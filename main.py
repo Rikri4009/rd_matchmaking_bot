@@ -4,6 +4,7 @@ import csv
 import hashlib
 import random
 import os
+import re
 
 bot = discord.Bot()
 
@@ -40,21 +41,15 @@ async def upload_rdsettings(
 async def roll_level(
     ctx,
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
-    played: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
-    player_2: discord.Option(discord.SlashCommandOptionType.user, required = False),
-    player_3: discord.Option(discord.SlashCommandOptionType.user, required = False),
-    player_4: discord.Option(discord.SlashCommandOptionType.user, required = False)
+    played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
+    difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
+    players: discord.Option(discord.SlashCommandOptionType.string, default = "", description = 'List of @users; no need to include yourself'),
 ):
-    
-    id_list = []
+    id_list = re.findall(r"\<\@(.*?)\>", players)
 
-    id_list.append(str(ctx.user.id))
-    if player_2 != None:
-        id_list.append(str(player_2.id))
-    if player_3 != None:
-        id_list.append(str(player_3.id))
-    if player_4 != None:
-        id_list.append(str(player_4.id))
+    id_list.append(str(ctx.user.id)) #add the user invoking the command
+
+    id_list = list(set(id_list)) #remove duplicates
 
     cafe_hashed = {}
 
@@ -64,11 +59,30 @@ async def roll_level(
     # iterate through cafe dataset
     with open(os.path.realpath(__file__) + '\\..\\cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
         for line in csv.DictReader(cafe_query):
+            level_prd = (line['approval'] == '10')
+            level_nrd = (line['approval'] == '-1')
+
+            level_pr_status = 'Peer Review in Progress'
+            if level_prd:
+                level_pr_status = 'Peer Reviewed'
+            elif level_nrd:
+                level_pr_status = 'Non-Refereed'
 
             # check if level matches pr option
-            pr_check = (peer_reviewed == 'Any') or ((peer_reviewed == 'Yes') and (line['approval'] == '10')) or ((peer_reviewed == 'No') and (line['approval'] == '-1'))
+            pr_check = (peer_reviewed == 'Any') or ((peer_reviewed == 'Yes') and level_prd) or ((peer_reviewed == 'No') and (level_nrd))
 
-            if pr_check:
+            level_diff = 'Easy'
+            if line['difficulty'] == '1':
+                level_diff = 'Medium'
+            elif line['difficulty'] == '2':
+                level_diff = 'Tough'
+            elif line['difficulty'] == '3':
+                level_diff = 'Very Tough'
+
+            # does difficulty match
+            diff_check = (difficulty == 'Any') or (difficulty == level_diff) or ((difficulty == 'Polarity') and ((level_diff == 'Easy') or (level_diff == 'Very Tough')))
+
+            if pr_check and diff_check:
                 authors_list = json.loads(line['authors'])
                 authors = ', '.join(authors_list)
 
@@ -84,20 +98,24 @@ async def roll_level(
                     'authors': authors,
                     'artist': artist,
                     'song': song,
+                    'difficulty': level_diff,
+                    'peer review status': level_pr_status,
                     'zip': zip}
 
-    if played == 'No': #remove played levels
+    if played_before == 'No': #remove played levels
         for id in id_list:
-            for hash in users_dict[id]:
-                if hash in cafe_hashed:
-                    del cafe_hashed[hash]
+            if id in users_dict:
+                for hash in users_dict[id]:
+                    if hash in cafe_hashed:
+                        del cafe_hashed[hash]
 
-    elif played == 'Yes': #keep only played levels
+    elif played_before == 'Yes': #keep only played levels
         hashes_all_played = set()
 
         # create list with only first user's played levels
         for id in id_list:
-            hashes_all_played = hashes_all_played.union(users_dict[id])
+            if id in users_dict:
+                hashes_all_played = hashes_all_played.union(users_dict[id])
 
         new_cafe_hashed = {}
 
@@ -110,7 +128,7 @@ async def roll_level(
 
     level_chosen = random.choice(list(cafe_hashed.values()))
 
-    await ctx.respond(f"Your level: " + level_chosen['artist'] + " - " + level_chosen['song'] + " (by " + level_chosen['authors'] + ")\n" + level_chosen['zip'])
+    await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\nDifficulty: {level_chosen['difficulty']} // {level_chosen['peer review status']}\n{level_chosen['zip']}")
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
