@@ -3,6 +3,7 @@ import json
 import csv
 import hashlib
 import random
+import os
 
 bot = discord.Bot()
 
@@ -15,7 +16,7 @@ async def upload_rdsettings(
     ctx,
     settings_rdsave: discord.Option(discord.SlashCommandOptionType.attachment)
 ):
-    with open('users_dict.json', 'r') as in_file:
+    with open(os.path.realpath(__file__) + '\\..\\users_dict.json', 'r') as in_file:
         users_dict = json.load(in_file)
 
     file = await settings_rdsave.read()
@@ -30,7 +31,7 @@ async def upload_rdsettings(
             users_dict[user].append(key[12:(len(key)-7)])
 
     json_object = json.dumps(users_dict, indent=4)
-    with open("users_dict.json", "w") as out_file:
+    with open(os.path.realpath(__file__) + "\\..\\users_dict.json", "w") as out_file:
         out_file.write(json_object)
 
     await ctx.respond(f"RDSettings updated!")
@@ -57,11 +58,11 @@ async def roll_level(
 
     cafe_hashed = {}
 
-    with open('users_dict.json', 'r') as in_file:
+    with open(os.path.realpath(__file__) + '\\..\\users_dict.json', 'r') as in_file:
         users_dict = json.load(in_file)
 
     # iterate through cafe dataset
-    with open('cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
+    with open(os.path.realpath(__file__) + '\\..\\cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
         for line in csv.DictReader(cafe_query):
 
             # check if level matches pr option
