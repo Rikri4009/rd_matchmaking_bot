@@ -16,28 +16,34 @@ bot = discord.Bot()
 async def on_ready():
     print(f"{bot.user} is ready and online!")
 
+def read_json(filename):
+    with open(os.path.realpath(__file__) + '\\..\\' + filename, 'r') as in_file:
+        return json.load(in_file)
+
+def write_json(dict, filename):
+    json_object = json.dumps(dict, indent=4)
+    with open(os.path.realpath(__file__) + '\\..\\' + filename, 'w') as out_file:
+        out_file.write(json_object)
+
 @bot.command()
 async def upload_rdsettings(
     ctx,
     settings_rdsave: discord.Option(discord.SlashCommandOptionType.attachment)
 ):
-    with open(os.path.realpath(__file__) + '\\..\\users_rdsettings.json', 'r') as in_file:
-        users_rdsettings = json.load(in_file)
+    users_rdsettings = read_json('users_rdsettings.json')
 
     file = await settings_rdsave.read()
-    user_rdsettings = json.loads((file.decode('utf-8-sig')).encode("utf-8"))
+    attached_rdsettings = json.loads((file.decode('utf-8-sig')).encode('utf-8'))
 
     user = str(ctx.user.id)
     users_rdsettings[user] = []
 
     # Extract hash of played levels
-    for key, val in user_rdsettings.items():
+    for key, val in attached_rdsettings.items():
         if (key[0:12] == 'CustomLevel_') and (key[(len(key)-7):(len(key))] == '_normal') and (val != 'NotFinished'):
             users_rdsettings[user].append(key[12:(len(key)-7)])
 
-    json_object = json.dumps(users_rdsettings, indent=4)
-    with open(os.path.realpath(__file__) + "\\..\\users_rdsettings.json", "w") as out_file:
-        out_file.write(json_object)
+    write_json(users_rdsettings, 'users_rdsettings.json')
 
     await ctx.respond(f"RDSettings updated!")
 
@@ -52,8 +58,7 @@ def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_lis
 
     cafe_hashed = {}
 
-    with open(os.path.realpath(__file__) + '\\..\\users_rdsettings.json', 'r') as in_file:
-        users_rdsettings = json.load(in_file)
+    users_rdsettings = read_json('users_rdsettings.json')
 
     # iterate through cafe dataset
     with open(os.path.realpath(__file__) + '\\..\\cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
@@ -102,9 +107,9 @@ def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_lis
                     'zip': zip}
 
     if played_before == 'No': #remove played levels
-        for id in user_id_list:
-            if id in users_rdsettings:
-                for hash in users_rdsettings[id]:
+        for uid in user_id_list:
+            if uid in users_rdsettings:
+                for hash in users_rdsettings[uid]:
                     if hash in cafe_hashed:
                         del cafe_hashed[hash]
 
@@ -112,9 +117,9 @@ def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_lis
         set_list = []
 
         # create list of users' played levels as sets
-        for id in user_id_list:
-            if id in users_rdsettings:
-                set_list.append(set(users_rdsettings[id]))
+        for uid in user_id_list:
+            if uid in users_rdsettings:
+                set_list.append(set(users_rdsettings[uid]))
 
         # find levels everyone's played
         hashes_all_played = set.intersection(*set_list)
@@ -140,9 +145,118 @@ async def roll_level(
 ):
     level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
 
-    await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\nDifficulty: {level_chosen['difficulty']} // {level_chosen['peer review status']}\n{level_chosen['zip']}")
+    await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
+Difficulty: {level_chosen['difficulty']}\n\
+{level_chosen['peer review status']}\n\
+{level_chosen['zip']}")
 
-match = bot.create_group("match", "Matchmaking commands")
+lobby = bot.create_group("lobby", "Lobby/matchmaking commands")
+
+@lobby.command()
+async def create(
+    ctx,
+    name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name')
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is already in a lobby
+    if (user in current_lobbies['users_playing']) or (user in current_lobbies['users_hosting']):
+        lobby_user_is_in = (current_lobbies['users_playing'] | current_lobbies['users_hosting'])[user]
+        await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!')
+        return
+
+    current_lobbies['users_hosting'][user] = name
+
+    current_lobbies['lobbies'][name] = {}
+    current_lobbies['lobbies'][name]['status'] = 'Open'
+    current_lobbies['lobbies'][name]['host'] = user
+    current_lobbies['lobbies'][name]['players'] = []
+
+    await ctx.respond(f'**The lobby \"{name}\" has been created!**\n\
+Do **\"lobby join {name}\"** to join. (The host should do this if they want to play!)\n\
+Do **\"lobby leave\"** to leave.\n\
+The host can do **\"lobby delete\"** to delete this lobby.\n\
+Once everyone has joined, the host should do **\"lobby roll_lobby_level\"**.')
+
+    print(current_lobbies)
+    write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
+async def join(
+    ctx,
+    name: discord.Option(discord.SlashCommandOptionType.string, description = 'Name of lobby to join')
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is playing in a lobby, or is hosting a lobby different to this one
+    if (user in current_lobbies['users_playing']) or ((user in current_lobbies['users_hosting']) and (current_lobbies['users_hosting'][user] != name)):
+        lobby_user_is_in = (current_lobbies['users_playing'] | current_lobbies['users_hosting'])[user]
+        await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!')
+        return
+
+    current_lobbies['users_playing'][user] = name
+
+    (current_lobbies['lobbies'][name]['players']).append(user)
+
+    await ctx.respond(f'Joined \"{name}\".')
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
+async def leave(
+    ctx
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is not playing
+    if user not in current_lobbies['users_playing']:
+        await ctx.respond(f'You are not playing in any lobbies!')
+        return
+
+    lobby_user_is_in = current_lobbies['users_playing'][user]
+
+    # remove user from current lobby they're in
+    (current_lobbies['lobbies'][lobby_user_is_in]['players']).remove(user)
+
+    del current_lobbies['users_playing'][user]
+
+    await ctx.respond(f'Left \"{lobby_user_is_in}\".')
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
+async def delete(
+    ctx
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is not hosting
+    if user not in current_lobbies['users_hosting']:
+        await ctx.respond(f'You are not hosting!')
+        return
+
+    lobby_user_is_hosting = current_lobbies['users_playing'][user]
+
+    del current_lobbies['users_hosting'][user] #user is no longer hosting a lobby
+
+    for player in current_lobbies['lobbies'][lobby_user_is_hosting]['players']:
+        del current_lobbies['users_playing'][player] #players are no longer playing
+
+    del current_lobbies['lobbies'][lobby_user_is_hosting]
+
+    await ctx.respond(f'Deleted \"{lobby_user_is_hosting}\".')
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
