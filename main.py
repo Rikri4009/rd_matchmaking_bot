@@ -17,33 +17,32 @@ async def upload_rdsettings(
     ctx,
     settings_rdsave: discord.Option(discord.SlashCommandOptionType.attachment)
 ):
-    with open(os.path.realpath(__file__) + '\\..\\users_dict.json', 'r') as in_file:
-        users_dict = json.load(in_file)
+    with open(os.path.realpath(__file__) + '\\..\\users_rdsettings.json', 'r') as in_file:
+        users_rdsettings = json.load(in_file)
 
     file = await settings_rdsave.read()
     user_rdsettings = json.loads((file.decode('utf-8-sig')).encode("utf-8"))
 
     user = str(ctx.user.id)
-    users_dict[user] = []
+    users_rdsettings[user] = []
 
     # Extract hash of played levels
     for key, val in user_rdsettings.items():
         if (key[0:12] == 'CustomLevel_') and (key[(len(key)-7):(len(key))] == '_normal') and (val != 'NotFinished'):
-            users_dict[user].append(key[12:(len(key)-7)])
+            users_rdsettings[user].append(key[12:(len(key)-7)])
 
-    json_object = json.dumps(users_dict, indent=4)
-    with open(os.path.realpath(__file__) + "\\..\\users_dict.json", "w") as out_file:
+    json_object = json.dumps(users_rdsettings, indent=4)
+    with open(os.path.realpath(__file__) + "\\..\\users_rdsettings.json", "w") as out_file:
         out_file.write(json_object)
 
     await ctx.respond(f"RDSettings updated!")
 
-@bot.command()
-async def roll_level(
+def roll_random_level(
     ctx,
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
     played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
-    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself'),
+    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
 ):
     id_list = []
 
@@ -56,8 +55,8 @@ async def roll_level(
 
     cafe_hashed = {}
 
-    with open(os.path.realpath(__file__) + '\\..\\users_dict.json', 'r') as in_file:
-        users_dict = json.load(in_file)
+    with open(os.path.realpath(__file__) + '\\..\\users_rdsettings.json', 'r') as in_file:
+        users_rdsettings = json.load(in_file)
 
     # iterate through cafe dataset
     with open(os.path.realpath(__file__) + '\\..\\cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
@@ -107,8 +106,8 @@ async def roll_level(
 
     if played_before == 'No': #remove played levels
         for id in id_list:
-            if id in users_dict:
-                for hash in users_dict[id]:
+            if id in users_rdsettings:
+                for hash in users_rdsettings[id]:
                     if hash in cafe_hashed:
                         del cafe_hashed[hash]
 
@@ -117,8 +116,8 @@ async def roll_level(
 
         # create list of users' played levels as sets
         for id in id_list:
-            if id in users_dict:
-                set_list.append(set(users_dict[id]))
+            if id in users_rdsettings:
+                set_list.append(set(users_rdsettings[id]))
 
         # find levels everyone's played
         hashes_all_played = set.intersection(*set_list)
@@ -132,7 +131,17 @@ async def roll_level(
 
         cafe_hashed = new_cafe_hashed
 
-    level_chosen = random.choice(list(cafe_hashed.values()))
+    return random.choice(list(cafe_hashed.values()))
+
+@bot.command()
+async def roll_level(
+    ctx,
+    peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
+    played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
+    difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
+    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
+):
+    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, players)
 
     await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\nDifficulty: {level_chosen['difficulty']} // {level_chosen['peer review status']}\n{level_chosen['zip']}")
 
