@@ -5,6 +5,10 @@ import hashlib
 import random
 import os
 import re
+from threading import Thread, Lock
+
+users_rdsettings_mutex = Lock() #I hope this works???
+current_games_mutex = Lock()
 
 bot = discord.Bot()
 
@@ -37,21 +41,14 @@ async def upload_rdsettings(
 
     await ctx.respond(f"RDSettings updated!")
 
-def roll_random_level(
-    ctx,
-    peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
-    played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
-    difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
-    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
-):
-    id_list = []
-
+def create_user_id_list(players, caller_id):
     if players == None:
-        id_list.append(str(ctx.user.id))
-    else:
-        id_list = re.findall(r"\<\@(.*?)\>", players)
+        players = '<@'+caller_id+'>'
+    
+    user_id_list = re.findall(r"\<\@(.*?)\>", players)
+    return list(set(user_id_list)) #remove duplicates
 
-    id_list = list(set(id_list)) #remove duplicates
+def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_list):
 
     cafe_hashed = {}
 
@@ -105,7 +102,7 @@ def roll_random_level(
                     'zip': zip}
 
     if played_before == 'No': #remove played levels
-        for id in id_list:
+        for id in user_id_list:
             if id in users_rdsettings:
                 for hash in users_rdsettings[id]:
                     if hash in cafe_hashed:
@@ -115,7 +112,7 @@ def roll_random_level(
         set_list = []
 
         # create list of users' played levels as sets
-        for id in id_list:
+        for id in user_id_list:
             if id in users_rdsettings:
                 set_list.append(set(users_rdsettings[id]))
 
@@ -141,9 +138,11 @@ async def roll_level(
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
     players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
 ):
-    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, players)
+    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
 
     await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\nDifficulty: {level_chosen['difficulty']} // {level_chosen['peer review status']}\n{level_chosen['zip']}")
+
+match = bot.create_group("match", "Matchmaking commands")
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
