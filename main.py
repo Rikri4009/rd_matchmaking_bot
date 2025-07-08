@@ -152,20 +152,33 @@ Difficulty: {level_chosen['difficulty']}\n\
 
 lobby = bot.create_group('lobby', 'Lobby/matchmaking commands')
 
-def get_lobby_creation_message(lobby_name, host_id, player_id_list):
+def get_lobby_open_message(lobby_name, host_id, player_id_dict):
     player_list = []
-    for id in player_id_list:
+    for id in player_id_dict:
         player_list.append('<@' + id + '>')
 
     players = ', '.join(player_list)
 
-    return '**The lobby \"' + lobby_name + '\" has been created!**\n\
-Do __\"/lobby join ' + lobby_name + '\"__ to join. (The host should do this if they want to play!)\n\
-Do __\"/lobby leave\"__ to leave.\n\
-The host can do __\"/lobby delete\"__ to delete this lobby.\n\
-Once everyone has joined, the host should do __\"/lobby roll\"__ to roll a level.\n\n\
+    return '# The lobby \"' + lobby_name + '\" has been created!\n\
+Do \"**/lobby join ' + lobby_name + '**\" to join. (The host should do this if they want to play!)\n\
+Do \"**/lobby leave**\" to leave.\n\
+The host can do \"**/lobby delete**\" to delete this lobby.\n\
+The host can do \"**/lobby kick [player]**\" to kick a player.\n\
+Once everyone has joined, the host should do \"**/lobby roll**\" to roll a level.\n\n\
 **Host:** <@' + host_id + '>\n\
 **Players:** ' + players
+
+def get_lobby_roll_message(player_id_dict):
+    ready_list = ''
+
+    for id in player_id_dict:
+        ready_list = ready_list + '<@' + id + '>: ' + player_id_dict[id] + '\n'
+
+    return 'Make sure you do \"**/lobby already_seen**\" if you recognize this level!\n\
+Otherwise, do \"**/lobby ready**\" when you\'re at the button screen.\n\
+Once everyone readies, the countdown will begin!\n\
+The host can do \"**/lobby unroll**\" to trash this selection and allow more players to join the lobby.\n\
+\n' + ready_list
 
 @lobby.command()
 async def create(
@@ -192,9 +205,9 @@ async def create(
     current_lobbies['lobbies'][name] = {}
     current_lobbies['lobbies'][name]['status'] = 'Open'
     current_lobbies['lobbies'][name]['host'] = user
-    current_lobbies['lobbies'][name]['players'] = []
+    current_lobbies['lobbies'][name]['players'] = {}
 
-    message = await ctx.channel.send(get_lobby_creation_message(name, user, []))
+    message = await ctx.channel.send(get_lobby_open_message(name, user, []))
 
     current_lobbies['lobbies'][name]['message_id'] = message.id
 
@@ -210,7 +223,7 @@ async def join(
 
     user = str(ctx.user.id)
 
-    # if user is playing in a lobby, or is hosting a lobby different to this one
+    # if user is playing in a lobby
     if user in current_lobbies['users_playing']:
         lobby_user_is_in = current_lobbies['users_playing'][user]
         await ctx.respond(f'You are already playing in the lobby \"{lobby_user_is_in}\"!')
@@ -243,13 +256,13 @@ async def join(
 
     current_lobbies['users_playing'][user] = name
 
-    (current_lobbies['lobbies'][name]['players']).append(user)
+    current_lobbies['lobbies'][name]['players'][user] = 'Not Ready'
 
     await ctx.respond(f'Joined \"{name}\".')
 
     if current_lobbies['lobbies'][name]['status'] == 'Open':
         lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][name]['message_id'])
-        await lobby_creation_message.edit(get_lobby_creation_message(name, current_lobbies['lobbies'][name]['host'], current_lobbies['lobbies'][name]['players']))
+        await lobby_creation_message.edit(get_lobby_open_message(name, current_lobbies['lobbies'][name]['host'], current_lobbies['lobbies'][name]['players']))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -269,7 +282,7 @@ async def leave(
     lobby_user_is_in = current_lobbies['users_playing'][user]
 
     # remove user from current lobby they're in
-    (current_lobbies['lobbies'][lobby_user_is_in]['players']).remove(user)
+    del current_lobbies['lobbies'][lobby_user_is_in]['players'][user]
 
     del current_lobbies['users_playing'][user]
 
@@ -277,7 +290,7 @@ async def leave(
 
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
         lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
-        await lobby_creation_message.edit(get_lobby_creation_message(lobby_user_is_in, current_lobbies['lobbies'][lobby_user_is_in]['host'], current_lobbies['lobbies'][lobby_user_is_in]['players']))
+        await lobby_creation_message.edit(get_lobby_open_message(lobby_user_is_in, current_lobbies['lobbies'][lobby_user_is_in]['host'], current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -305,7 +318,7 @@ async def kick(
         return
 
     # kick player
-    (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).remove(player_to_kick)
+    del current_lobbies['lobbies'][lobby_user_is_hosting]['players'][player_to_kick]
 
     del current_lobbies['users_playing'][player_to_kick]
 
@@ -313,7 +326,7 @@ async def kick(
 
     if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Open':
         lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
-        await lobby_creation_message.edit(get_lobby_creation_message(lobby_user_is_hosting, current_lobbies['lobbies'][lobby_user_is_hosting]['host'], current_lobbies['lobbies'][lobby_user_is_hosting]['players']))
+        await lobby_creation_message.edit(get_lobby_open_message(lobby_user_is_hosting, current_lobbies['lobbies'][lobby_user_is_hosting]['host'], current_lobbies['lobbies'][lobby_user_is_hosting]['players']))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -344,19 +357,49 @@ async def delete(
     write_json(current_lobbies, 'current_lobbies.json')
 
 @lobby.command()
-async def roll_level(
+async def roll(
     ctx,
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
     played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
-    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
 ):
-    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
+    current_lobbies = read_json('current_lobbies.json')
 
-    await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
+    user = str(ctx.user.id)
+
+    # if user is not hosting
+    if user not in current_lobbies['users_hosting']:
+        await ctx.respond(f'You are not hosting!')
+        return
+
+    lobby_user_is_hosting = current_lobbies['users_hosting'][user]
+
+    # if lobby is not in open state
+    if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Rolling':
+        await ctx.respond(f'Your lobby has already rolled a level! Use **/lobby unroll** to re-open your lobby.')
+        return
+    if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Playing':
+        await ctx.respond(f'Your lobby is already playing, or is waiting on people to submit their miss counts! Kick AFK players if you must.')
+        return
+
+    # if no one is playing
+    if current_lobbies['lobbies'][lobby_user_is_hosting]['players'] == {}:
+        await ctx.respond(f'No one is playing!')
+        return
+
+    current_lobbies['lobbies'][lobby_user_is_hosting]['status'] = 'Rolling'
+
+    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys())
+
+    message = await ctx.channel.send(get_lobby_roll_message(current_lobbies['lobbies'][lobby_user_is_hosting]['players'])
+                                     + f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
 Difficulty: {level_chosen['difficulty']}\n\
 {level_chosen['peer review status']}\n\
 {level_chosen['zip']}")
+
+    current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'] = message.id
+
+    write_json(current_lobbies, 'current_lobbies.json')
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
