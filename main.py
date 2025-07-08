@@ -14,7 +14,7 @@ bot = discord.Bot()
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} is ready and online!")
+    print(f'{bot.user} is ready and online!')
 
 def read_json(filename):
     with open(os.path.realpath(__file__) + '\\..\\' + filename, 'r') as in_file:
@@ -45,7 +45,7 @@ async def upload_rdsettings(
 
     write_json(users_rdsettings, 'users_rdsettings.json')
 
-    await ctx.respond(f"RDSettings updated!")
+    await ctx.respond(f'RDSettings updated!')
 
 def create_user_id_list(players, caller_id):
     if players == None:
@@ -150,7 +150,22 @@ Difficulty: {level_chosen['difficulty']}\n\
 {level_chosen['peer review status']}\n\
 {level_chosen['zip']}")
 
-lobby = bot.create_group("lobby", "Lobby/matchmaking commands")
+lobby = bot.create_group('lobby', 'Lobby/matchmaking commands')
+
+def get_lobby_creation_message(lobby_name, host_id, player_id_list):
+    player_list = []
+    for id in player_id_list:
+        player_list.append('<@' + id + '>')
+
+    players = ', '.join(player_list)
+
+    return '**The lobby \"' + lobby_name + '\" has been created!**\n\
+Do __\"/lobby join ' + lobby_name + '\"__ to join. (The host should do this if they want to play!)\n\
+Do __\"/lobby leave\"__ to leave.\n\
+The host can do __\"/lobby delete\"__ to delete this lobby.\n\
+Once everyone has joined, the host should do __\"/lobby roll\"__ to roll a level.\n\n\
+**Host:** <@' + host_id + '>\n\
+**Players:** ' + players
 
 @lobby.command()
 async def create(
@@ -174,11 +189,9 @@ async def create(
     current_lobbies['lobbies'][name]['host'] = user
     current_lobbies['lobbies'][name]['players'] = []
 
-    await ctx.respond(f'**The lobby \"{name}\" has been created!**\n\
-Do **\"lobby join {name}\"** to join. (The host should do this if they want to play!)\n\
-Do **\"lobby leave\"** to leave.\n\
-The host can do **\"lobby delete\"** to delete this lobby.\n\
-Once everyone has joined, the host should do **\"lobby roll_lobby_level\"**.')
+    message = await ctx.respond(get_lobby_creation_message(name, user, []))
+
+    current_lobbies['lobbies'][name]['message_id'] = message.id
 
     print(current_lobbies)
     write_json(current_lobbies, 'current_lobbies.json')
@@ -193,9 +206,25 @@ async def join(
     user = str(ctx.user.id)
 
     # if user is playing in a lobby, or is hosting a lobby different to this one
-    if (user in current_lobbies['users_playing']) or ((user in current_lobbies['users_hosting']) and (current_lobbies['users_hosting'][user] != name)):
-        lobby_user_is_in = (current_lobbies['users_playing'] | current_lobbies['users_hosting'])[user]
-        await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!')
+    if user in current_lobbies['users_playing']:
+        lobby_user_is_in = current_lobbies['users_playing'][user]
+        await ctx.respond(f'You are already playing in the lobby \"{lobby_user_is_in}\"!')
+        return
+
+    # if user is hosting a lobby different to this one
+    if (user in current_lobbies['users_hosting']) and (current_lobbies['users_hosting'][user] != name):
+        lobby_user_is_in = current_lobbies['users_hosting'][user]
+        await ctx.respond(f'You are already hosting the lobby \"{lobby_user_is_in}\"!')
+        return
+
+    # if lobby doesn't exist
+    if name not in current_lobbies['lobbies']:
+        await ctx.respond(f'That lobby doesn\'t exist!')
+        return
+
+    # if lobby is not open
+    if current_lobbies['lobbies'][name]['status'] != 'Rolling':
+        await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to __/lobby unroll__ so that you can join.)')
         return
 
     current_lobbies['users_playing'][user] = name
@@ -203,6 +232,8 @@ async def join(
     (current_lobbies['lobbies'][name]['players']).append(user)
 
     await ctx.respond(f'Joined \"{name}\".')
+
+    #await 
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -243,7 +274,7 @@ async def delete(
         await ctx.respond(f'You are not hosting!')
         return
 
-    lobby_user_is_hosting = current_lobbies['users_playing'][user]
+    lobby_user_is_hosting = current_lobbies['users_hosting'][user]
 
     del current_lobbies['users_hosting'][user] #user is no longer hosting a lobby
 
