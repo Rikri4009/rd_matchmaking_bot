@@ -182,6 +182,11 @@ async def create(
         await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!')
         return
 
+    # if a lobby with that name exists
+    if name in current_lobbies['lobbies']:
+        await ctx.respond(f'That lobby name is already in use!')
+        return
+
     current_lobbies['users_hosting'][user] = name
 
     current_lobbies['lobbies'][name] = {}
@@ -189,7 +194,7 @@ async def create(
     current_lobbies['lobbies'][name]['host'] = user
     current_lobbies['lobbies'][name]['players'] = []
 
-    message = await ctx.respond(get_lobby_creation_message(name, user, []))
+    message = await ctx.channel.send(get_lobby_creation_message(name, user, []))
 
     current_lobbies['lobbies'][name]['message_id'] = message.id
 
@@ -223,8 +228,17 @@ async def join(
         return
 
     # if lobby is not open
-    if current_lobbies['lobbies'][name]['status'] != 'Rolling':
+    if current_lobbies['lobbies'][name]['status'] == 'Rolling':
         await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to __/lobby unroll__ so that you can join.)')
+        return
+    if current_lobbies['lobbies'][name]['status'] == 'Playing':
+        await ctx.respond(f'That lobby is already playing!')
+        return
+
+    # if user doesn't have an rdsettings
+    rdsettings = read_json('users_rdsettings.json')
+    if user not in rdsettings:
+        await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsettings** to do this.)')
         return
 
     current_lobbies['users_playing'][user] = name
@@ -233,7 +247,9 @@ async def join(
 
     await ctx.respond(f'Joined \"{name}\".')
 
-    #await 
+    if current_lobbies['lobbies'][name]['status'] == 'Open':
+        lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][name]['message_id'])
+        await lobby_creation_message.edit(get_lobby_creation_message(name, current_lobbies['lobbies'][name]['host'], current_lobbies['lobbies'][name]['players']))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -258,6 +274,10 @@ async def leave(
     del current_lobbies['users_playing'][user]
 
     await ctx.respond(f'Left \"{lobby_user_is_in}\".')
+
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
+        lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
+        await lobby_creation_message.edit(get_lobby_creation_message(lobby_user_is_in, current_lobbies['lobbies'][lobby_user_is_in]['host'], current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -286,8 +306,6 @@ async def delete(
     await ctx.respond(f'Deleted \"{lobby_user_is_hosting}\".')
 
     write_json(current_lobbies, 'current_lobbies.json')
-
-
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
