@@ -110,12 +110,15 @@ async def roll_level(
                         del cafe_hashed[hash]
 
     elif played_before == 'Yes': #keep only played levels
-        hashes_all_played = set()
+        set_list = []
 
-        # create list with only first user's played levels
+        # create list of users' played levels as sets
         for id in id_list:
             if id in users_dict:
-                hashes_all_played = hashes_all_played.union(users_dict[id])
+                set_list.append(set(users_dict[id]))
+
+        # find levels everyone's played
+        hashes_all_played = set.intersection(*set_list)
 
         new_cafe_hashed = {}
 
