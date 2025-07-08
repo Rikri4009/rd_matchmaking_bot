@@ -282,6 +282,42 @@ async def leave(
     write_json(current_lobbies, 'current_lobbies.json')
 
 @lobby.command()
+async def kick(
+    ctx,
+    player: discord.Option(discord.SlashCommandOptionType.user)
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    player_to_kick = str(player.id)
+
+    # if user is not hosting
+    if user not in current_lobbies['users_hosting']:
+        await ctx.respond(f'You are not hosting!')
+        return
+
+    lobby_user_is_hosting = current_lobbies['users_hosting'][user]
+
+    # if player is not in the lobby
+    if player_to_kick not in current_lobbies['lobbies'][lobby_user_is_hosting]['players']:
+        await ctx.respond(f'User not found in lobby!')
+        return
+
+    # kick player
+    (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).remove(player_to_kick)
+
+    del current_lobbies['users_playing'][player_to_kick]
+
+    await ctx.respond(f'Kicked <@{player_to_kick}>.')
+
+    if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Open':
+        lobby_creation_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
+        await lobby_creation_message.edit(get_lobby_creation_message(lobby_user_is_hosting, current_lobbies['lobbies'][lobby_user_is_hosting]['host'], current_lobbies['lobbies'][lobby_user_is_hosting]['players']))
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
 async def delete(
     ctx
 ):
@@ -306,6 +342,21 @@ async def delete(
     await ctx.respond(f'Deleted \"{lobby_user_is_hosting}\".')
 
     write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
+async def roll_level(
+    ctx,
+    peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
+    played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
+    difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
+    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
+):
+    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
+
+    await ctx.respond(f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
+Difficulty: {level_chosen['difficulty']}\n\
+{level_chosen['peer review status']}\n\
+{level_chosen['zip']}")
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
