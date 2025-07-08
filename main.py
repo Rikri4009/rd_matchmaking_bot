@@ -43,11 +43,14 @@ async def roll_level(
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
     played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
-    players: discord.Option(discord.SlashCommandOptionType.string, default = "", description = 'List of @users; no need to include yourself'),
+    players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself'),
 ):
-    id_list = re.findall(r"\<\@(.*?)\>", players)
+    id_list = []
 
-    id_list.append(str(ctx.user.id)) #add the user invoking the command
+    if players == None:
+        id_list.append(str(ctx.user.id))
+    else:
+        id_list = re.findall(r"\<\@(.*?)\>", players)
 
     id_list = list(set(id_list)) #remove duplicates
 
