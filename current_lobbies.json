@@ -7,20 +7,15 @@
     },
     "lobbies": {
         "a": {
-            "status": "Rolling",
+            "status": "Open",
             "host": "1207345676141465622",
             "players": {
-                "1207345676141465622": "Not Ready"
+                "1207345676141465622": {
+                    "ready_status": "Not Ready"
+                }
             },
-            "level": {
-                "authors": "MarioMak967",
-                "artist": "Virtual Riot",
-                "song": "Evil Gameboy",
-                "difficulty": "Tough",
-                "peer review status": "Peer Reviewed",
-                "zip": "https://codex.rhythm.cafe/evil-gam-TpFqCVGRyvQ.rdzip"
-            },
-            "message_id": 1392432377699110922
+            "level": {},
+            "message_id": 1392467741360914503
         }
     }
 }
