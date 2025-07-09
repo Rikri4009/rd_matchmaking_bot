@@ -3,31 +3,26 @@
         "1207345676141465622": "a"
     },
     "users_playing": {
-        "1207345676141465622": "a"
+        "1207345676141465622": "a",
+        "231573791136808960": "a"
     },
     "lobbies": {
         "a": {
-            "status": "Playing",
+            "status": "Open",
             "host": "1207345676141465622",
             "players": {
                 "1207345676141465622": {
-                    "ready_status": "Not Yet Submitted"
+                    "ready_status": "Not Ready",
+                    "miss_count": -2
+                },
+                "231573791136808960": {
+                    "ready_status": "Not Ready",
+                    "miss_count": -2
                 }
             },
-            "roll_settings": {
-                "peer_reviewed": "Yes",
-                "played_before": "No",
-                "difficulty": "Any"
-            },
-            "level": {
-                "authors": "willowpoke",
-                "artist": "Toby Fox",
-                "song": "Cool Mixtape",
-                "difficulty": "Medium",
-                "peer review status": "Peer Reviewed",
-                "zip": "https://codex.rhythm.cafe/cool-mix-jh1JDgwWJLy.rdzip"
-            },
-            "message_id": 1392574519306223775
+            "roll_settings": {},
+            "level": {},
+            "message_id": 1392632087059890336
         }
     }
 }

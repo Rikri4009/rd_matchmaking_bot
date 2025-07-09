@@ -191,7 +191,7 @@ def get_lobby_playing_message(player_id_dict):
 
     return f'Make sure you do \"**/lobby already_seen**\" if you recognize this level!\n\
 Otherwise, when you\'re done, do \"**/lobby submit_misses**\" to submit your miss count (and optionally add a comment).\n\
-Once everyone submits, final results will be posted. (The host should kick AFK players.)'
+Once everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}'
 
 def get_lobby_message(status, lobby_name, host_id, player_id_dict, level_chosen):
     if status == 'Open':
@@ -299,6 +299,7 @@ async def join(
 
     current_lobbies['lobbies'][name]['players'][user] = {}
     current_lobbies['lobbies'][name]['players'][user]['ready_status'] = 'Not Ready'
+    current_lobbies['lobbies'][name]['players'][user]['miss_count'] = -2
 
     await ctx.respond(f'Joined \"{name}\".')
 
@@ -348,6 +349,7 @@ async def leave(
 
     lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
+    await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
 @lobby.command()
 async def kick(
@@ -390,6 +392,7 @@ async def kick(
     write_json(current_lobbies, 'current_lobbies.json')
 
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_hosting, user)
+    await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_hosting, user)
 
 @lobby.command()
 async def delete(
@@ -545,6 +548,11 @@ async def already_seen(
 
         await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!")
 
+        # unready everyone
+        for player in current_lobbies['lobbies'][lobby_user_is_in]['players']:
+            current_lobbies['lobbies'][lobby_user_is_in]['players'][player]['ready_status'] = 'Not Ready'
+
+        # choose a new level
         new_peer_reviewed = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['peer_reviewed']
         new_played_before = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['played_before']
         new_difficulty = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['difficulty']
@@ -557,20 +565,38 @@ async def already_seen(
         lobby_new_message = await ctx.channel.send(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_in]['players'], new_level_chosen))
 
         current_lobbies['lobbies'][lobby_user_is_in]['message_id'] = lobby_new_message.id
+
+        await ctx.respond(f'Rerolled!')
+
     elif current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing': #if playing
-        print('ahh')
+        # if user has already submitted
+        if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Submitted':
+            await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)')
+            return
+
+        current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Submitted'
+        current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['miss_count'] = -1
+
+        lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
+
+        await lobby_curr_message.edit(get_lobby_playing_message(current_lobbies['lobbies'][lobby_user_is_in]['players']))
+
+        await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
 
     write_json(current_lobbies, 'current_lobbies.json')
 
 async def begin_match(ctx, current_lobbies, lobby_name):
     current_lobbies['lobbies'][lobby_name]['status'] = 'Playing'
 
+    message = ''
+
     for player in current_lobbies['lobbies'][lobby_name]['players']:
+        message = message + f"<@{player}> "
         current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] = 'Not Yet Submitted'
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-    await ctx.channel.send('**Beginning match in 10 seconds!**')
+    await ctx.channel.send(message + '\n**Beginning match in 10 seconds!**')
     time.sleep(7)
 
     await ctx.channel.send('**3**')
@@ -602,6 +628,127 @@ async def is_everyone_ready(ctx, current_lobbies, lobby_name, host):
             return
 
     await begin_match(ctx, current_lobbies, lobby_name)
+
+async def finish_match(ctx, current_lobbies, lobby_name, host):
+    unsorted_misses = {}
+
+    for player in current_lobbies['lobbies'][lobby_name]['players']:
+        unsorted_misses[player] = current_lobbies['lobbies'][lobby_name]['players'][player]['miss_count']
+
+    sorted_misses = {}
+    for player in sorted(unsorted_misses, key=unsorted_misses.get):
+        sorted_misses[player] = unsorted_misses[player]
+
+    players_already_seen = []
+    players_places = {}
+
+    current_place = 1
+    prev_player_place = 1
+    prev_misses = -100
+
+    for player in sorted_misses:
+        if sorted_misses[player] == -1: #they already played
+            players_already_seen.append(player)
+        else:
+            if sorted_misses[player] == prev_misses: #a tie
+                players_places[player] = prev_player_place #give the same place as prev player
+            else: #not a tie
+                players_places[player] = current_place
+                prev_player_place = current_place
+            
+            current_place = current_place + 1
+
+    for player in players_already_seen: #already played players
+        players_places[player] = current_place #joint last place
+
+    level_artist = current_lobbies['lobbies'][lobby_name]['level']['artist']
+    level_song = current_lobbies['lobbies'][lobby_name]['level']['song']
+    level_authors = current_lobbies['lobbies'][lobby_name]['level']['authors']
+    placement_message = f"# Results for {level_artist} - {level_song} (by {level_authors}):\n"
+
+    num_players = len(players_places) #for exp calculation
+
+    users_stats = read_json('users_stats.json')
+
+    players_higher_places = [] #to calculate opponents_beaten_list for each player
+
+    for player in players_places:
+        placement_message = placement_message + f"Place {players_places[player]}: <@{player}> (+{num_players*2 - players_places[player]} exp)\n" #(2*players - place) exp gained
+
+        if player not in users_stats:
+            users_stats[player] = {}
+            users_stats[player]['exp'] = 0
+            users_stats[player]['matches_played'] = 0
+            users_stats[player]['opponents_beaten'] = 0
+            users_stats[player]['opponents_beaten_list'] = []
+            users_stats[player]['easy_s_ranked'] = 0
+            users_stats[player]['medium_s_ranked'] = 0
+            users_stats[player]['tough_s_ranked'] = 0
+            users_stats[player]['vt_s_ranked'] = 0
+            users_stats[player]['largest_match_played'] = 0
+            users_stats[player]['largest_match_won'] = 0
+            users_stats[player]['nr_played'] = 0
+            users_stats[player]['polarity_played'] = 0
+
+        users_stats[player]['exp'] = users_stats[player]['exp'] + num_players*2 - players_places[player]
+        users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
+        users_stats[player]['opponents_beaten'] = users_stats[player]['opponents_beaten'] + num_players - players_places[player]
+        for better_player in players_higher_places:
+            users_stats[better_player]['opponents_beaten_list'].append(player)
+            users_stats[better_player]['opponents_beaten_list'] = list(set(users_stats[better_player]['opponents_beaten_list'])) #remove duplicates
+        if sorted_misses[player] == 0:
+            if current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Easy':
+                users_stats[player]['easy_s_ranked'] = users_stats[player]['easy_s_ranked'] + 1
+            elif current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Medium':
+                users_stats[player]['medium_s_ranked'] = users_stats[player]['medium_s_ranked'] + 1
+            elif current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Tough':
+                users_stats[player]['tough_s_ranked'] = users_stats[player]['tough_s_ranked'] + 1
+            else:
+                users_stats[player]['vt_s_ranked'] = users_stats[player]['vt_s_ranked'] + 1
+        if len(sorted_misses) > users_stats[player]['largest_match_played']:
+            users_stats[player]['largest_match_played'] = len(sorted_misses)
+        if (players_places[player] == 1) and (len(sorted_misses) > users_stats[player]['largest_match_won']):
+            users_stats[player]['largest_match_won'] = len(sorted_misses)
+        if current_lobbies['lobbies'][lobby_name]['level']['peer review status'] == 'Non-Refereed':
+            users_stats[player]['nr_played'] = users_stats[player]['nr_played'] + 1
+        if current_lobbies['lobbies'][lobby_name]['roll_settings']['difficulty'] == 'Polarity':
+            users_stats[player]['polarity_played'] = users_stats[player]['polarity_played'] + 1
+
+    write_json(users_stats, 'users_stats.json')
+
+    await ctx.channel.send(placement_message)
+
+    for player in current_lobbies['lobbies'][lobby_name]['players']:
+        current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] = 'Not Ready'
+        current_lobbies['lobbies'][lobby_name]['players'][player]['miss_count'] = -2
+        #todo: clear comment
+
+    current_lobbies['lobbies'][lobby_name]['status'] = 'Open'
+    current_lobbies['lobbies'][lobby_name]['roll_settings'] = {}
+    current_lobbies['lobbies'][lobby_name]['level'] = {}
+
+    player_list = current_lobbies['lobbies'][lobby_name]['players']
+
+    lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_name, host, player_list))
+
+    current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+async def has_everyone_submitted(ctx, current_lobbies, lobby_name, host):
+    if current_lobbies['lobbies'][lobby_name]['status'] != 'Playing':
+        return
+
+    if len(current_lobbies['lobbies'][lobby_name]['players']) == 0: #no players in lobby
+        current_lobbies['lobbies'][lobby_name]['status'] = 'Open'
+        await unroll_level(ctx, current_lobbies, lobby_name, host)
+        return
+
+    for player in current_lobbies['lobbies'][lobby_name]['players']:
+        if current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] == 'Not Yet Submitted':
+            return
+
+    await finish_match(ctx, current_lobbies, lobby_name, host)
 
 @lobby.command()
 async def ready(
@@ -684,7 +831,51 @@ async def unready(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-with open('key.txt', 'r') as key_file:
-    key = key_file.read().rstrip()
+@lobby.command()
+async def submit_misses(
+    ctx,
+    miss_count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many misses you got'),
+    comment: discord.Option(discord.SlashCommandOptionType.string, description = 'DOESNT CURRENTLY DO ANYTHING DONT USE (Optional) a short comment about the level')
+):
+    current_lobbies = read_json('current_lobbies.json')
 
-bot.run(key)
+    user = str(ctx.user.id)
+
+    # if user is not playing
+    if user not in current_lobbies['users_playing']:
+        await ctx.respond(f'You are not playing in any lobbies!')
+        return
+
+    lobby_user_is_in = current_lobbies['users_playing'][user]
+
+    # if lobby isn't playing
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
+        await ctx.respond(f'Your lobby has not yet rolled a level! (Contact <@1207345676141465622> if you made a mistake.)')
+        return
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Rolling':
+        await ctx.respond(f'Your lobby has not yet started playing! (Contact <@1207345676141465622> if you made a mistake.)')
+        return
+
+    # if user has already submitted
+    if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Submitted':
+        await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)')
+        return
+
+    current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Submitted'
+    current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['miss_count'] = miss_count
+
+    lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
+
+    await lobby_curr_message.edit(get_lobby_playing_message(current_lobbies['lobbies'][lobby_user_is_in]['players']))
+
+    await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_in, lobby_host)
+
+with open('key.txt', 'r') as key_file:
+    bot_api_key = key_file.read().rstrip()
+
+bot.run(bot_api_key)
