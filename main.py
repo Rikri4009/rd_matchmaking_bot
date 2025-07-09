@@ -488,6 +488,7 @@ async def unroll(
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['status'] = 'Open'
 
+    current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings'] = {}
     current_lobbies['lobbies'][lobby_user_is_hosting]['level'] = {}
 
     lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_user_is_hosting, user, current_lobbies['lobbies'][lobby_user_is_hosting]['players']))

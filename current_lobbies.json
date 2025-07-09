@@ -14,8 +14,9 @@
                     "ready_status": "Not Ready"
                 }
             },
+            "roll_settings": {},
             "level": {},
-            "message_id": 1392467741360914503
+            "message_id": 1392488359804276756
         }
     }
 }
