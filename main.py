@@ -335,6 +335,9 @@ async def leave(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
+
 @lobby.command()
 async def kick(
     ctx,
@@ -375,6 +378,7 @@ async def kick(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
+    await is_everyone_ready(ctx, current_lobbies, lobby_user_is_hosting, user)
 @lobby.command()
 async def delete(
     ctx
@@ -456,6 +460,26 @@ async def roll(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
+async def unroll_level(ctx, current_lobbies, lobby_name, host):
+    lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_name]['message_id'])
+    print(current_lobbies['lobbies'][lobby_name]['level'])
+    unrolled_artist = current_lobbies['lobbies'][lobby_name]['level']['artist']
+    unrolled_song = current_lobbies['lobbies'][lobby_name]['level']['song']
+    unrolled_authors = current_lobbies['lobbies'][lobby_name]['level']['authors']
+
+    await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!")
+
+    current_lobbies['lobbies'][lobby_name]['status'] = 'Open'
+
+    current_lobbies['lobbies'][lobby_name]['roll_settings'] = {}
+    current_lobbies['lobbies'][lobby_name]['level'] = {}
+
+    lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_name, host, current_lobbies['lobbies'][lobby_name]['players']))
+
+    current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
 @lobby.command()
 async def unroll(
     ctx
@@ -479,23 +503,7 @@ async def unroll(
         await ctx.respond(f'Your lobby is already playing! Wait for everyone to finish.')
         return
 
-    lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
-    unrolled_artist = current_lobbies['lobbies'][lobby_user_is_hosting]['level']['artist']
-    unrolled_song = current_lobbies['lobbies'][lobby_user_is_hosting]['level']['song']
-    unrolled_authors = current_lobbies['lobbies'][lobby_user_is_hosting]['level']['authors']
-
-    await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!")
-
-    current_lobbies['lobbies'][lobby_user_is_hosting]['status'] = 'Open'
-
-    current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings'] = {}
-    current_lobbies['lobbies'][lobby_user_is_hosting]['level'] = {}
-
-    lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_user_is_hosting, user, current_lobbies['lobbies'][lobby_user_is_hosting]['players']))
-
-    current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'] = lobby_new_message.id
-
-    write_json(current_lobbies, 'current_lobbies.json')
+    await unroll_level(ctx, current_lobbies, lobby_user_is_hosting, user)
 
 @lobby.command()
 async def already_seen(
@@ -543,6 +551,50 @@ async def already_seen(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
+async def is_everyone_ready(ctx, current_lobbies, lobby_name, host):
+    if current_lobbies['lobbies'][lobby_name]['status'] != 'Rolling':
+        return
+
+    if len(current_lobbies['lobbies'][lobby_name]['players']) == 0: #no players in lobby
+        current_lobbies['lobbies'][lobby_name]['status'] == 'Open'
+        await unroll_level(ctx, current_lobbies, lobby_name, host)
+        return
+
+    for player in current_lobbies['lobbies'][lobby_name]['players']:
+        if player['ready_status'] == 'Not Ready':
+            return
+
+    #
+
+@lobby.command()
+async def ready(
+    ctx
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is not playing
+    if user not in current_lobbies['users_playing']:
+        await ctx.respond(f'You are not playing in any lobbies!')
+        return
+
+    lobby_user_is_in = current_lobbies['users_playing'][user]
+
+    # if level isn't rolled yet
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
+        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        return
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing':
+        await ctx.respond(f'Your lobby is already playing!')
+        return
+
+    current_lobbies['lobbies'][lobby_user_is_in][user]['ready_status'] = 'Ready'
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()

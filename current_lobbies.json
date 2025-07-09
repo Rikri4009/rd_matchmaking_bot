@@ -2,21 +2,15 @@
     "users_hosting": {
         "1207345676141465622": "a"
     },
-    "users_playing": {
-        "1207345676141465622": "a"
-    },
+    "users_playing": {},
     "lobbies": {
         "a": {
             "status": "Open",
             "host": "1207345676141465622",
-            "players": {
-                "1207345676141465622": {
-                    "ready_status": "Not Ready"
-                }
-            },
+            "players": {},
             "roll_settings": {},
             "level": {},
-            "message_id": 1392488359804276756
+            "message_id": 1392558431541399552
         }
     }
 }
