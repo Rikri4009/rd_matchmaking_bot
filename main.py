@@ -6,6 +6,7 @@ import random
 import os
 import re
 from threading import Thread, Lock
+import time
 
 users_rdsettings_mutex = Lock() #I hope this works???
 current_games_mutex = Lock()
@@ -181,6 +182,16 @@ def get_lobby_rolling_message(player_id_dict, level_chosen):
 Otherwise, do \"**/lobby ready**\" when you\'re at the button screen.\n\
 Once everyone readies, the countdown will begin!\n\
 The host can do \"**/lobby unroll**\" to trash this selection and allow more players to join the lobby.\n\n{ready_list}\n{get_level_chosen_message(level_chosen)}'
+
+def get_lobby_playing_message(player_id_dict):
+    submitted_list = ''
+
+    for id in player_id_dict:
+        submitted_list = submitted_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
+
+    return f'Make sure you do \"**/lobby already_seen**\" if you recognize this level!\n\
+Otherwise, when you\'re done, do \"**/lobby submit_misses**\" to submit your miss count (and optionally add a comment).\n\
+Once everyone submits, final results will be posted. (The host should kick AFK players.)'
 
 def get_lobby_message(status, lobby_name, host_id, player_id_dict, level_chosen):
     if status == 'Open':
@@ -379,6 +390,7 @@ async def kick(
     write_json(current_lobbies, 'current_lobbies.json')
 
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_hosting, user)
+
 @lobby.command()
 async def delete(
     ctx
@@ -550,12 +562,38 @@ async def already_seen(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
+async def begin_match(ctx, current_lobbies, lobby_name):
+    current_lobbies['lobbies'][lobby_name]['status'] = 'Playing'
+
+    for player in current_lobbies['lobbies'][lobby_name]['players']:
+        current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] = 'Not Yet Submitted'
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
+    await ctx.channel.send('**Beginning match in 10 seconds!**')
+    time.sleep(7)
+
+    await ctx.channel.send('**3**')
+    time.sleep(1)
+    await ctx.channel.send('**2**')
+    time.sleep(1)
+    await ctx.channel.send('**1**')
+    time.sleep(1)
+    await ctx.channel.send('**GO!**')
+    time.sleep(10)
+
+    lobby_new_message = await ctx.channel.send(get_lobby_playing_message(current_lobbies['lobbies'][lobby_name]['players']))
+
+    current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
 async def is_everyone_ready(ctx, current_lobbies, lobby_name, host):
     if current_lobbies['lobbies'][lobby_name]['status'] != 'Rolling':
         return
 
     if len(current_lobbies['lobbies'][lobby_name]['players']) == 0: #no players in lobby
-        current_lobbies['lobbies'][lobby_name]['status'] == 'Open'
+        current_lobbies['lobbies'][lobby_name]['status'] = 'Open'
         await unroll_level(ctx, current_lobbies, lobby_name, host)
         return
 
@@ -563,7 +601,7 @@ async def is_everyone_ready(ctx, current_lobbies, lobby_name, host):
         if current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] == 'Not Ready':
             return
 
-    print('big mistake')
+    await begin_match(ctx, current_lobbies, lobby_name)
 
 @lobby.command()
 async def ready(
