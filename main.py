@@ -235,6 +235,7 @@ async def create(
     current_lobbies['lobbies'][name]['status'] = 'Open'
     current_lobbies['lobbies'][name]['host'] = user
     current_lobbies['lobbies'][name]['players'] = {}
+    current_lobbies['lobbies'][name]['roll_settings'] = {}
     current_lobbies['lobbies'][name]['level'] = {}
 
     message = await ctx.channel.send(get_lobby_open_message(name, user, []))
@@ -436,8 +437,12 @@ async def roll(
         return
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['status'] = 'Rolling'
+    current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings']['peer_reviewed'] = peer_reviewed
+    current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings']['played_before'] = played_before
+    current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings']['difficulty'] = difficulty
+    roll_player_id_list = (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys()
 
-    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys())
+    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, roll_player_id_list)
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['level'] = level_chosen
 
@@ -490,6 +495,53 @@ async def unroll(
     current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'] = lobby_new_message.id
 
     write_json(current_lobbies, 'current_lobbies.json')
+
+@lobby.command()
+async def already_seen(
+    ctx
+):
+    current_lobbies = read_json('current_lobbies.json')
+
+    user = str(ctx.user.id)
+
+    # if user is not playing
+    if user not in current_lobbies['users_playing']:
+        await ctx.respond(f'You are not playing in any lobbies!')
+        return
+
+    lobby_user_is_in = current_lobbies['users_playing'][user]
+
+    # if level isn't rolled yet
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
+        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        return
+
+    # if rolling
+    if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Rolling':
+        lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
+        rerolled_artist = current_lobbies['lobbies'][lobby_user_is_in]['level']['artist']
+        rerolled_song = current_lobbies['lobbies'][lobby_user_is_in]['level']['song']
+        rerolled_authors = current_lobbies['lobbies'][lobby_user_is_in]['level']['authors']
+
+        await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!")
+
+        new_peer_reviewed = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['peer_reviewed']
+        new_played_before = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['played_before']
+        new_difficulty = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['difficulty']
+        roll_player_id_list = (current_lobbies['lobbies'][lobby_user_is_in]['players']).keys()
+
+        new_level_chosen = roll_random_level(ctx, new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list)
+
+        current_lobbies['lobbies'][lobby_user_is_in]['level'] = new_level_chosen
+
+        lobby_new_message = await ctx.channel.send(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_in]['players'], new_level_chosen))
+
+        current_lobbies['lobbies'][lobby_user_is_in]['message_id'] = lobby_new_message.id
+    elif current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing': #if playing
+        print('ahh')
+
+    write_json(current_lobbies, 'current_lobbies.json')
+
 
 with open('key.txt', 'r') as key_file:
     key = key_file.read().rstrip()
