@@ -1,0 +1,30 @@
+{
+    "1207345676141465622": {
+        "exp": 4,
+        "matches_played": 2,
+        "opponents_beaten": 1,
+        "opponents_beaten_list": [],
+        "easy_s_ranked": 0,
+        "medium_s_ranked": 0,
+        "tough_s_ranked": 0,
+        "vt_s_ranked": 0,
+        "largest_match_played": 2,
+        "largest_match_won": 2,
+        "nr_played": 0,
+        "polarity_played": 0
+    },
+    "231573791136808960": {
+        "exp": 2,
+        "matches_played": 1,
+        "opponents_beaten": 0,
+        "opponents_beaten_list": [],
+        "easy_s_ranked": 0,
+        "medium_s_ranked": 0,
+        "tough_s_ranked": 0,
+        "vt_s_ranked": 0,
+        "largest_match_played": 2,
+        "largest_match_won": 0,
+        "nr_played": 0,
+        "polarity_played": 0
+    }
+}
