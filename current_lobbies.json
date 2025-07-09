@@ -12,7 +12,15 @@
             "players": {
                 "1207345676141465622": "Not Ready"
             },
-            "message_id": 1392241777569824839
+            "level": {
+                "authors": "MarioMak967",
+                "artist": "Virtual Riot",
+                "song": "Evil Gameboy",
+                "difficulty": "Tough",
+                "peer review status": "Peer Reviewed",
+                "zip": "https://codex.rhythm.cafe/evil-gam-TpFqCVGRyvQ.rdzip"
+            },
+            "message_id": 1392432377699110922
         }
     }
 }
