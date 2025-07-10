@@ -246,6 +246,11 @@ async def achievements(
     achievement_list['Secret']['So Juxta']['Assoc_Stat'] = 'polarity_played'
     achievement_list['Secret']['So Juxta']['Requirement'] = 5
 
+    achievement_list['Secret']['Hard-Fought Victory'] = {}
+    achievement_list['Secret']['Hard-Fought Victory']['Description'] = 'Win a 20-player match... on a Tough level or harder'
+    achievement_list['Secret']['Hard-Fought Victory']['Assoc_Stat'] = 'tough_plus_largest_match_played'
+    achievement_list['Secret']['Hard-Fought Victory']['Requirement'] = 20
+
     achievements_message = '**Tiered Achivements:**\n'
 
     for achievement in achievement_list['Tiered']:
@@ -309,6 +314,19 @@ async def achievements(
     
     if no_srt3_semifinalists_beaten >= 3:
         achievements_message = achievements_message + f':medal: [Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists"): ({no_srt3_semifinalists_beaten}/3)\n'
+
+    no_srt3_semifinalists_beaten = 0
+    if '298722923626364928' in this_user_stats['tough_plus_opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '1207345676141465622' in this_user_stats['tough_plus_opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '943278556543352873' in this_user_stats['tough_plus_opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '224514766486372352' in this_user_stats['tough_plus_opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    
+    if no_srt3_semifinalists_beaten >= 3:
+        achievements_message = achievements_message + f':medal: [Tough Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists... on Tough levels or harder"): ({no_srt3_semifinalists_beaten}/3)\n'
 
     tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f'Achievements ({this_user_total_achievement_count}★)', description = achievements_message)
 
@@ -860,6 +878,7 @@ async def finish_match(ctx, lobby_name, host):
             users_stats[player]['matches_played'] = 0
             users_stats[player]['opponents_beaten'] = 0
             users_stats[player]['opponents_beaten_list'] = []
+            users_stats[player]['tough_plus_opponents_beaten_list'] = []
             users_stats[player]['unique_opponents_beaten'] = 0
             users_stats[player]['easy_s_ranked'] = 0
             users_stats[player]['medium_s_ranked'] = 0
@@ -867,8 +886,11 @@ async def finish_match(ctx, lobby_name, host):
             users_stats[player]['vt_s_ranked'] = 0
             users_stats[player]['largest_match_played'] = 0
             users_stats[player]['largest_match_won'] = 0
+            users_stats[player]['tough_plus_largest_match_won'] = 0
             users_stats[player]['nr_played'] = 0
             users_stats[player]['polarity_played'] = 0
+
+        level_is_tough_plus = (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Tough') or (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Very Tough')
 
         users_stats[player]['exp'] = users_stats[player]['exp'] + num_players*2 - players_places[player]
         users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
@@ -878,6 +900,10 @@ async def finish_match(ctx, lobby_name, host):
                 users_stats[player]['opponents_beaten_list'].append(player_beaten)
                 users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
                 users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
+
+                if level_is_tough_plus:
+                    users_stats[player]['tough_plus_opponents_beaten_list'].append(player_beaten)
+                    users_stats[player]['tough_plus_opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
         if (sorted_misses[player] == 0) and (current_lobbies['lobbies'][lobby_name]['roll_settings']['played_before'] == 'No'):
             if current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Easy':
                 users_stats[player]['easy_s_ranked'] = users_stats[player]['easy_s_ranked'] + 1
@@ -891,6 +917,8 @@ async def finish_match(ctx, lobby_name, host):
             users_stats[player]['largest_match_played'] = len(sorted_misses)
         if (players_places[player] == 1) and (len(sorted_misses) > users_stats[player]['largest_match_won']):
             users_stats[player]['largest_match_won'] = len(sorted_misses)
+        if (players_places[player] == 1) and (len(sorted_misses) > users_stats[player]['tough_plus_largest_match_won']) and level_is_tough_plus:
+            users_stats[player]['tough_plus_largest_match_won'] = len(sorted_misses)
         if current_lobbies['lobbies'][lobby_name]['level']['peer review status'] == 'Non-Refereed':
             users_stats[player]['nr_played'] = users_stats[player]['nr_played'] + 1
         if current_lobbies['lobbies'][lobby_name]['roll_settings']['difficulty'] == 'Polarity':
