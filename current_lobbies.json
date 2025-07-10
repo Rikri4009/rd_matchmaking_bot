@@ -1,28 +1,5 @@
 {
-    "users_hosting": {
-        "1207345676141465622": "a"
-    },
-    "users_playing": {
-        "231573791136808960": "a",
-        "1207345676141465622": "a"
-    },
-    "lobbies": {
-        "a": {
-            "status": "Open",
-            "host": "1207345676141465622",
-            "players": {
-                "231573791136808960": {
-                    "ready_status": "Not Ready",
-                    "miss_count": -2
-                },
-                "1207345676141465622": {
-                    "ready_status": "Not Ready",
-                    "miss_count": -2
-                }
-            },
-            "roll_settings": {},
-            "level": {},
-            "message_id": 1392861648875950081
-        }
-    }
+    "users_hosting": {},
+    "users_playing": {},
+    "lobbies": {}
 }

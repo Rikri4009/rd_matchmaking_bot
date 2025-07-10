@@ -857,7 +857,7 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
         users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
         users_stats[player]['opponents_beaten'] = users_stats[player]['opponents_beaten'] + num_players - players_places[player]
         for player_beaten in players_places:
-            if players_places[player] <= players_places[player_beaten]: #if player did better than player_beaten
+            if (players_places[player] <= players_places[player_beaten]) and (player_beaten != player): #if player did better than player_beaten
                 users_stats[player]['opponents_beaten_list'].append(player_beaten)
                 users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
                 users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
