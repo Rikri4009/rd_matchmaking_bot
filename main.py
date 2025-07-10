@@ -55,7 +55,7 @@ def create_user_id_list(players, caller_id):
     user_id_list = re.findall(r"\<\@(.*?)\>", players)
     return list(set(user_id_list)) #remove duplicates
 
-def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_list):
+def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
 
     cafe_hashed = {}
 
@@ -99,13 +99,16 @@ def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_lis
 
                 zip = line['url2']
 
+                image_url = line['image']
+
                 cafe_hashed[hash_hex] = {
                     'authors': authors,
                     'artist': artist,
                     'song': song,
                     'difficulty': level_diff,
                     'peer review status': level_pr_status,
-                    'zip': zip}
+                    'zip': zip,
+                    'image_url': image_url}
 
     if played_before == 'No': #remove played levels
         for uid in user_id_list:
@@ -137,7 +140,7 @@ def roll_random_level(ctx, peer_reviewed, played_before, difficulty, user_id_lis
     return random.choice(list(cafe_hashed.values()))
 
 def get_level_chosen_message(level_chosen):
-    return f"Your level: {level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
+    return f"{level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
 Difficulty: {level_chosen['difficulty']}\n\
 {level_chosen['peer review status']}\n\
 {level_chosen['zip']}"
@@ -150,9 +153,11 @@ async def roll_level(
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
     players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
 ):
-    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
+    level_chosen = roll_random_level(peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
 
-    await ctx.respond(get_level_chosen_message(level_chosen))
+    level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Here's your level:", description = f"{get_level_chosen_message(level_chosen)}", image = level_chosen['image_url'])
+
+    await ctx.respond(embed=level_embed)
 
 @bot.command()
 async def achievements(
@@ -297,48 +302,36 @@ async def achievements(
 
 lobby = bot.create_group('lobby', 'Lobby/matchmaking commands')
 
-def get_lobby_open_message(lobby_name, host_id, player_id_dict):
+def get_lobby_open_embed(lobby_name, host_id, player_id_dict):
     player_list = []
     for id in player_id_dict:
         player_list.append('<@' + id + '>')
 
     players = ', '.join(player_list)
 
-    return '# Lobby: \"' + lobby_name + '\" is open!\n\
-Do \"**/lobby join ' + lobby_name + '**\" to join. (The host should do this if they want to play!)\n\
-Do \"**/lobby leave**\" to leave.\n\
-The host can do \"**/lobby delete**\" to delete this lobby.\n\
-The host can do \"**/lobby kick [player]**\" to kick a player.\n\
-Once everyone has joined, the host should do \"**/lobby roll**\" to roll a level.\n\n\
-**Host:** <@' + host_id + '>\n\
-**Players:** ' + players
+    return discord.Embed(colour = discord.Colour.blue(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nDo \"**/lobby join {lobby_name}**\" to join.\n\n**Players:** {players}")
 
-def get_lobby_rolling_message(player_id_dict, level_chosen):
+def get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen):
     ready_list = ''
 
     for id in player_id_dict:
         ready_list = ready_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-    return f'Make sure you do \"**/lobby already_seen**\" if you recognize this level!\n\
-Otherwise, do \"**/lobby ready**\" when you\'re at the button screen.\n\
-Once everyone readies, the countdown will begin!\n\
-The host can do \"**/lobby unroll**\" to trash this selection and allow more players to join the lobby.\n\n{ready_list}\n{get_level_chosen_message(level_chosen)}'
+    return discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, do \"**/lobby ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n{get_level_chosen_message(level_chosen)}", image = level_chosen['image_url'])
 
-def get_lobby_playing_message(player_id_dict):
+def get_lobby_playing_embed(lobby_name, host_id, player_id_dict):
     submitted_list = ''
 
     for id in player_id_dict:
         submitted_list = submitted_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-    return f'Make sure you do \"**/lobby already_seen**\" if you recognize this level!\n\
-Otherwise, when you\'re done, do \"**/lobby submit_misses**\" to submit your miss count (and optionally add a comment).\n\
-Once everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}'
+    return discord.Embed(colour = discord.Colour.red(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, when you\'re done, do \"**/lobby submit_misses**\" to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
 
-def get_lobby_message(status, lobby_name, host_id, player_id_dict, level_chosen):
+def get_lobby_embed(status, lobby_name, host_id, player_id_dict, level_chosen):
     if status == 'Open':
-        return get_lobby_open_message(lobby_name, host_id, player_id_dict)
+        return get_lobby_open_embed(lobby_name, host_id, player_id_dict)
     elif status == 'Rolling':
-        return get_lobby_rolling_message(player_id_dict, level_chosen)
+        return get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen)
     elif status == 'Playing':
         print('todo')
     else:
@@ -390,9 +383,15 @@ async def create(
     current_lobbies['lobbies'][name]['roll_settings'] = {}
     current_lobbies['lobbies'][name]['level'] = {}
 
-    message = await ctx.channel.send(get_lobby_open_message(name, user, []))
+    message = await ctx.channel.send(embed=get_lobby_open_embed(name, user, []))
 
     current_lobbies['lobbies'][name]['message_id'] = message.id
+
+    await ctx.respond(f"<@{user}> You have started hosting the lobby \"{name}\"!\n\
+Make sure to do \"**/lobby join {name}**\" if you want to play.\n\
+You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
+You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
+Once everyone has joined, do \"**/lobby roll**\" to roll a level.")
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -442,7 +441,7 @@ async def join(
     current_lobbies['lobbies'][name]['players'][user]['ready_status'] = 'Not Ready'
     current_lobbies['lobbies'][name]['players'][user]['miss_count'] = -2
 
-    await ctx.respond(f'Joined \"{name}\".')
+    await ctx.respond(f'Joined \"{name}\".\nDo \"**/lobby leave**\" to leave.\nWait for the host to roll a level...')
 
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][name]['message_id'])
@@ -451,7 +450,7 @@ async def join(
     lobby_players = current_lobbies['lobbies'][name]['players']
     level_chosen = current_lobbies['lobbies'][name]['level']
 
-    await lobby_curr_message.edit(get_lobby_message(lobby_status, name, lobby_host, lobby_players, level_chosen))
+    await lobby_curr_message.edit(embed=get_lobby_embed(lobby_status, name, lobby_host, lobby_players, level_chosen))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -484,7 +483,7 @@ async def leave(
     lobby_players = current_lobbies['lobbies'][lobby_user_is_in]['players']
     level_chosen = current_lobbies['lobbies'][lobby_user_is_in]['level']
 
-    await lobby_curr_message.edit(get_lobby_message(lobby_status, lobby_user_is_in, lobby_host, lobby_players, level_chosen))
+    await lobby_curr_message.edit(embed=get_lobby_embed(lobby_status, lobby_user_is_in, lobby_host, lobby_players, level_chosen))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -528,7 +527,7 @@ async def kick(
     lobby_players = (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys()
     level_chosen = current_lobbies['lobbies'][lobby_user_is_hosting]['level']
 
-    await lobby_curr_message.edit(get_lobby_message(lobby_status, lobby_user_is_hosting, user, lobby_players, level_chosen))
+    await lobby_curr_message.edit(embed=get_lobby_embed(lobby_status, lobby_user_is_hosting, user, lobby_players, level_chosen))
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -552,7 +551,7 @@ async def delete(
 
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
-    await lobby_curr_message.edit(f"This lobby \"{lobby_user_is_hosting}\" has been deleted!")
+    await lobby_curr_message.edit(f"This lobby \"{lobby_user_is_hosting}\" has been deleted!", embed=None)
 
     del current_lobbies['users_hosting'][user] #user is no longer hosting a lobby
 
@@ -602,15 +601,17 @@ async def roll(
     current_lobbies['lobbies'][lobby_user_is_hosting]['roll_settings']['difficulty'] = difficulty
     roll_player_id_list = (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys()
 
-    level_chosen = roll_random_level(ctx, peer_reviewed, played_before, difficulty, roll_player_id_list)
+    level_chosen = roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list)
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['level'] = level_chosen
 
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
 
-    await lobby_curr_message.edit(f'The lobby \"{lobby_user_is_hosting}\" has rolled a level!')
+    await lobby_curr_message.edit(f'The lobby \"{lobby_user_is_hosting}\" has rolled a level!', embed=None)
 
-    lobby_new_message = await ctx.channel.send(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_hosting]['players'], level_chosen))
+    lobby_new_message = await ctx.channel.send(embed=get_lobby_rolling_embed(lobby_user_is_hosting, user, current_lobbies['lobbies'][lobby_user_is_hosting]['players'], level_chosen))
+
+    await ctx.respond(f'<@{user}> You have rolled a level! No more players may join this lobby.\nYou can do \"**/lobby unroll**\" to trash this selection and allow more players to join.')
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'] = lobby_new_message.id
 
@@ -622,14 +623,14 @@ async def unroll_level(ctx, current_lobbies, lobby_name, host):
     unrolled_song = current_lobbies['lobbies'][lobby_name]['level']['song']
     unrolled_authors = current_lobbies['lobbies'][lobby_name]['level']['authors']
 
-    await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!")
+    await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!", embed=None)
 
     current_lobbies['lobbies'][lobby_name]['status'] = 'Open'
 
     current_lobbies['lobbies'][lobby_name]['roll_settings'] = {}
     current_lobbies['lobbies'][lobby_name]['level'] = {}
 
-    lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_name, host, current_lobbies['lobbies'][lobby_name]['players']))
+    lobby_new_message = await ctx.channel.send(embed=get_lobby_open_embed(lobby_name, host, current_lobbies['lobbies'][lobby_name]['players']))
 
     current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
 
@@ -687,7 +688,7 @@ async def already_seen(
         rerolled_song = current_lobbies['lobbies'][lobby_user_is_in]['level']['song']
         rerolled_authors = current_lobbies['lobbies'][lobby_user_is_in]['level']['authors']
 
-        await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!")
+        await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!", embed=None)
 
         # unready everyone
         for player in current_lobbies['lobbies'][lobby_user_is_in]['players']:
@@ -699,11 +700,12 @@ async def already_seen(
         new_difficulty = current_lobbies['lobbies'][lobby_user_is_in]['roll_settings']['difficulty']
         roll_player_id_list = (current_lobbies['lobbies'][lobby_user_is_in]['players']).keys()
 
-        new_level_chosen = roll_random_level(ctx, new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list)
+        new_level_chosen = roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list)
 
         current_lobbies['lobbies'][lobby_user_is_in]['level'] = new_level_chosen
 
-        lobby_new_message = await ctx.channel.send(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_in]['players'], new_level_chosen))
+        lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+        lobby_new_message = await ctx.channel.send(embed=get_lobby_rolling_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players'], new_level_chosen))
 
         current_lobbies['lobbies'][lobby_user_is_in]['message_id'] = lobby_new_message.id
 
@@ -720,7 +722,8 @@ async def already_seen(
 
         lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
 
-        await lobby_curr_message.edit(get_lobby_playing_message(current_lobbies['lobbies'][lobby_user_is_in]['players']))
+        lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+        await lobby_curr_message.edit(embed=get_lobby_playing_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
         await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
 
@@ -749,7 +752,8 @@ async def begin_match(ctx, current_lobbies, lobby_name):
     await ctx.channel.send('**GO!**')
     time.sleep(10)
 
-    lobby_new_message = await ctx.channel.send(get_lobby_playing_message(current_lobbies['lobbies'][lobby_name]['players']))
+    lobby_host = current_lobbies['lobbies'][lobby_name]['host']
+    lobby_new_message = await ctx.channel.send(embed=get_lobby_playing_embed(lobby_name, lobby_host, current_lobbies['lobbies'][lobby_name]['players']))
 
     current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
 
@@ -805,14 +809,14 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
     level_artist = current_lobbies['lobbies'][lobby_name]['level']['artist']
     level_song = current_lobbies['lobbies'][lobby_name]['level']['song']
     level_authors = current_lobbies['lobbies'][lobby_name]['level']['authors']
-    placement_message = f"# Results for {level_artist} - {level_song} (by {level_authors}):\n"
+    placement_message = ''
 
     num_players = len(players_places) #for exp calculation
 
     users_stats = read_json('users_stats.json')
 
     for player in players_places:
-        placement_message = placement_message + f"Place {players_places[player]}: <@{player}> (+{num_players*2 - players_places[player]} exp)\n" #(2*players - place) exp gained
+        placement_message = placement_message + f"Place {players_places[player]}: <@{player}> with {sorted_misses[player]} misses (+{num_players*2 - players_places[player]} exp)\n" #(2*players - place) exp gained
 
         if player not in users_stats:
             users_stats[player] = {}
@@ -858,7 +862,8 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
 
     write_json(users_stats, 'users_stats.json')
 
-    await ctx.channel.send(placement_message)
+    placement_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"Results for {level_artist} - {level_song} (by {level_authors}):", description = placement_message)
+    await ctx.channel.send(embed=placement_embed)
 
     for player in current_lobbies['lobbies'][lobby_name]['players']:
         current_lobbies['lobbies'][lobby_name]['players'][player]['ready_status'] = 'Not Ready'
@@ -871,7 +876,7 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
 
     player_list = current_lobbies['lobbies'][lobby_name]['players']
 
-    lobby_new_message = await ctx.channel.send(get_lobby_open_message(lobby_name, host, player_list))
+    lobby_new_message = await ctx.channel.send(embed=get_lobby_open_embed(lobby_name, host, player_list))
 
     current_lobbies['lobbies'][lobby_name]['message_id'] = lobby_new_message.id
 
@@ -925,13 +930,13 @@ async def ready(
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
     lobby_level_chosen = current_lobbies['lobbies'][lobby_user_is_in]['level']
 
-    await lobby_curr_message.edit(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await lobby_curr_message.edit(embed=get_lobby_rolling_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
 
     await ctx.respond(f'Readied!')
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
 @lobby.command()
@@ -967,7 +972,8 @@ async def unready(
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
     lobby_level_chosen = current_lobbies['lobbies'][lobby_user_is_in]['level']
 
-    await lobby_curr_message.edit(get_lobby_rolling_message(current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await lobby_curr_message.edit(embed=get_lobby_rolling_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
 
     await ctx.respond(f'Unreadied!')
 
@@ -976,8 +982,7 @@ async def unready(
 @lobby.command()
 async def submit_misses(
     ctx,
-    miss_count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many misses you got'),
-    comment: discord.Option(discord.SlashCommandOptionType.string, description = 'DOESNT CURRENTLY DO ANYTHING DONT USE (Optional) a short comment about the level')
+    miss_count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many misses you got')
 ):
     current_lobbies = read_json('current_lobbies.json')
 
@@ -1008,13 +1013,13 @@ async def submit_misses(
 
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
 
-    await lobby_curr_message.edit(get_lobby_playing_message(current_lobbies['lobbies'][lobby_user_is_in]['players']))
+    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
+    await lobby_curr_message.edit(embed=get_lobby_playing_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
     await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-    lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
 with open('key.txt', 'r') as key_file:
