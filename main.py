@@ -274,11 +274,24 @@ async def achievements(
         ach_user_current_stat = this_user_stats[ach_assoc_stat]
 
         if ach_user_current_stat >= ach_requirement:
-            achievements_message = achievements_message + f'[:medal: {achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
+            achievements_message = achievements_message + f':medal: [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
 
             this_user_total_achievement_count = this_user_total_achievement_count + 1
 
-    tooltipEmbed = discord.Embed(colour = discord.Colour.blue(), title = f'Achievements ({this_user_total_achievement_count}★)', description = achievements_message)
+    no_srt3_semifinalists_beaten = 0
+    if '298722923626364928' in this_user_stats['opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '1207345676141465622' in this_user_stats['opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '943278556543352873' in this_user_stats['opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    if '224514766486372352' in this_user_stats['opponents_beaten_list']:
+        no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
+    
+    if no_srt3_semifinalists_beaten >= 3:
+        achievements_message = achievements_message + f':medal: [Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists"): ({no_srt3_semifinalists_beaten}/3)\n'
+
+    tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f'Achievements ({this_user_total_achievement_count}★)', description = achievements_message)
 
     await ctx.respond(embed=tooltipEmbed)
 
@@ -842,8 +855,6 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
             users_stats[player]['nr_played'] = users_stats[player]['nr_played'] + 1
         if current_lobbies['lobbies'][lobby_name]['roll_settings']['difficulty'] == 'Polarity':
             users_stats[player]['polarity_played'] = users_stats[player]['polarity_played'] + 1
-
-        players_higher_places.append(player)
 
     write_json(users_stats, 'users_stats.json')
 
