@@ -248,7 +248,7 @@ async def achievements(
 
     achievement_list['Secret']['Hard-Fought Victory'] = {}
     achievement_list['Secret']['Hard-Fought Victory']['Description'] = 'Win a 20-player match... on a Tough level or harder'
-    achievement_list['Secret']['Hard-Fought Victory']['Assoc_Stat'] = 'tough_plus_largest_match_played'
+    achievement_list['Secret']['Hard-Fought Victory']['Assoc_Stat'] = 'tough_plus_largest_match_won'
     achievement_list['Secret']['Hard-Fought Victory']['Requirement'] = 20
 
     achievements_message = '**Tiered Achivements:**\n'
