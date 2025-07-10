@@ -314,6 +314,7 @@ async def achievements(
     
     if no_srt3_semifinalists_beaten >= 3:
         achievements_message = achievements_message + f':medal: [Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists"): ({no_srt3_semifinalists_beaten}/3)\n'
+        this_user_total_achievement_count = this_user_total_achievement_count + 1
 
     no_srt3_semifinalists_beaten = 0
     if '298722923626364928' in this_user_stats['tough_plus_opponents_beaten_list']:
@@ -327,6 +328,7 @@ async def achievements(
     
     if no_srt3_semifinalists_beaten >= 3:
         achievements_message = achievements_message + f':medal: [Tough Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists... on Tough levels or harder"): ({no_srt3_semifinalists_beaten}/3)\n'
+        this_user_total_achievement_count = this_user_total_achievement_count + 1
 
     tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f'Achievements ({this_user_total_achievement_count}★)', description = achievements_message)
 
