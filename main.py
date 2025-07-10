@@ -26,7 +26,7 @@ def write_json(dict, filename):
     with open(os.path.realpath(__file__) + '\\..\\' + filename, 'w') as out_file:
         out_file.write(json_object)
 
-@bot.command()
+@bot.command(description="Upload your \"settings.rdsave\" file, located in the \"User\" directory of your RD installation")
 async def upload_rdsettings(
     ctx,
     settings_rdsave: discord.Option(discord.SlashCommandOptionType.attachment)
@@ -145,8 +145,8 @@ Difficulty: {level_chosen['difficulty']}\n\
 {level_chosen['peer review status']}\n\
 {level_chosen['zip']}"
 
-@bot.command()
-async def roll_level(
+@bot.command(description="(Use \"/lobby roll\" for lobbies!) Rolls a random level with specified settings")
+async def out_of_lobby_roll(
     ctx,
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
     played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
@@ -167,7 +167,7 @@ async def roll_level(
 
     await ctx.respond(embed=level_embed)
 
-@bot.command()
+@bot.command(description="View your milestones")
 async def achievements(
     ctx
 ):
@@ -350,7 +350,7 @@ def get_lobby_embed(status, lobby_name, host_id, player_id_dict, level_chosen):
     else:
         print('Huge Mistake')
 
-@lobby.command()
+@lobby.command(description="List all existing lobbies")
 async def list_all(
     ctx
 ):
@@ -367,7 +367,7 @@ async def list_all(
 
     await ctx.respond(lobby_list_message)
 
-@lobby.command()
+@lobby.command(description="Create a lobby")
 async def create(
     ctx,
     name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name')
@@ -408,7 +408,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-@lobby.command()
+@lobby.command(description="Join a specified lobby")
 async def join(
     ctx,
     name: discord.Option(discord.SlashCommandOptionType.string, description = 'Name of lobby to join')
@@ -468,7 +468,7 @@ async def join(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-@lobby.command()
+@lobby.command(description="Leave the lobby you're in")
 async def leave(
     ctx
 ):
@@ -506,7 +506,7 @@ async def leave(
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
     await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
-@lobby.command()
+@lobby.command(description="Kick a player from your lobby")
 async def kick(
     ctx,
     player: discord.Option(discord.SlashCommandOptionType.user)
@@ -549,7 +549,7 @@ async def kick(
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_hosting, user)
     await has_everyone_submitted(ctx, current_lobbies, lobby_user_is_hosting, user)
 
-@lobby.command()
+@lobby.command(description="Delete your lobby")
 async def delete(
     ctx
 ):
@@ -580,7 +580,7 @@ async def delete(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-@lobby.command()
+@lobby.command(description="Roll a random level for your lobby with specified settings")
 async def roll(
     ctx,
     peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
@@ -652,7 +652,7 @@ async def unroll_level(ctx, current_lobbies, lobby_name, host):
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-@lobby.command()
+@lobby.command(description="Trash your lobby's level selection and re-open it")
 async def unroll(
     ctx
 ):
@@ -679,7 +679,7 @@ async def unroll(
 
     await ctx.respond("Unrolled.", ephemeral=True)
 
-@lobby.command()
+@lobby.command(description="Use this command if you've seen the rolled level before")
 async def already_seen(
     ctx
 ):
@@ -857,7 +857,7 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
         users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
         users_stats[player]['opponents_beaten'] = users_stats[player]['opponents_beaten'] + num_players - players_places[player]
         for player_beaten in players_places:
-            if players_places[player] < players_places[player_beaten]: #if player did better than player_beaten
+            if players_places[player] <= players_places[player_beaten]: #if player did better than player_beaten
                 users_stats[player]['opponents_beaten_list'].append(player_beaten)
                 users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
                 users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
@@ -916,7 +916,7 @@ async def has_everyone_submitted(ctx, current_lobbies, lobby_name, host):
 
     await finish_match(ctx, current_lobbies, lobby_name, host)
 
-@lobby.command()
+@lobby.command(description="MAKE SURE YOU\'RE AT THE BUTTON SCREEN!")
 async def ready(
     ctx
 ):
@@ -958,7 +958,7 @@ async def ready(
 
     await is_everyone_ready(ctx, current_lobbies, lobby_user_is_in, lobby_host)
 
-@lobby.command()
+@lobby.command(description="Use this command if you\'re no longer ready")
 async def unready(
     ctx
 ):
@@ -998,7 +998,7 @@ async def unready(
 
     write_json(current_lobbies, 'current_lobbies.json')
 
-@lobby.command()
+@lobby.command(description="Submit your miss count")
 async def submit_misses(
     ctx,
     miss_count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many misses you got')
