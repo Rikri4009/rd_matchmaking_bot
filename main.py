@@ -207,17 +207,17 @@ async def achievements(
     achievement_list['Tiered']['Well Acquainted']['Requirements'] = [3, 10, 30, 100]
 
     achievement_list['Tiered']['Baking Cake Isn\'t Easy'] = {}
-    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Description'] = 'Easy levels S-ranked'
+    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Description'] = 'Easy levels S-ranked on sightread'
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Assoc_Stat'] = 'easy_s_ranked'
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 15, 40, 120]
 
     achievement_list['Tiered']['Middle Difficult'] = {}
-    achievement_list['Tiered']['Middle Difficult']['Description'] = 'Medium levels S-ranked'
+    achievement_list['Tiered']['Middle Difficult']['Description'] = 'Medium levels S-ranked on sightread'
     achievement_list['Tiered']['Middle Difficult']['Assoc_Stat'] = 'medium_s_ranked'
     achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 80]
 
     achievement_list['Tiered']['Flawless Performance'] = {}
-    achievement_list['Tiered']['Flawless Performance']['Description'] = 'Tough levels S-ranked'
+    achievement_list['Tiered']['Flawless Performance']['Description'] = 'Tough levels S-ranked on sightread'
     achievement_list['Tiered']['Flawless Performance']['Assoc_Stat'] = 'tough_s_ranked'
     achievement_list['Tiered']['Flawless Performance']['Requirements'] = [1, 3, 10, 30]
 
@@ -232,7 +232,7 @@ async def achievements(
     achievement_list['Secret']['Mega Lobby']['Requirement'] = 20
 
     achievement_list['Secret']['Godlike'] = {}
-    achievement_list['Secret']['Godlike']['Description'] = 'S-rank a Very Tough level'
+    achievement_list['Secret']['Godlike']['Description'] = 'S-rank a Very Tough level on sightread'
     achievement_list['Secret']['Godlike']['Assoc_Stat'] = 'vt_s_ranked'
     achievement_list['Secret']['Godlike']['Requirement'] = 1
 
@@ -878,7 +878,7 @@ async def finish_match(ctx, lobby_name, host):
                 users_stats[player]['opponents_beaten_list'].append(player_beaten)
                 users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
                 users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
-        if sorted_misses[player] == 0:
+        if (sorted_misses[player] == 0) and (current_lobbies['lobbies'][lobby_name]['roll_settings']['played_before'] == 'No'):
             if current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Easy':
                 users_stats[player]['easy_s_ranked'] = users_stats[player]['easy_s_ranked'] + 1
             elif current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Medium':
