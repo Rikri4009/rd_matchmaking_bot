@@ -137,6 +137,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
 
         cafe_hashed = new_cafe_hashed
 
+    print(len(cafe_hashed))
     return random.choice(list(cafe_hashed.values()))
 
 def get_level_chosen_message(level_chosen):
@@ -346,7 +347,7 @@ def get_lobby_embed(status, lobby_name, host_id, player_id_dict, level_chosen):
     elif status == 'Rolling':
         return get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen)
     elif status == 'Playing':
-        print('todo')
+        return get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
     else:
         print('Huge Mistake')
 
@@ -539,7 +540,7 @@ async def kick(
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
     lobby_status = current_lobbies['lobbies'][lobby_user_is_hosting]['status']
-    lobby_players = (current_lobbies['lobbies'][lobby_user_is_hosting]['players']).keys()
+    lobby_players = current_lobbies['lobbies'][lobby_user_is_hosting]['players']
     level_chosen = current_lobbies['lobbies'][lobby_user_is_hosting]['level']
 
     await lobby_curr_message.edit(embed=get_lobby_embed(lobby_status, lobby_user_is_hosting, user, lobby_players, level_chosen))
