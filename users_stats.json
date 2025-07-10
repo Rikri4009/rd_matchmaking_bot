@@ -1,37 +1,32 @@
 {
-    "1207345676141465622": {
-        "exp": 33,
-        "matches_played": 23,
-        "opponents_beaten": 499,
-        "opponents_beaten_list": [
-            "943278556543352873",
-            "298722923626364928",
-            "224514766486372352",
-            "1207345676141465622"
-        ],
-        "unique_opponents_beaten": 0,
-        "easy_s_ranked": 201,
-        "medium_s_ranked": 0,
-        "tough_s_ranked": 0,
-        "vt_s_ranked": 4,
-        "largest_match_played": 22,
-        "largest_match_won": 22,
-        "nr_played": 6,
-        "polarity_played": 5
-    },
     "231573791136808960": {
-        "exp": 2,
+        "exp": 3,
         "matches_played": 1,
-        "opponents_beaten": 0,
+        "opponents_beaten": 1,
         "opponents_beaten_list": [],
         "unique_opponents_beaten": 0,
         "easy_s_ranked": 0,
         "medium_s_ranked": 0,
         "tough_s_ranked": 0,
         "vt_s_ranked": 0,
-        "largest_match_played": 22,
-        "largest_match_won": 0,
-        "nr_played": 6,
+        "largest_match_played": 2,
+        "largest_match_won": 2,
+        "nr_played": 0,
+        "polarity_played": 0
+    },
+    "1207345676141465622": {
+        "exp": 3,
+        "matches_played": 1,
+        "opponents_beaten": 1,
+        "opponents_beaten_list": [],
+        "unique_opponents_beaten": 0,
+        "easy_s_ranked": 0,
+        "medium_s_ranked": 0,
+        "tough_s_ranked": 0,
+        "vt_s_ranked": 0,
+        "largest_match_played": 2,
+        "largest_match_won": 2,
+        "nr_played": 0,
         "polarity_played": 0
     }
 }

@@ -46,7 +46,7 @@ async def upload_rdsettings(
 
     write_json(users_rdsettings, 'users_rdsettings.json')
 
-    await ctx.respond(f'RDSettings updated!')
+    await ctx.respond(f'RDSettings updated!', ephemeral=True)
 
 def create_user_id_list(players, caller_id):
     if players == None:
@@ -153,7 +153,15 @@ async def roll_level(
     difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Polarity'], default = 'Any', description = 'Default: Any'),
     players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
 ):
-    level_chosen = roll_random_level(peer_reviewed, played_before, difficulty, create_user_id_list(players, str(ctx.user.id)))
+    user = str(ctx.user.id)
+
+    # if user doesn't have an rdsettings
+    rdsettings = read_json('users_rdsettings.json')
+    if user not in rdsettings:
+        await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsettings** to do this.)', ephemeral=True)
+        return
+
+    level_chosen = roll_random_level(peer_reviewed, played_before, difficulty, create_user_id_list(players, user))
 
     level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Here's your level:", description = f"{get_level_chosen_message(level_chosen)}", image = level_chosen['image_url'])
 
@@ -165,6 +173,11 @@ async def achievements(
 ):
     user = str(ctx.user.id)
     users_stats = read_json('users_stats.json')
+
+    if user not in users_stats:
+        await ctx.respond('You have not played any matches!', ephemeral = True)
+        return
+
     this_user_stats = users_stats[user]
     this_user_total_achievement_count = 0
 
@@ -345,7 +358,7 @@ async def list_all(
 
     # if there are no lobbies
     if len(current_lobbies['lobbies']) == 0:
-        await ctx.respond(f'There are currently no lobbies!')
+        await ctx.respond(f'There are currently no lobbies!', ephemeral=True)
         return
 
     lobby_list_message = ''
@@ -366,12 +379,12 @@ async def create(
     # if user is already in a lobby
     if (user in current_lobbies['users_playing']) or (user in current_lobbies['users_hosting']):
         lobby_user_is_in = (current_lobbies['users_playing'] | current_lobbies['users_hosting'])[user]
-        await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!')
+        await ctx.respond(f'You are already in the lobby \"{lobby_user_is_in}\"!', ephemeral=True)
         return
 
     # if a lobby with that name exists
     if name in current_lobbies['lobbies']:
-        await ctx.respond(f'That lobby name is already in use!')
+        await ctx.respond(f'That lobby name is already in use!', ephemeral=True)
         return
 
     current_lobbies['users_hosting'][user] = name
@@ -391,7 +404,7 @@ async def create(
 Make sure to do \"**/lobby join {name}**\" if you want to play.\n\
 You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
 You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
-Once everyone has joined, do \"**/lobby roll**\" to roll a level.")
+Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=True)
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -407,32 +420,32 @@ async def join(
     # if user is playing in a lobby
     if user in current_lobbies['users_playing']:
         lobby_user_is_in = current_lobbies['users_playing'][user]
-        await ctx.respond(f'You are already playing in the lobby \"{lobby_user_is_in}\"!')
+        await ctx.respond(f'You are already playing in the lobby \"{lobby_user_is_in}\"!', ephemeral=True)
         return
 
     # if user is hosting a lobby different to this one
     if (user in current_lobbies['users_hosting']) and (current_lobbies['users_hosting'][user] != name):
         lobby_user_is_in = current_lobbies['users_hosting'][user]
-        await ctx.respond(f'You are already hosting the lobby \"{lobby_user_is_in}\"!')
+        await ctx.respond(f'You are already hosting the lobby \"{lobby_user_is_in}\"!', ephemeral=True)
         return
 
     # if lobby doesn't exist
     if name not in current_lobbies['lobbies']:
-        await ctx.respond(f'That lobby doesn\'t exist!')
+        await ctx.respond(f'That lobby doesn\'t exist!', ephemeral=True)
         return
 
     # if lobby is not open
     if current_lobbies['lobbies'][name]['status'] == 'Rolling':
-        await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to **/lobby unroll** so that you can join.)')
+        await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to **/lobby unroll** so that you can join.)', ephemeral=True)
         return
     if current_lobbies['lobbies'][name]['status'] == 'Playing':
-        await ctx.respond(f'That lobby is already playing!')
+        await ctx.respond(f'That lobby is already playing!', ephemeral=True)
         return
 
     # if user doesn't have an rdsettings
     rdsettings = read_json('users_rdsettings.json')
     if user not in rdsettings:
-        await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsettings** to do this.)')
+        await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsettings** to do this.)', ephemeral=True)
         return
 
     current_lobbies['users_playing'][user] = name
@@ -441,7 +454,8 @@ async def join(
     current_lobbies['lobbies'][name]['players'][user]['ready_status'] = 'Not Ready'
     current_lobbies['lobbies'][name]['players'][user]['miss_count'] = -2
 
-    await ctx.respond(f'Joined \"{name}\".\nDo \"**/lobby leave**\" to leave.\nWait for the host to roll a level...')
+    await ctx.respond(f'Joined \"{name}\".\nDo \"**/lobby leave**\" to leave.\nWait for the host to roll a level...', ephemeral=True)
+    await ctx.channel.send(f'<@{user}> Joined \"{name}\"!')
 
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][name]['message_id'])
@@ -464,7 +478,7 @@ async def leave(
 
     # if user is not playing
     if user not in current_lobbies['users_playing']:
-        await ctx.respond(f'You are not playing in any lobbies!')
+        await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
         return
 
     lobby_user_is_in = current_lobbies['users_playing'][user]
@@ -474,7 +488,8 @@ async def leave(
 
     del current_lobbies['users_playing'][user]
 
-    await ctx.respond(f'Left \"{lobby_user_is_in}\".')
+    await ctx.respond(f'Left \"{lobby_user_is_in}\".', ephemeral=True)
+    await ctx.channel.send(f'<@{user}> left \"{lobby_user_is_in}\".')
 
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_in]['message_id'])
@@ -504,14 +519,14 @@ async def kick(
 
     # if user is not hosting
     if user not in current_lobbies['users_hosting']:
-        await ctx.respond(f'You are not hosting!')
+        await ctx.respond(f'You are not hosting!', ephemeral=True)
         return
 
     lobby_user_is_hosting = current_lobbies['users_hosting'][user]
 
     # if player is not in the lobby
     if player_to_kick not in current_lobbies['lobbies'][lobby_user_is_hosting]['players']:
-        await ctx.respond(f'User not found in lobby!')
+        await ctx.respond(f'User not found in lobby!', ephemeral=True)
         return
 
     # kick player
@@ -544,14 +559,15 @@ async def delete(
 
     # if user is not hosting
     if user not in current_lobbies['users_hosting']:
-        await ctx.respond(f'You are not hosting!')
+        await ctx.respond(f'You are not hosting!', ephemeral=True)
         return
 
     lobby_user_is_hosting = current_lobbies['users_hosting'][user]
 
     # edit lobby message
     lobby_curr_message = await ctx.fetch_message(current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'])
-    await lobby_curr_message.edit(f"This lobby \"{lobby_user_is_hosting}\" has been deleted!", embed=None)
+    if lobby_curr_message != None:
+        await lobby_curr_message.edit(f"This lobby \"{lobby_user_is_hosting}\" has been deleted!", embed=None)
 
     del current_lobbies['users_hosting'][user] #user is no longer hosting a lobby
 
@@ -577,22 +593,22 @@ async def roll(
 
     # if user is not hosting
     if user not in current_lobbies['users_hosting']:
-        await ctx.respond(f'You are not hosting!')
+        await ctx.respond(f'You are not hosting!', ephemeral=True)
         return
 
     lobby_user_is_hosting = current_lobbies['users_hosting'][user]
 
     # if lobby is not in open state
     if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Rolling':
-        await ctx.respond(f'Your lobby has already rolled a level! Use **/lobby unroll** to re-open your lobby.')
+        await ctx.respond(f'Your lobby has already rolled a level! Use **/lobby unroll** to re-open your lobby.', ephemeral=True)
         return
     if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Playing':
-        await ctx.respond(f'Your lobby is already playing, or is waiting on people to submit their miss counts! Kick AFK players if you must.')
+        await ctx.respond(f'Your lobby is already playing, or is waiting on people to submit their miss counts! Kick AFK players if you must.', ephemeral=True)
         return
 
     # if no one is playing
     if len(current_lobbies['lobbies'][lobby_user_is_hosting]['players']) == 0:
-        await ctx.respond(f'No one is playing!')
+        await ctx.respond(f'No one is playing!', ephemeral=True)
         return
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['status'] = 'Rolling'
@@ -611,7 +627,7 @@ async def roll(
 
     lobby_new_message = await ctx.channel.send(embed=get_lobby_rolling_embed(lobby_user_is_hosting, user, current_lobbies['lobbies'][lobby_user_is_hosting]['players'], level_chosen))
 
-    await ctx.respond(f'<@{user}> You have rolled a level! No more players may join this lobby.\nYou can do \"**/lobby unroll**\" to trash this selection and allow more players to join.')
+    await ctx.respond(f'<@{user}> You have rolled a level! No more players may join this lobby.\nYou can do \"**/lobby unroll**\" to trash this selection and allow more players to join.', ephemeral=True)
 
     current_lobbies['lobbies'][lobby_user_is_hosting]['message_id'] = lobby_new_message.id
 
@@ -646,20 +662,22 @@ async def unroll(
 
     # if user is not hosting
     if user not in current_lobbies['users_hosting']:
-        await ctx.respond(f'You are not hosting!')
+        await ctx.respond(f'You are not hosting!', ephemeral=True)
         return
 
     lobby_user_is_hosting = current_lobbies['users_hosting'][user]
 
     # if lobby is not in rolling state
     if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Open':
-        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
         return
     if current_lobbies['lobbies'][lobby_user_is_hosting]['status'] == 'Playing':
-        await ctx.respond(f'Your lobby is already playing! Wait for everyone to finish.')
+        await ctx.respond(f'Your lobby is already playing! Wait for everyone to finish.', ephemeral=True)
         return
 
     await unroll_level(ctx, current_lobbies, lobby_user_is_hosting, user)
+
+    await ctx.respond("Unrolled.", ephemeral=True)
 
 @lobby.command()
 async def already_seen(
@@ -671,14 +689,14 @@ async def already_seen(
 
     # if user is not playing
     if user not in current_lobbies['users_playing']:
-        await ctx.respond(f'You are not playing in any lobbies!')
+        await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
         return
 
     lobby_user_is_in = current_lobbies['users_playing'][user]
 
     # if level isn't rolled yet
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
-        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
         return
 
     # if rolling
@@ -709,12 +727,12 @@ async def already_seen(
 
         current_lobbies['lobbies'][lobby_user_is_in]['message_id'] = lobby_new_message.id
 
-        await ctx.respond(f'Rerolled!')
+        await ctx.respond(f'Rerolled!', ephemeral=True)
 
     elif current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing': #if playing
         # if user has already submitted
         if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Submitted':
-            await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)')
+            await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
             return
 
         current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Submitted'
@@ -725,7 +743,7 @@ async def already_seen(
         lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
         await lobby_curr_message.edit(embed=get_lobby_playing_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
-        await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
+        await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -800,7 +818,8 @@ async def finish_match(ctx, current_lobbies, lobby_name, host):
             else: #not a tie
                 players_places[player] = current_place
                 prev_player_place = current_place
-            
+
+            prev_misses = sorted_misses[player]
             current_place = current_place + 1
 
     for player in players_already_seen: #already played players
@@ -907,22 +926,22 @@ async def ready(
 
     # if user is not playing
     if user not in current_lobbies['users_playing']:
-        await ctx.respond(f'You are not playing in any lobbies!')
+        await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
         return
 
     lobby_user_is_in = current_lobbies['users_playing'][user]
 
     # if level isn't rolled yet
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
-        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
         return
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing':
-        await ctx.respond(f'Your lobby is already playing!')
+        await ctx.respond(f'Your lobby is already playing!', ephemeral=True)
         return
 
     # if user is already ready
     if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Ready':
-        await ctx.respond(f'You are already ready!')
+        await ctx.respond(f'You are already ready!', ephemeral=True)
         return
 
     current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Ready'
@@ -933,7 +952,7 @@ async def ready(
     lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await lobby_curr_message.edit(embed=get_lobby_rolling_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
 
-    await ctx.respond(f'Readied!')
+    await ctx.respond(f'Readied!', ephemeral=True)
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -949,22 +968,22 @@ async def unready(
 
     # if user is not playing
     if user not in current_lobbies['users_playing']:
-        await ctx.respond(f'You are not playing in any lobbies!')
+        await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
         return
 
     lobby_user_is_in = current_lobbies['users_playing'][user]
 
     # if level isn't rolled yet
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
-        await ctx.respond(f'Your lobby has not yet rolled a level!')
+        await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
         return
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Playing':
-        await ctx.respond(f'Your lobby is already playing!')
+        await ctx.respond(f'Your lobby is already playing!', ephemeral=True)
         return
 
     # if user is already not ready
     if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Not Ready':
-        await ctx.respond(f'You are already not ready!')
+        await ctx.respond(f'You are already not ready!', ephemeral=True)
         return
 
     current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Not Ready'
@@ -975,7 +994,7 @@ async def unready(
     lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await lobby_curr_message.edit(embed=get_lobby_rolling_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players'], lobby_level_chosen))
 
-    await ctx.respond(f'Unreadied!')
+    await ctx.respond(f'Unreadied.', ephemeral=True)
 
     write_json(current_lobbies, 'current_lobbies.json')
 
@@ -990,22 +1009,22 @@ async def submit_misses(
 
     # if user is not playing
     if user not in current_lobbies['users_playing']:
-        await ctx.respond(f'You are not playing in any lobbies!')
+        await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
         return
 
     lobby_user_is_in = current_lobbies['users_playing'][user]
 
     # if lobby isn't playing
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Open':
-        await ctx.respond(f'Your lobby has not yet rolled a level! (Contact <@1207345676141465622> if you made a mistake.)')
+        await ctx.respond(f'Your lobby has not yet rolled a level! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
         return
     if current_lobbies['lobbies'][lobby_user_is_in]['status'] == 'Rolling':
-        await ctx.respond(f'Your lobby has not yet started playing! (Contact <@1207345676141465622> if you made a mistake.)')
+        await ctx.respond(f'Your lobby has not yet started playing! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
         return
 
     # if user has already submitted
     if current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] == 'Submitted':
-        await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)')
+        await ctx.respond(f'You already submitted! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
         return
 
     current_lobbies['lobbies'][lobby_user_is_in]['players'][user]['ready_status'] = 'Submitted'
@@ -1016,7 +1035,7 @@ async def submit_misses(
     lobby_host = current_lobbies['lobbies'][lobby_user_is_in]['host']
     await lobby_curr_message.edit(embed=get_lobby_playing_embed(lobby_user_is_in, lobby_host, current_lobbies['lobbies'][lobby_user_is_in]['players']))
 
-    await ctx.respond(f'Submitted! Just wait for everyone else to submit...')
+    await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
     write_json(current_lobbies, 'current_lobbies.json')
 
