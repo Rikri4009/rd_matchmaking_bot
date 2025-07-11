@@ -420,6 +420,7 @@ async def achievements(
         return
 
     tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.global_name}\'s Achievements ({achievements_list['total']}★)", description = achievements_list['message'])
+    tooltipEmbed.set_footer(text="Hover over text for info!")
 
     await ctx.respond(embed=tooltipEmbed)
 
