@@ -256,17 +256,17 @@ async def achievements(
     achievement_list['Tiered']['Doctor in Training'] = {}
     achievement_list['Tiered']['Doctor in Training']['Description'] = 'Earned exp'
     achievement_list['Tiered']['Doctor in Training']['Assoc_Stat'] = 'exp'
-    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [20, 100, 500, 2000]
+    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [50, 200, 1000, 5000]
 
     achievement_list['Tiered']['Place Your Bets'] = {}
     achievement_list['Tiered']['Place Your Bets']['Description'] = 'Matches played'
     achievement_list['Tiered']['Place Your Bets']['Assoc_Stat'] = 'matches_played'
-    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [5, 20, 100, 500]
+    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [3, 20, 100, 400]
 
     achievement_list['Tiered']['A Cut Above'] = {}
     achievement_list['Tiered']['A Cut Above']['Description'] = 'Opponents beaten'
     achievement_list['Tiered']['A Cut Above']['Assoc_Stat'] = 'opponents_beaten'
-    achievement_list['Tiered']['A Cut Above']['Requirements'] = [5, 20, 100, 500]
+    achievement_list['Tiered']['A Cut Above']['Requirements'] = [5, 40, 200, 800]
 
     achievement_list['Tiered']['Well Acquainted'] = {}
     achievement_list['Tiered']['Well Acquainted']['Description'] = 'Unique opponents beaten'
@@ -276,12 +276,12 @@ async def achievements(
     achievement_list['Tiered']['Baking Cake Isn\'t Easy'] = {}
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Description'] = 'Easy levels S-ranked on sightread'
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Assoc_Stat'] = 'easy_s_ranked'
-    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 15, 40, 120]
+    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 15, 40, 100]
 
     achievement_list['Tiered']['Middle Difficult'] = {}
     achievement_list['Tiered']['Middle Difficult']['Description'] = 'Medium levels S-ranked on sightread'
     achievement_list['Tiered']['Middle Difficult']['Assoc_Stat'] = 'medium_s_ranked'
-    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 80]
+    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 70]
 
     achievement_list['Tiered']['Flawless Performance'] = {}
     achievement_list['Tiered']['Flawless Performance']['Description'] = 'Tough levels S-ranked on sightread'
@@ -455,7 +455,7 @@ async def list_all(
     for name in current_lobbies['lobbies']:
         lobby_list_message = lobby_list_message + f"{name}: {len(current_lobbies['lobbies'][name]['players'])} Players\n"
 
-    await ctx.respond(lobby_list_message)
+    await ctx.respond(lobby_list_message, ephemeral=True)
 
 @lobby.command(description="Create a lobby")
 async def create(
@@ -941,7 +941,7 @@ async def finish_match(ctx, lobby_name, host):
     users_stats = read_json('users_stats.json')
 
     for player in players_places:
-        placement_message = placement_message + f"Place {players_places[player]}: <@{player}> with {sorted_misses[player]} misses (+{num_players*2 - players_places[player]} exp)\n" #(2*players - place) exp gained
+        placement_message = placement_message + f"Place {players_places[player]}: <@{player}> with {sorted_misses[player]} misses (+{num_players*2 - players_places[player] + 4} exp)\n" #(2*players - place) exp gained
 
         if player not in users_stats:
             users_stats[player] = {}
@@ -963,7 +963,7 @@ async def finish_match(ctx, lobby_name, host):
 
         level_is_tough_plus = (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Tough') or (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Very Tough')
 
-        users_stats[player]['exp'] = users_stats[player]['exp'] + num_players*2 - players_places[player]
+        users_stats[player]['exp'] = users_stats[player]['exp'] + num_players*2 - players_places[player] + 4
         users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
         users_stats[player]['opponents_beaten'] = users_stats[player]['opponents_beaten'] + num_players - players_places[player]
         for player_beaten in players_places:
