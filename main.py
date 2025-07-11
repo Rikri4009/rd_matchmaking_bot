@@ -534,11 +534,8 @@ async def create(
 
     user = str(ctx.user.id)
 
-    if name == 'the light':
-        await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\n...fine, just take your \'achievement\' and get out!\"', ephemeral=True)
-        users_stats = read_json('users_stats.json')
-        users_stats[user]['secret'] = 1
-        write_json(users_stats, 'users_stats.json')
+    if name == 'the light': #secret
+        await ctx.respond(f'That lobby name is already in use...!?', ephemeral=True)
         return
 
     # if user is already in a lobby
@@ -583,6 +580,16 @@ async def join(
     current_lobbies = read_json('current_lobbies.json')
 
     user = str(ctx.user.id)
+
+    if name == 'the light': #secret
+        await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
+\"...okay, fine, I\'m supposed to let those with 15★ or more in, but this place is still under construction.\"\n\
+\"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
+\"Fine, if you insist... just take your achievement and get out!\"', ephemeral=True)
+        users_stats = read_json('users_stats.json')
+        users_stats[user]['secret'] = 1
+        write_json(users_stats, 'users_stats.json')
+        return
 
     # if user is playing in a lobby
     if user in current_lobbies['users_playing']:
