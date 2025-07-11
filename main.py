@@ -235,23 +235,19 @@ async def out_of_lobby_roll(
 
     await ctx.respond(embed=level_embed)
 
-@bot.command(description="View your milestones")
-async def achievements(
-    ctx
-):
-    user = str(ctx.user.id)
+def get_user_achievements(ctx, user):
     users_stats = read_json('users_stats.json')
 
     if user not in users_stats:
-        await ctx.respond('You have not played any matches!', ephemeral = True)
-        return
+        return None
 
     this_user_stats = users_stats[user]
-    this_user_total_achievement_count = 0
 
     achievement_list = {}
     achievement_list['Tiered'] = {}
     achievement_list['Secret'] = {}
+    achievement_list['message'] = '**Tiered Achivements:**\n'
+    achievement_list['total'] = 0
 
     achievement_list['Tiered']['Doctor in Training'] = {}
     achievement_list['Tiered']['Doctor in Training']['Description'] = 'Earned exp'
@@ -318,7 +314,10 @@ async def achievements(
     achievement_list['Secret']['Hard-Fought Victory']['Assoc_Stat'] = 'tough_plus_largest_match_won'
     achievement_list['Secret']['Hard-Fought Victory']['Requirement'] = 20
 
-    achievements_message = '**Tiered Achivements:**\n'
+    achievement_list['Secret']['Ruler of the Cosmos'] = {}
+    achievement_list['Secret']['Ruler of the Cosmos']['Description'] = 'Want to know what levels I\'ve played? Tough luck, they\'re all NR\'d!'
+    achievement_list['Secret']['Ruler of the Cosmos']['Assoc_Stat'] = 'secret'
+    achievement_list['Secret']['Ruler of the Cosmos']['Requirement'] = 1
 
     for achievement in achievement_list['Tiered']:
         ach_description = achievement_list['Tiered'][achievement]['Description']
@@ -352,11 +351,11 @@ async def achievements(
         if ach_tier == 3:
             ach_next_tier = ach_tier #no next tier to speak of
 
-        achievements_message = achievements_message + f'{ach_emoji} [{achievement}]({ctx.channel.jump_url} "{ach_description}") ({ach_level_desc}): ({ach_user_current_stat}/{ach_requirements[ach_next_tier]})\n'
+        achievement_list['message'] = achievement_list['message'] + f'{ach_emoji} [{achievement}]({ctx.channel.jump_url} "{ach_description}") ({ach_level_desc}): ({ach_user_current_stat}/{ach_requirements[ach_next_tier]})\n'
 
-        this_user_total_achievement_count = this_user_total_achievement_count + ach_tier+1
+        achievement_list['total'] = achievement_list['total'] + ach_tier+1
 
-    achievements_message = achievements_message + '\n**Secret Achivements:**\n'
+    achievement_list['message'] = achievement_list['message'] + '\n**Secret Achivements:**\n'
     for achievement in achievement_list['Secret']:
         ach_description = achievement_list['Secret'][achievement]['Description']
         ach_assoc_stat = achievement_list['Secret'][achievement]['Assoc_Stat']
@@ -365,9 +364,9 @@ async def achievements(
         ach_user_current_stat = this_user_stats[ach_assoc_stat]
 
         if ach_user_current_stat >= ach_requirement:
-            achievements_message = achievements_message + f':medal: [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
+            achievement_list['message'] = achievement_list['message'] + f':medal: [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
 
-            this_user_total_achievement_count = this_user_total_achievement_count + 1
+            achievement_list['total'] = achievement_list['total'] + 1
 
     no_srt3_semifinalists_beaten = 0
     if '298722923626364928' in this_user_stats['opponents_beaten_list']:
@@ -380,8 +379,8 @@ async def achievements(
         no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
     
     if no_srt3_semifinalists_beaten >= 3:
-        achievements_message = achievements_message + f':medal: [Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists"): ({no_srt3_semifinalists_beaten}/3)\n'
-        this_user_total_achievement_count = this_user_total_achievement_count + 1
+        achievement_list['message'] = achievement_list['message'] + f':medal: [Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists"): ({no_srt3_semifinalists_beaten}/3)\n'
+        achievement_list['total'] = achievement_list['total'] + 1
 
     no_srt3_semifinalists_beaten = 0
     if '298722923626364928' in this_user_stats['tough_plus_opponents_beaten_list']:
@@ -394,10 +393,33 @@ async def achievements(
         no_srt3_semifinalists_beaten = no_srt3_semifinalists_beaten + 1
     
     if no_srt3_semifinalists_beaten >= 3:
-        achievements_message = achievements_message + f':medal: [Grand Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists... on Tough levels or harder"): ({no_srt3_semifinalists_beaten}/3)\n'
-        this_user_total_achievement_count = this_user_total_achievement_count + 1
+        achievement_list['message'] = achievement_list['message'] + f':medal: [Grand Finalist]({ctx.channel.jump_url} "Beat 3 of 4 RDSRT3 semifinalists... on Tough levels or harder"): ({no_srt3_semifinalists_beaten}/3)\n'
+        achievement_list['total'] = achievement_list['total'] + 1
 
-    tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f'Achievements ({this_user_total_achievement_count}★)', description = achievements_message)
+    return achievement_list
+
+@bot.command(description="View your milestones")
+async def achievements(
+    ctx,
+    user: discord.Option(discord.SlashCommandOptionType.user, required = False, description = '@user to view achievements of. Default: Yourself')
+):
+    if user == None:
+        ach_user = ctx.user
+    else:
+        ach_user = user
+
+    ach_user_id = str(ach_user.id)
+
+    achievements_list = get_user_achievements(ctx, ach_user_id)
+
+    if achievements_list == None:
+        if ach_user_id == str(ctx.user.id):
+            await ctx.respond('You have not played any matches!', ephemeral = True)
+        else:
+            await ctx.respond('This user has not played any matches!', ephemeral = True)
+        return
+
+    tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.global_name}\'s Achievements ({achievements_list['total']}★)", description = achievements_list['message'])
 
     await ctx.respond(embed=tooltipEmbed)
 
@@ -901,9 +923,11 @@ async def finish_match(ctx, lobby_name, host):
 
     unsorted_misses = {}
 
+    #users_rdsettings = read_json('users_rdsettings.json')
     for player in current_lobbies['lobbies'][lobby_name]['players']:
         unsorted_misses[player] = current_lobbies['lobbies'][lobby_name]['players'][player]['miss_count']
 
+        # add level to player's rdsettings
     sorted_misses = {}
     for player in sorted(unsorted_misses, key=unsorted_misses.get):
         sorted_misses[player] = unsorted_misses[player]
@@ -960,6 +984,7 @@ async def finish_match(ctx, lobby_name, host):
             users_stats[player]['tough_plus_largest_match_won'] = 0
             users_stats[player]['nr_played'] = 0
             users_stats[player]['polarity_played'] = 0
+            users_stats[player]['secret'] = 0
 
         level_is_tough_plus = (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Tough') or (current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Very Tough')
 
@@ -974,7 +999,7 @@ async def finish_match(ctx, lobby_name, host):
 
                 if level_is_tough_plus:
                     users_stats[player]['tough_plus_opponents_beaten_list'].append(player_beaten)
-                    users_stats[player]['tough_plus_opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
+                    users_stats[player]['tough_plus_opponents_beaten_list'] = list(set(users_stats[player]['tough_plus_opponents_beaten_list'])) #remove duplicates
         if (sorted_misses[player] == 0) and (current_lobbies['lobbies'][lobby_name]['roll_settings']['played_before'] == 'No'):
             if current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Easy':
                 users_stats[player]['easy_s_ranked'] = users_stats[player]['easy_s_ranked'] + 1
