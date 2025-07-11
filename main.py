@@ -423,6 +423,51 @@ async def achievements(
 
     await ctx.respond(embed=tooltipEmbed)
 
+@bot.command(description="See the rankings")
+async def leaderboard(
+    ctx,
+    category: discord.Option(choices = ['exp', '★'], default = 'exp', description = 'Default: exp'),
+):
+    users_stats = read_json('users_stats.json')
+
+    unsorted_score = {}
+
+    for user in users_stats:
+        if category == 'exp':
+            if users_stats[user]['exp'] > 0: #remove people with 0 exp
+                unsorted_score[user] = users_stats[user]['exp']
+        else:
+            user_achievements = get_user_achievements(ctx, user)
+            if user_achievements['total'] > 0:
+                unsorted_score[user] = user_achievements['total']
+
+    sorted_score = {}
+    for user in sorted(unsorted_score, key=unsorted_score.get, reverse=True):
+        sorted_score[user] = unsorted_score[user]
+
+    users_places = {}
+    current_place = 1
+    prev_user_place = 1
+    prev_score = -100
+
+    for user in sorted_score:
+        if sorted_score[user] == prev_score: #a tie
+            users_places[user] = prev_user_place #give the same place as prev player
+        else: #not a tie
+            users_places[user] = current_place
+            prev_user_place = current_place
+
+        prev_score = sorted_score[user]
+        current_place = current_place + 1
+
+    leaderboard_message = ''
+
+    for user in users_places:
+        leaderboard_message = leaderboard_message + f"Place {users_places[user]} ({sorted_score[user]} {category}): <@{user}>\n" #(2*players - place) exp gained
+
+    leaderboard_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{category} Leaderboard", description = leaderboard_message)
+    await ctx.respond(embed=leaderboard_embed)
+
 lobby = bot.create_group('lobby', 'Lobby/matchmaking commands')
 
 def get_lobby_open_embed(lobby_name, host_id, player_id_dict):
@@ -487,6 +532,13 @@ async def create(
     current_lobbies = read_json('current_lobbies.json')
 
     user = str(ctx.user.id)
+
+    if name == 'the light':
+        await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\n...fine, just take your \'achievement\' and get out!\"', ephemeral=True)
+        users_stats = read_json('users_stats.json')
+        users_stats[user]['secret'] = 1
+        write_json(users_stats, 'users_stats.json')
+        return
 
     # if user is already in a lobby
     if (user in current_lobbies['users_playing']) or (user in current_lobbies['users_hosting']):
