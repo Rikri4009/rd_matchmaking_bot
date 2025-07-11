@@ -55,6 +55,67 @@ def create_user_id_list(players, caller_id):
     user_id_list = re.findall(r"\<\@(.*?)\>", players)
     return list(set(user_id_list)) #remove duplicates
 
+def roll_random_level_juxta(peer_reviewed, played_before, difficulty, user_id_list):
+    juxta_tracker = read_json('juxta_tracker.json')
+    juxta_tracker['current'] = juxta_tracker['current'] + 1
+    write_json(juxta_tracker, 'juxta_tracker.json')
+    juxta_tracker['current'] = juxta_tracker['current'] - 1
+    the_list = [0] * 100
+
+    # iterate through cafe dataset
+    with open(os.path.realpath(__file__) + '\\..\\cafe_query.csv', 'r', encoding='utf-8') as cafe_query:
+        for line in csv.DictReader(cafe_query):
+            level_prd = (line['approval'] == '10')
+            level_nrd = (line['approval'] == '-1')
+
+            level_pr_status = 'Peer Review in Progress'
+            if level_prd:
+                level_pr_status = 'Peer Reviewed'
+            elif level_nrd:
+                level_pr_status = 'Non-Refereed'
+
+            level_diff = 'Easy'
+            if line['difficulty'] == '1':
+                level_diff = 'Medium'
+            elif line['difficulty'] == '2':
+                level_diff = 'Tough'
+            elif line['difficulty'] == '3':
+                level_diff = 'Very Tough'
+
+            authors_list = json.loads(line['authors'])
+            authors = ', '.join(authors_list)
+
+            artist = line['artist']
+            song = line['song']
+            description = line['description']
+
+            hash = hashlib.md5((authors + artist + song).encode())
+            hash_hex = hash.hexdigest()
+
+            zip = line['url2']
+
+            image_url = line['image']
+
+            if zip in juxta_tracker['list']:
+                index = juxta_tracker['list'].index(zip)
+                new_entry = {
+                    'authors': authors,
+                    'artist': artist,
+                    'song': song,
+                    'description': description,
+                    'difficulty': level_diff,
+                    'peer review status': level_pr_status,
+                    'hash': hash_hex,
+                    'zip': zip,
+                    'image_url': image_url}
+                the_list[index] = new_entry
+
+                if zip == 'https://codex.rhythm.cafe/kiyubizu-PMtq8Xo2GwK.rdzip':
+                    the_list[30] = new_entry
+
+    print(len(juxta_tracker))
+    return the_list[juxta_tracker['current']]
+
 def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
 
     cafe_hashed = {}
@@ -93,6 +154,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
 
                 artist = line['artist']
                 song = line['song']
+                description = line['description']
 
                 hash = hashlib.md5((authors + artist + song).encode())
                 hash_hex = hash.hexdigest()
@@ -105,6 +167,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
                     'authors': authors,
                     'artist': artist,
                     'song': song,
+                    'description': description,
                     'difficulty': level_diff,
                     'peer review status': level_pr_status,
                     'zip': zip,
@@ -140,11 +203,13 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
     print(len(cafe_hashed))
     return random.choice(list(cafe_hashed.values()))
 
-def get_level_chosen_message(level_chosen):
-    return f"{level_chosen['artist']} - {level_chosen['song']} (by {level_chosen['authors']})\n\
-Difficulty: {level_chosen['difficulty']}\n\
-{level_chosen['peer review status']}\n\
-{level_chosen['zip']}"
+def create_level_embed(level_embed, level_chosen):
+    level_embed.add_field(name = 'Level', value = f"{level_chosen['artist']} - {level_chosen['song']}", inline = True)
+    level_embed.add_field(name = 'Creator', value = level_chosen['authors'], inline = True)
+    level_embed.add_field(name = 'Description', value = level_chosen['description'], inline = False)
+    level_embed.add_field(name = 'Difficulty', value = level_chosen['difficulty'], inline = True)
+    level_embed.add_field(name = 'PR Status', value = level_chosen['peer review status'], inline = True)
+    level_embed.add_field(name = 'Download', value = f"[Link]({level_chosen['zip']})", inline = True)
 
 @bot.command(description="(Use \"/lobby roll\" for lobbies!) Rolls a random level with specified settings")
 async def out_of_lobby_roll(
@@ -164,7 +229,9 @@ async def out_of_lobby_roll(
 
     level_chosen = roll_random_level(peer_reviewed, played_before, difficulty, create_user_id_list(players, user))
 
-    level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Here's your level:", description = f"{get_level_chosen_message(level_chosen)}", image = level_chosen['image_url'])
+    level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Here's your level:", image = level_chosen['image_url'])
+
+    create_level_embed(level_embed, level_chosen)
 
     await ctx.respond(embed=level_embed)
 
@@ -351,7 +418,9 @@ def get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen):
     for id in player_id_dict:
         ready_list = ready_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-    return discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, do \"**/lobby ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n{get_level_chosen_message(level_chosen)}", image = level_chosen['image_url'])
+    level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, do \"**/lobby ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n", image = level_chosen['image_url'])
+    create_level_embed(level_embed, level_chosen)
+    return level_embed
 
 def get_lobby_playing_embed(lobby_name, host_id, player_id_dict):
     submitted_list = ''
