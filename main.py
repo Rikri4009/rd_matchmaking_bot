@@ -112,6 +112,7 @@ def roll_random_level_juxta(peer_reviewed, played_before, difficulty, user_id_li
 
                 if zip == 'https://codex.rhythm.cafe/kiyubizu-PMtq8Xo2GwK.rdzip':
                     the_list[30] = new_entry
+                    the_list[31] = new_entry
 
     print(len(juxta_tracker))
     return the_list[juxta_tracker['current']]
@@ -252,12 +253,12 @@ def get_user_achievements(ctx, user):
     achievement_list['Tiered']['Doctor in Training'] = {}
     achievement_list['Tiered']['Doctor in Training']['Description'] = 'Earned exp'
     achievement_list['Tiered']['Doctor in Training']['Assoc_Stat'] = 'exp'
-    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [50, 200, 1000, 5000]
+    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [50, 300, 1000, 3000]
 
     achievement_list['Tiered']['Place Your Bets'] = {}
     achievement_list['Tiered']['Place Your Bets']['Description'] = 'Matches played'
     achievement_list['Tiered']['Place Your Bets']['Assoc_Stat'] = 'matches_played'
-    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [3, 20, 100, 400]
+    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [3, 30, 100, 300]
 
     achievement_list['Tiered']['A Cut Above'] = {}
     achievement_list['Tiered']['A Cut Above']['Description'] = 'Opponents beaten'
@@ -267,22 +268,22 @@ def get_user_achievements(ctx, user):
     achievement_list['Tiered']['Well Acquainted'] = {}
     achievement_list['Tiered']['Well Acquainted']['Description'] = 'Unique opponents beaten'
     achievement_list['Tiered']['Well Acquainted']['Assoc_Stat'] = 'unique_opponents_beaten'
-    achievement_list['Tiered']['Well Acquainted']['Requirements'] = [3, 10, 30, 100]
+    achievement_list['Tiered']['Well Acquainted']['Requirements'] = [3, 8, 20, 40]
 
     achievement_list['Tiered']['Baking Cake Isn\'t Easy'] = {}
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Description'] = 'Easy levels S-ranked on sightread'
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Assoc_Stat'] = 'easy_s_ranked'
-    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 15, 40, 100]
+    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 10, 20, 60]
 
     achievement_list['Tiered']['Middle Difficult'] = {}
     achievement_list['Tiered']['Middle Difficult']['Description'] = 'Medium levels S-ranked on sightread'
     achievement_list['Tiered']['Middle Difficult']['Assoc_Stat'] = 'medium_s_ranked'
-    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 70]
+    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 40]
 
     achievement_list['Tiered']['Flawless Performance'] = {}
     achievement_list['Tiered']['Flawless Performance']['Description'] = 'Tough levels S-ranked on sightread'
     achievement_list['Tiered']['Flawless Performance']['Assoc_Stat'] = 'tough_s_ranked'
-    achievement_list['Tiered']['Flawless Performance']['Requirements'] = [1, 3, 10, 30]
+    achievement_list['Tiered']['Flawless Performance']['Requirements'] = [1, 5, 10, 20]
 
     achievement_list['Tiered']['Winner Takes All'] = {}
     achievement_list['Tiered']['Winner Takes All']['Description'] = 'Largest match won'
@@ -316,8 +317,13 @@ def get_user_achievements(ctx, user):
 
     achievement_list['Secret']['Ruler of the Cosmos'] = {}
     achievement_list['Secret']['Ruler of the Cosmos']['Description'] = 'Want to know what levels I\'ve played? Tough luck, they\'re all NR\'d!'
-    achievement_list['Secret']['Ruler of the Cosmos']['Assoc_Stat'] = 'secret'
+    achievement_list['Secret']['Ruler of the Cosmos']['Assoc_Stat'] = 'secret_bot'
     achievement_list['Secret']['Ruler of the Cosmos']['Requirement'] = 1
+
+    achievement_list['Secret']['Bearer of the Cosmos'] = {}
+    achievement_list['Secret']['Bearer of the Cosmos']['Description'] = 'Survive Quaver\'s challenge'
+    achievement_list['Secret']['Bearer of the Cosmos']['Assoc_Stat'] = 'divine_intervention'
+    achievement_list['Secret']['Bearer of the Cosmos']['Requirement'] = 1
 
     for achievement in achievement_list['Tiered']:
         ach_description = achievement_list['Tiered'][achievement]['Description']
@@ -361,12 +367,13 @@ def get_user_achievements(ctx, user):
         ach_assoc_stat = achievement_list['Secret'][achievement]['Assoc_Stat']
         ach_requirement = achievement_list['Secret'][achievement]['Requirement']
 
-        ach_user_current_stat = this_user_stats[ach_assoc_stat]
+        if ach_assoc_stat in this_user_stats:
+            ach_user_current_stat = this_user_stats[ach_assoc_stat]
 
-        if ach_user_current_stat >= ach_requirement:
-            achievement_list['message'] = achievement_list['message'] + f':medal: [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
+            if ach_user_current_stat >= ach_requirement:
+                achievement_list['message'] = achievement_list['message'] + f':medal: [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirement})\n'
 
-            achievement_list['total'] = achievement_list['total'] + 1
+                achievement_list['total'] = achievement_list['total'] + 1
 
     no_srt3_semifinalists_beaten = 0
     if '298722923626364928' in this_user_stats['opponents_beaten_list']:
@@ -433,11 +440,13 @@ async def leaderboard(
 
     unsorted_score = {}
 
-    for user in users_stats:
-        if category == 'exp':
+    if category == 'exp':
+        category = ' ' + category
+        for user in users_stats:
             if users_stats[user]['exp'] > 0: #remove people with 0 exp
                 unsorted_score[user] = users_stats[user]['exp']
-        else:
+    else:
+        for user in users_stats:
             user_achievements = get_user_achievements(ctx, user)
             if user_achievements['total'] > 0:
                 unsorted_score[user] = user_achievements['total']
@@ -464,7 +473,7 @@ async def leaderboard(
     leaderboard_message = ''
 
     for user in users_places:
-        leaderboard_message = leaderboard_message + f"Place {users_places[user]} ({sorted_score[user]} {category}): <@{user}>\n" #(2*players - place) exp gained
+        leaderboard_message = leaderboard_message + f"Place {users_places[user]} ({sorted_score[user]}{category}): <@{user}>\n" #(2*players - place) exp gained
 
     leaderboard_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{category} Leaderboard", description = leaderboard_message)
     await ctx.respond(embed=leaderboard_embed)
@@ -585,10 +594,8 @@ async def join(
         await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
 \"...okay, fine, I\'m supposed to let those with 15★ or more in, but this place is still under construction.\"\n\
 \"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
-\"Fine, if you insist... just take your achievement and get out!\"', ephemeral=True)
-        users_stats = read_json('users_stats.json')
-        users_stats[user]['secret'] = 1
-        write_json(users_stats, 'users_stats.json')
+\"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"\n\
+\"Oh, and good luck rolling the level! I guess you\'ll just have to get lucky...!\"', ephemeral=True)
         return
 
     # if user is playing in a lobby
@@ -1051,15 +1058,16 @@ async def finish_match(ctx, lobby_name, host):
         users_stats[player]['exp'] = users_stats[player]['exp'] + num_players*2 - players_places[player] + 4
         users_stats[player]['matches_played'] = users_stats[player]['matches_played'] + 1
         users_stats[player]['opponents_beaten'] = users_stats[player]['opponents_beaten'] + num_players - players_places[player]
-        for player_beaten in players_places:
-            if (players_places[player] <= players_places[player_beaten]) and (player_beaten != player): #if player did better than player_beaten
-                users_stats[player]['opponents_beaten_list'].append(player_beaten)
-                users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
-                users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
+        if (current_lobbies['lobbies'][lobby_name]['roll_settings']['played_before'] == 'No'):
+            for player_beaten in players_places:
+                if (players_places[player] <= players_places[player_beaten]) and (player_beaten != player): #if player did better than player_beaten
+                    users_stats[player]['opponents_beaten_list'].append(player_beaten)
+                    users_stats[player]['opponents_beaten_list'] = list(set(users_stats[player]['opponents_beaten_list'])) #remove duplicates
+                    users_stats[player]['unique_opponents_beaten'] = len(users_stats[player]['opponents_beaten_list'])
 
-                if level_is_tough_plus:
-                    users_stats[player]['tough_plus_opponents_beaten_list'].append(player_beaten)
-                    users_stats[player]['tough_plus_opponents_beaten_list'] = list(set(users_stats[player]['tough_plus_opponents_beaten_list'])) #remove duplicates
+                    if level_is_tough_plus:
+                        users_stats[player]['tough_plus_opponents_beaten_list'].append(player_beaten)
+                        users_stats[player]['tough_plus_opponents_beaten_list'] = list(set(users_stats[player]['tough_plus_opponents_beaten_list'])) #remove duplicates
         if (sorted_misses[player] == 0) and (current_lobbies['lobbies'][lobby_name]['roll_settings']['played_before'] == 'No'):
             if current_lobbies['lobbies'][lobby_name]['level']['difficulty'] == 'Easy':
                 users_stats[player]['easy_s_ranked'] = users_stats[player]['easy_s_ranked'] + 1
@@ -1079,6 +1087,11 @@ async def finish_match(ctx, lobby_name, host):
             users_stats[player]['nr_played'] = users_stats[player]['nr_played'] + 1
         if current_lobbies['lobbies'][lobby_name]['roll_settings']['difficulty'] == 'Polarity':
             users_stats[player]['polarity_played'] = users_stats[player]['polarity_played'] + 1
+
+        # divine intervention secret
+        if current_lobbies['lobbies'][lobby_name]['level']['hash'] == 'c0d7a6c64264d812e06707159c297eb2':
+            if current_lobbies['lobbies'][lobby_name]['players'][player]['miss_count'] <= 75:
+                users_stats[player]['divine_intervention'] = 1
 
     write_json(users_stats, 'users_stats.json')
 
