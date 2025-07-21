@@ -165,6 +165,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list):
                 image_url = line['image']
 
                 cafe_hashed[hash_hex] = {
+                    'hash': hash_hex,
                     'authors': authors,
                     'artist': artist,
                     'song': song,
@@ -247,48 +248,48 @@ def get_user_achievements(ctx, user):
     achievement_list = {}
     achievement_list['Tiered'] = {}
     achievement_list['Secret'] = {}
-    achievement_list['message'] = '**Tiered Achivements:**\n'
+    achievement_list['message'] = '**Tiered Achievements:**\n'
     achievement_list['total'] = 0
 
     achievement_list['Tiered']['Doctor in Training'] = {}
     achievement_list['Tiered']['Doctor in Training']['Description'] = 'Earned exp'
     achievement_list['Tiered']['Doctor in Training']['Assoc_Stat'] = 'exp'
-    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [50, 300, 1000, 3000]
+    achievement_list['Tiered']['Doctor in Training']['Requirements'] = [100, 250, 500, 800, 1300, 2000, 3000]
 
     achievement_list['Tiered']['Place Your Bets'] = {}
     achievement_list['Tiered']['Place Your Bets']['Description'] = 'Matches played'
     achievement_list['Tiered']['Place Your Bets']['Assoc_Stat'] = 'matches_played'
-    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [3, 30, 100, 300]
+    achievement_list['Tiered']['Place Your Bets']['Requirements'] = [10, 25, 50, 80, 130, 200, 300]
 
     achievement_list['Tiered']['A Cut Above'] = {}
     achievement_list['Tiered']['A Cut Above']['Description'] = 'Opponents beaten'
     achievement_list['Tiered']['A Cut Above']['Assoc_Stat'] = 'opponents_beaten'
-    achievement_list['Tiered']['A Cut Above']['Requirements'] = [5, 40, 200, 800]
+    achievement_list['Tiered']['A Cut Above']['Requirements'] = [30, 80, 160, 300, 450, 700, 1000]
 
     achievement_list['Tiered']['Well Acquainted'] = {}
     achievement_list['Tiered']['Well Acquainted']['Description'] = 'Unique opponents beaten'
     achievement_list['Tiered']['Well Acquainted']['Assoc_Stat'] = 'unique_opponents_beaten'
-    achievement_list['Tiered']['Well Acquainted']['Requirements'] = [3, 8, 20, 40]
+    achievement_list['Tiered']['Well Acquainted']['Requirements'] = [3, 7, 12, 18, 25, 32, 40]
 
     achievement_list['Tiered']['Baking Cake Isn\'t Easy'] = {}
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Description'] = 'Easy levels S-ranked on sightread'
     achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Assoc_Stat'] = 'easy_s_ranked'
-    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [5, 10, 20, 60]
+    achievement_list['Tiered']['Baking Cake Isn\'t Easy']['Requirements'] = [2, 4, 8, 13, 20, 30, 50]
 
     achievement_list['Tiered']['Middle Difficult'] = {}
     achievement_list['Tiered']['Middle Difficult']['Description'] = 'Medium levels S-ranked on sightread'
     achievement_list['Tiered']['Middle Difficult']['Assoc_Stat'] = 'medium_s_ranked'
-    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [3, 8, 25, 40]
+    achievement_list['Tiered']['Middle Difficult']['Requirements'] = [2, 4, 8, 13, 20, 30, 50]
 
     achievement_list['Tiered']['Flawless Performance'] = {}
     achievement_list['Tiered']['Flawless Performance']['Description'] = 'Tough levels S-ranked on sightread'
     achievement_list['Tiered']['Flawless Performance']['Assoc_Stat'] = 'tough_s_ranked'
-    achievement_list['Tiered']['Flawless Performance']['Requirements'] = [1, 5, 10, 20]
+    achievement_list['Tiered']['Flawless Performance']['Requirements'] = [1, 3, 5, 8, 13, 20, 30]
 
     achievement_list['Tiered']['Winner Takes All'] = {}
     achievement_list['Tiered']['Winner Takes All']['Description'] = 'Largest match won'
     achievement_list['Tiered']['Winner Takes All']['Assoc_Stat'] = 'largest_match_won'
-    achievement_list['Tiered']['Winner Takes All']['Requirements'] = [3, 7, 12, 20]
+    achievement_list['Tiered']['Winner Takes All']['Requirements'] = [2, 5, 8, 11, 14, 17, 20]
 
     achievement_list['Secret']['Mega Lobby'] = {}
     achievement_list['Secret']['Mega Lobby']['Description'] = '20-player match played'
@@ -336,32 +337,50 @@ def get_user_achievements(ctx, user):
             if ach_user_current_stat >= tier_requirement:
                 ach_tier = ach_tier + 1
 
-        ach_level_desc = ''
+        ach_level_desc = 'Unobtained'
         ach_emoji = ''
-        if ach_tier == -1:
-            ach_level_desc = 'Unobtained'
-        elif ach_tier == 0:
-            ach_level_desc = 'Bronze'
-            ach_emoji = ':third_place:'
-        elif ach_tier == 1:
-            ach_level_desc = 'Silver'
-            ach_emoji = ':second_place:'
-        elif ach_tier == 2:
-            ach_level_desc = 'Gold'
-            ach_emoji = ':first_place:'
-        else:
-            ach_level_desc = 'Medical-Grade'
-            ach_emoji = ':syringe:'
+
+        ach_value = 0
+
+        match ach_tier:
+            case 0:
+                ach_level_desc = 'Bronze'
+                ach_emoji = ':third_place:'
+                ach_value = 1
+            case 1:
+                ach_level_desc = 'Silver'
+                ach_emoji = ':second_place:'
+                ach_value = 2
+            case 2:
+                ach_level_desc = 'Gold'
+                ach_emoji = ':first_place:'
+                ach_value = 3
+            case 3:
+                ach_level_desc = 'Distinguished'
+                ach_emoji = ':trophy:'
+                ach_value = 4
+            case 4:
+                ach_level_desc = 'Illustrious'
+                ach_emoji = ':gem:'
+                ach_value = 5
+            case 5:
+                ach_level_desc = 'Otherworldly'
+                ach_emoji = ':comet:'
+                ach_value = 6
+            case 6:
+                ach_level_desc = 'Medical-Grade'
+                ach_emoji = ':syringe:'
+                ach_value = 7
 
         ach_next_tier = ach_tier+1
-        if ach_tier == 3:
+        if ach_tier == 6:
             ach_next_tier = ach_tier #no next tier to speak of
 
         achievement_list['message'] = achievement_list['message'] + f'{ach_emoji} [{achievement}]({ctx.channel.jump_url} "{ach_description}") ({ach_level_desc}): ({ach_user_current_stat}/{ach_requirements[ach_next_tier]})\n'
 
-        achievement_list['total'] = achievement_list['total'] + ach_tier+1
+        achievement_list['total'] = achievement_list['total'] + ach_value
 
-    achievement_list['message'] = achievement_list['message'] + '\n**Secret Achivements:**\n'
+    achievement_list['message'] = achievement_list['message'] + '\n**Secret Achievements:**\n'
     for achievement in achievement_list['Secret']:
         ach_description = achievement_list['Secret'][achievement]['Description']
         ach_assoc_stat = achievement_list['Secret'][achievement]['Assoc_Stat']
@@ -543,7 +562,7 @@ async def create(
 
     user = str(ctx.user.id)
 
-    if name == 'the light': #secret
+    if name.startswith('the light'): #secret
         await ctx.respond(f'That lobby name is already in use...!?', ephemeral=True)
         return
 
@@ -581,6 +600,196 @@ You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
 You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
 Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=True)
 
+async def the_light_welcome(ctx, player_id):
+    welcome_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Lobby: \"`   ` `     `\"", description = f"`      `: <@{player_id}>\n\n\
+Welcome!\nHere, your goal is to `           ` to reach `   ` `     ` at the end of `   ` 7.\n\
+Each `   ` consists of 4 `      `.\nYou start with ★ `  `, and will lose 1 for `         `.\n\
+**Starting an `       ` costs 5`     `!**\nYou can join `             ` during your `       `.\n\n\
+To begin an `       `, type \"**/`                          `**\".")
+    await ctx.channel.send(embed = welcome_embed)
+
+    lobbies = read_json('current_lobbies.json')
+    if 'the light' not in lobbies:
+        lobbies['the light'] = {}
+    if player_id not in lobbies['the light']:
+        lobbies['the light'][player_id] = {}
+        lobbies['the light'][player_id]['status'] = 'Not Started'
+        lobbies['the light'][player_id]['set_theme'] = ''
+        lobbies['the light'][player_id]['set_modifier'] = ''
+        lobbies['the light'][player_id]['set_difficulties'] = []
+    write_json(lobbies, 'current_lobbies.json')
+
+async def the_light_begin(ctx, player_id):
+    lobbies = read_json('current_lobbies.json')
+
+    if lobbies['the light'][player_id]['status'] != 'Not Started':
+        await ctx.respond('You have already started climbing!')
+        return
+
+    lobbies['the light'][player_id]['status'] = 'Started'
+    write_json(lobbies, 'current_lobbies.json')
+
+    await begin_set(ctx, player_id, 1)
+
+async def begin_set(ctx, player_id, set_number):
+    sets_config = {}
+
+    sets_config[1] = {}
+    sets_config[1]['difficulties'] = ['Easy', 'Medium', 'Easy', 'Tough']
+    sets_config[1]['theme'] = []
+    sets_config[1]['modifier'] = []
+
+    sets_config[2] = {}
+    sets_config[2]['difficulties'] = ['Easy', 'Medium', 'Medium', 'Tough']
+    sets_config[2]['theme'] = ['Holds', 'Skipshots']
+    sets_config[2]['modifier'] = []
+
+    sets_config[3] = {}
+    sets_config[3]['difficulties'] = ['Easy', 'Medium', 'Medium', 'Tough']
+    sets_config[3]['theme'] = []
+    sets_config[3]['modifier'] = ['Hard Difficulty Button', '2-Player']
+
+    sets_config[4] = {}
+    sets_config[4]['difficulties'] = ['Easy', 'Medium', 'Medium', 'Tough']
+    sets_config[4]['theme'] = ['No Classics', 'Syncopation']
+    sets_config[4]['modifier'] = []
+
+    sets_config[5] = {}
+    sets_config[5]['difficulties'] = []
+    sets_config[5]['theme'] = []
+    sets_config[5]['modifier'] = ['Blindfolded', 'Chili Speed']
+
+    sets_config[6] = {}
+    sets_config[6]['difficulties'] = []
+    sets_config[6]['theme'] = ['No Oneshots', 'Freezeshots']
+    sets_config[6]['modifier'] = ['Double Damage', 'Endurance']
+
+    sets_config[7] = {}
+    sets_config[7]['difficulties'] = []
+    sets_config[7]['theme'] = ['None', 'Holds', 'Skipshots', 'No Classics', 'Syncopation', 'No Oneshots', 'Freezeshots', '8-Beat', 'Window Dance']
+    sets_config[7]['modifier'] = ['Extreme']
+
+    sets_config['None'] = {}
+    sets_config['None']['description'] = 'Anything is possible!'
+    sets_config['None']['tags'] = []
+    sets_config['None']['facets'] = {}
+
+    sets_config['Holds'] = {}
+    sets_config['Holds']['description'] = 'This set\'s levels contain holds.'
+    sets_config['Holds']['tags'] = []
+    sets_config['Holds']['facets'] = {'has_holds': 1}
+
+    sets_config['Skipshots'] = {}
+    sets_config['Skipshots']['description'] = 'This set\'s levels contain skipshots.'
+    sets_config['Skipshots']['tags'] = []
+    sets_config['Skipshots']['facets'] = {'has_skipshots': 1}
+
+    sets_config['No Classics'] = {}
+    sets_config['No Classics']['description'] = 'This set\'s levels don\'t contain classic rows.'
+    sets_config['No Classics']['tags'] = []
+    sets_config['No Classics']['facets'] = {'has_classics': 0}
+
+    sets_config['Syncopation'] = {}
+    sets_config['Syncopation']['description'] = 'This set\'s levels contain syncopation.'
+    sets_config['Syncopation']['tags'] = ['syncopation']
+    sets_config['Syncopation']['facets'] = {}
+
+    sets_config['8-Beat'] = {}
+    sets_config['8-Beat']['description'] = 'This set\'s levels contain 8-beat.'
+    sets_config['8-Beat']['tags'] = ['8beat']
+    sets_config['8-Beat']['facets'] = {}
+
+    sets_config['No Oneshots'] = {}
+    sets_config['No Oneshots']['description'] = 'This set\'s levels don\'t contain oneshot rows.'
+    sets_config['No Oneshots']['tags'] = []
+    sets_config['No Oneshots']['facets'] = {'has_oneshots': 0}
+
+    sets_config['Freezeshots'] = {}
+    sets_config['Freezeshots']['description'] = 'This set\'s levels contain freezeshots.'
+    sets_config['Freezeshots']['tags'] = []
+    sets_config['Freezeshots']['facets'] = {'has_freezeshots': 1}
+
+    sets_config['Window Dance'] = {}
+    sets_config['Window Dance']['description'] = 'This set\'s levels contain window dance.'
+    sets_config['Window Dance']['tags'] = []
+    sets_config['Window Dance']['facets'] = {'has_window_dance': 1}
+
+    sets_config['Hard Difficulty Button'] = {}
+    sets_config['Hard Difficulty Button']['diff_override'] = ['Easy', 'Medium', 'Medium', 'Tough']
+    sets_config['Hard Difficulty Button']['description'] = 'You must use the hard difficulty button!'
+    sets_config['Hard Difficulty Button']['tags'] = []
+    sets_config['Hard Difficulty Button']['facets'] = {}
+
+    sets_config['2-Player'] = {}
+    sets_config['2-Player']['diff_override'] = ['Easy', 'Medium', 'Medium', 'Tough']
+    sets_config['2-Player']['description'] = 'You must play on 2-player mode!'
+    sets_config['2-Player']['tags'] = []
+    sets_config['2-Player']['facets'] = {'two_player': 1}
+
+    sets_config['Blindfolded'] = {}
+    sets_config['Blindfolded']['diff_override'] = ['Easy', 'Medium', 'Easy', 'Medium']
+    sets_config['Blindfolded']['description'] = 'You must play with your eyes fully closed!'
+    sets_config['Blindfolded']['tags'] = []
+    sets_config['Blindfolded']['facets'] = {}
+
+    sets_config['Chili Speed'] = {}
+    sets_config['Chili Speed']['diff_override'] = ['Easy', 'Medium', 'Easy', 'Medium']
+    sets_config['Chili Speed']['description'] = 'You must play on :hot_pepper: chili speed!'
+
+    sets_config['Blindfolded']['tags'] = []
+    sets_config['Blindfolded']['facets'] = {}
+
+    sets_config['Double Damage'] = {}
+    sets_config['Double Damage']['diff_override'] = ['Easy', 'Easy', 'Medium', 'Tough']
+    sets_config['Double Damage']['description'] = 'Damage taken is doubled!'
+    sets_config['Double Damage']['tags'] = []
+    sets_config['Double Damage']['facets'] = {}
+
+    sets_config['Endurance'] = {}
+    sets_config['Endurance']['diff_override'] = ['Easy', 'Medium', 'Medium', 'Easy', 'Medium', 'Medium', 'Tough']
+    sets_config['Endurance']['description'] = 'This set is extra long!'
+    sets_config['Endurance']['tags'] = []
+    sets_config['Endurance']['facets'] = {}
+
+    sets_config['Extreme'] = {}
+    sets_config['Extreme']['diff_override'] = ['Tough', 'Medium', 'Tough', 'Very Tough']
+    sets_config['Extreme']['description'] = 'This set is impossible.'
+    sets_config['Extreme']['tags'] = []
+    sets_config['Extreme']['facets'] = {}
+
+    lobbies = read_json('current_lobbies.json')
+
+    lobbies['the light'][player_id]['set_number'] = set_number
+
+    theme_and_modifier_desc = ''
+    set_difficulties = sets_config[set_number]['difficulties']
+
+    set_theme = 'None'
+    if len(sets_config[set_number]['theme']) != 0:
+        set_theme = random.choice(sets_config[set_number]['theme'])
+        theme_and_modifier_desc = theme_and_modifier_desc + f"Set Theme: **{set_theme}**\n{sets_config[set_theme]['description']}\n\n"
+    lobbies['the light'][player_id]['set_theme'] = set_theme
+
+    set_modifier = 'None'
+    if len(sets_config[set_number]['modifier']) != 0:
+        set_modifier = random.choice(sets_config[set_number]['modifier'])
+        theme_and_modifier_desc = theme_and_modifier_desc + f"Set Modifier: **{set_modifier}**\n{sets_config[set_modifier]['description']}\n\n"
+    lobbies['the light'][player_id]['set_modifier'] = set_modifier
+
+    lobbies['the light'][player_id]['roll_tags'] = sets_config[set_theme]['tags'] + sets_config[set_modifier]['tags']
+    lobbies['the light'][player_id]['roll_facets'] = sets_config[set_theme]['facets'] | sets_config[set_modifier]['facets']
+
+    if set_modifier != 'None':
+        set_difficulties = sets_config[set_modifier]['diff_override']
+
+    lobbies['the light'][player_id]['set_difficulties'] = set_difficulties
+
+    write_json(lobbies, 'current_lobbies.json')
+
+    set_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Lobby: \"`   ` `     `\" | SET {set_number}", description = f"Player: <@{player_id}>\n\n\
+{' -> '.join(set_difficulties)}\n\n{theme_and_modifier_desc}When you're ready, abc")
+    await ctx.respond(embed = set_embed)
+
 @lobby.command(description="Join a specified lobby")
 async def join(
     ctx,
@@ -592,11 +801,18 @@ async def join(
 
     if name == 'the light': #secret
         await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
-\"...okay, fine, I\'m supposed to let those with 15★ or more in, but this place is still under construction.\"\n\
+\"...okay, fine, I\'m supposed to let those with 15★ or more in. Don\'t think your attempt will be easy, though!\"\n\
 \"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
-\"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"\n\
-\"Oh, and good luck rolling the level! I guess you\'ll just have to get lucky...!\"', ephemeral=True)
+\"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"', ephemeral=True)
+        user_achievements = get_user_achievements(ctx, user)
+        if user_achievements['total'] >= 15:
+            await the_light_welcome(ctx, user)
         return
+
+    if user in current_lobbies['the light']:
+        if name == 'the light begin':
+            await the_light_begin(ctx, user)
+            return
 
     # if user is playing in a lobby
     if user in current_lobbies['users_playing']:
