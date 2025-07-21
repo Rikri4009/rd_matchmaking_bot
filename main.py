@@ -260,7 +260,7 @@ def get_user_achievements(ctx, user):
     achievement_list['Tiered']['Place Your Bets']['Description'] = 'Matches played'
     achievement_list['Tiered']['Place Your Bets']['Assoc_Stat'] = 'matches_played'
     achievement_list['Tiered']['Place Your Bets']['Requirements'] = [10, 25, 50, 80, 130, 200, 300]
-
+ 
     achievement_list['Tiered']['A Cut Above'] = {}
     achievement_list['Tiered']['A Cut Above']['Description'] = 'Opponents beaten'
     achievement_list['Tiered']['A Cut Above']['Assoc_Stat'] = 'opponents_beaten'
