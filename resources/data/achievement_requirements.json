@@ -1,0 +1,155 @@
+{
+    "Tiered": {
+        "Doctor in Training": {
+            "Description": "Earned exp",
+            "Assoc_Stat": "exp",
+            "Requirements": [
+                100,
+                250,
+                500,
+                800,
+                1300,
+                2000,
+                3000
+            ]
+        },
+        "Place Your Bets": {
+            "Description": "Matches played",
+            "Assoc_Stat": "matches_played",
+            "Requirements": [
+                10,
+                25,
+                50,
+                80,
+                130,
+                200,
+                300
+            ]
+        },
+        "A Cut Above": {
+            "Description": "Opponents beaten",
+            "Assoc_Stat": "opponents_beaten",
+            "Requirements": [
+                30,
+                80,
+                160,
+                300,
+                450,
+                700,
+                1000
+            ]
+        },
+        "Well Acquainted": {
+            "Description": "Unique opponents beaten",
+            "Assoc_Stat": "unique_opponents_beaten",
+            "Requirements": [
+                3,
+                7,
+                12,
+                18,
+                25,
+                32,
+                40
+            ]
+        },
+        "Baking Cake Isn't Easy": {
+            "Description": "Easy levels S-ranked on sightread",
+            "Assoc_Stat": "easy_s_ranked",
+            "Requirements": [
+                2,
+                4,
+                8,
+                13,
+                20,
+                30,
+                50
+            ]
+        },
+        "Middle Difficult": {
+            "Description": "Medium levels S-ranked on sightread",
+            "Assoc_Stat": "medium_s_ranked",
+            "Requirements": [
+                1,
+                3,
+                6,
+                10,
+                16,
+                25,
+                40
+            ]
+        },
+        "Flawless Performance": {
+            "Description": "Tough levels S-ranked on sightread",
+            "Assoc_Stat": "tough_s_ranked",
+            "Requirements": [
+                1,
+                3,
+                5,
+                8,
+                13,
+                20,
+                30
+            ]
+        },
+        "Winner Takes All": {
+            "Description": "Largest match won",
+            "Assoc_Stat": "largest_match_won",
+            "Requirements": [
+                2,
+                5,
+                8,
+                11,
+                14,
+                17,
+                20
+            ]
+        }
+    },
+    "Secret": {
+        "Mega Lobby": {
+            "Description": "20-player match played",
+            "Assoc_Stat": "largest_match_played",
+            "Requirement": 20
+        },
+        "Godlike": {
+            "Description": "S-rank a Very Tough level on sightread",
+            "Assoc_Stat": "vt_s_ranked",
+            "Requirement": 1
+        },
+        "Workshop Hell": {
+            "Description": "Play 5 non-refereed levels",
+            "Assoc_Stat": "nr_played",
+            "Requirement": 5
+        },
+        "So Juxta": {
+            "Description": "Play 5 levels with the polarity difficulty setting",
+            "Assoc_Stat": "polarity_played",
+            "Requirement": 5
+        },
+        "Hard-Fought Victory": {
+            "Description": "Win a 20-player match... on a Tough level or harder",
+            "Assoc_Stat": "tough_plus_largest_match_won",
+            "Requirement": 20
+        },
+        "Finalist": {
+            "Description": "Beat 3 of 4 RDSRT3 semifinalists",
+            "Assoc_Stat": "srt3_semifinalists_beaten",
+            "Requirement": 3
+        },
+        "True Finalist": {
+            "Description": "Beat 3 of 4 RDSRT3 semifinalists... on Tough levels or harder",
+            "Assoc_Stat": "tough_plus_srt3_semifinalists_beaten",
+            "Requirement": 3
+        },
+        "Ruler of the Cosmos": {
+            "Description": "Want to know what levels I've played? Tough luck, they're all NR'd!",
+            "Assoc_Stat": "secret_bot",
+            "Requirement": 1
+        },
+        "Bearer of the Cosmos": {
+            "Description": "Survive Quaver's challenge",
+            "Assoc_Stat": "divine_intervention",
+            "Requirement": 1
+        }
+    }
+}

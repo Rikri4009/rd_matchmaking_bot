@@ -1,0 +1,1 @@
+from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot

@@ -1,0 +1,19 @@
+{
+    "lobbies": {
+        "a": {
+            "status": "Open",
+            "host": "1207345676141465622",
+            "players": {
+                "1207345676141465622": {
+                    "ready_status": "Not Ready",
+                    "miss_count": null
+                }
+            },
+            "roll_settings": {},
+            "level": {},
+            "channel_id": 1392061548549373972,
+            "message_id": 1397877921330364526
+        }
+    },
+    "endless": {}
+}
