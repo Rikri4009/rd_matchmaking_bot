@@ -4,7 +4,12 @@ import hashlib
 
 import rd_matchmaking_bot.utils.data as data
 
-def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves):
+def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets):
+
+    if tags == None:
+        tags = []
+    if facets == None:
+        facets = {}
 
     cafe_hashed = {}
 
@@ -37,7 +42,23 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         # does difficulty match
         diff_check = (difficulty == 'Any') or (difficulty == level_diff) or ((difficulty == 'Not Easy') and (level_diff != 'Easy')) or ((difficulty == 'Not Very Tough') and (level_diff != 'Very Tough')) or ((difficulty == 'Polarity') and ((level_diff == 'Easy') or (level_diff == 'Very Tough')))
 
-        if pr_check and diff_check:
+        # does level have all tags
+        level_tags = json.loads(line['tags'])
+
+        tags_check = True
+        for tag in tags:
+            if tag not in level_tags:
+                tags_check = False
+
+        # datasette facet check
+        facets_check = True
+        for facet in facets:
+            if facet not in line:
+                print("HUGE MISTAKE")
+            if str(facets[facet]) != str(line[facet]):
+                facets_check = False
+
+        if pr_check and diff_check and facets_check and tags_check:
             authors_list = json.loads(line['authors'])
             authors = ', '.join(authors_list)
 
@@ -61,7 +82,9 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
                 'difficulty': level_diff,
                 'peer review status': level_pr_status,
                 'zip': zip,
-                'image_url': image_url}
+                'image_url': image_url,
+                'tags': level_tags
+                }
 
     if played_before == 'No': #remove played levels
         for uid in user_id_list:
@@ -78,6 +101,9 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
             if uid in users_rdsaves:
                 set_list.append(set(users_rdsaves[uid]))
 
+        if len(set_list) == 0:
+            return None
+
         # find levels everyone's played
         hashes_all_played = set.intersection(*set_list)
 
@@ -91,12 +117,20 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         cafe_hashed = new_cafe_hashed
 
     print("Possible levels: " + str(len(cafe_hashed)))
-    return random.choice(list(cafe_hashed.values()))
+
+    if len(cafe_hashed) == 0:
+        return None
+
+    chosen_level = random.choice(list(cafe_hashed.values()))
+    chosen_level["possibilities"] = len(cafe_hashed)
+
+    return chosen_level
 
 def add_level_to_embed(level_embed, level_chosen):
     level_embed.add_field(name = 'Level', value = f"{level_chosen['artist']} - {level_chosen['song']}", inline = True)
     level_embed.add_field(name = 'Creator', value = level_chosen['authors'], inline = True)
     level_embed.add_field(name = 'Description', value = level_chosen['description'], inline = False)
+    level_embed.add_field(name = 'Tags', value = ', '.join(level_chosen['tags']), inline = False)
     level_embed.add_field(name = 'Difficulty', value = level_chosen['difficulty'], inline = True)
     level_embed.add_field(name = 'PR Status', value = level_chosen['peer review status'], inline = True)
     level_embed.add_field(name = 'Download', value = f"[Link]({level_chosen['zip']})", inline = True)

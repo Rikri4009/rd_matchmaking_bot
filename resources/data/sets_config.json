@@ -1,0 +1,221 @@
+{
+    "1": {
+        "difficulties": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "theme": [],
+        "modifier": []
+    },
+    "2": {
+        "difficulties": [
+            "Medium",
+            "Medium",
+            "Tough"
+        ],
+        "theme": [
+            "Holds",
+            "Skipshots"
+        ],
+        "modifier": []
+    },
+    "3": {
+        "difficulties": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "theme": [],
+        "modifier": [
+            "Hard Difficulty Button",
+            "2-Player"
+        ]
+    },
+    "4": {
+        "difficulties": [
+            "Easy",
+            "Medium",
+            "Medium",
+            "Tough"
+        ],
+        "theme": [
+            "No Classics",
+            "Syncopation"
+        ],
+        "modifier": []
+    },
+    "5": {
+        "difficulties": [],
+        "theme": [],
+        "modifier": [
+            "Blindfolded",
+            "Chili Speed"
+        ]
+    },
+    "6": {
+        "difficulties": [],
+        "theme": [
+            "No Oneshots",
+            "Freezeshots"
+        ],
+        "modifier": [
+            "Double Damage",
+            "Endurance"
+        ]
+    },
+    "7": {
+        "difficulties": [],
+        "theme": [
+            "None",
+            "Holds",
+            "Skipshots",
+            "No Classics",
+            "Syncopation",
+            "No Oneshots",
+            "Freezeshots",
+            "8-Beat",
+            "Window Dance"
+        ],
+        "modifier": [
+            "Extreme"
+        ]
+    },
+    "None": {
+        "description": "Anything is possible!",
+        "tags": [],
+        "facets": {}
+    },
+    "Holds": {
+        "description": "This set's levels contain holds.",
+        "tags": [],
+        "facets": {
+            "has_holds": 1
+        }
+    },
+    "Skipshots": {
+        "description": "This set's levels contain skipshots.",
+        "tags": [],
+        "facets": {
+            "has_skipshots": 1
+        }
+    },
+    "No Classics": {
+        "description": "This set's levels don't contain classic rows.",
+        "tags": [],
+        "facets": {
+            "has_classics": 0
+        }
+    },
+    "Syncopation": {
+        "description": "This set's levels contain syncopation.",
+        "tags": [
+            "syncopation"
+        ],
+        "facets": {}
+    },
+    "8-Beat": {
+        "description": "This set's levels contain 8-beat.",
+        "tags": [
+            "8beat"
+        ],
+        "facets": {}
+    },
+    "No Oneshots": {
+        "description": "This set's levels don't contain oneshot rows.",
+        "tags": [],
+        "facets": {
+            "has_oneshots": 0
+        }
+    },
+    "Freezeshots": {
+        "description": "This set's levels contain freezeshots.",
+        "tags": [],
+        "facets": {
+            "has_freezeshots": 1
+        }
+    },
+    "Window Dance": {
+        "description": "This set's levels contain window dance.",
+        "tags": [],
+        "facets": {
+            "has_window_dance": 1
+        }
+    },
+    "Hard Difficulty Button": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "description": "You must use the hard difficulty button!",
+        "tags": [],
+        "facets": {}
+    },
+    "2-Player": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "description": "You must play on 2-player mode!",
+        "tags": [],
+        "facets": {
+            "two_player": 1
+        }
+    },
+    "Blindfolded": {
+        "diff_override": [
+            "Easy",
+            "Easy",
+            "Medium"
+        ],
+        "description": "You must play with your eyes fully closed!",
+        "tags": [],
+        "facets": {}
+    },
+    "Chili Speed": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Easy",
+            "Medium"
+        ],
+        "description": "You must play on :hot_pepper: chili speed!",
+        "tags": [],
+        "facets": {}
+    },
+    "Double Damage": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "description": "Damage taken is doubled!",
+        "tags": [],
+        "facets": {}
+    },
+    "Endurance": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "description": "This set is extra long!",
+        "tags": [],
+        "facets": {}
+    },
+    "Extreme": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough",
+            "Very Tough"
+        ],
+        "description": "This set is impossible.",
+        "tags": [],
+        "facets": {}
+    }
+}

@@ -67,6 +67,53 @@ class MatchmakingBot(Bot):
         if "endless" not in self.game_data:
             self.game_data["endless"] = {}
 
+        endless_lobbies = self.game_data["endless"]
+
+        for player in endless_lobbies:
+            endless_lobby = endless_lobbies[player]
+
+            if "status" not in endless_lobby:
+                endless_lobby["status"] = "Not Started"
+            if "max_hp" not in endless_lobby:
+                endless_lobby["max_hp"] = -1
+            if "current_hp" not in endless_lobby:
+                endless_lobby["current_hp"] = -1
+            if "current_set" not in endless_lobby:
+                endless_lobby["current_set"] = -1
+            if "level_number" not in endless_lobby:
+                endless_lobby["level_number"] = -1
+            if "items" not in endless_lobby:
+                endless_lobby["items"] = {}
+            if "shields_used" not in endless_lobby:
+                endless_lobby["shields_used"] = 0
+            if "chosen_item_1" not in endless_lobby:
+                endless_lobby["chosen_item_1"] = None
+            if "chosen_item_2" not in endless_lobby:
+                endless_lobby["chosen_item_2"] = None
+            if "extra" not in endless_lobby:
+                endless_lobby["extra"] = 0
+
+            if "set_theme" not in endless_lobby:
+                endless_lobby["set_theme"] = None
+            if "set_modifier" not in endless_lobby:
+                endless_lobby["set_modifier"] = None
+            if "roll_tags" not in endless_lobby:
+                endless_lobby["roll_tags"] = []
+            if "roll_facets" not in endless_lobby:
+                endless_lobby["roll_facets"] = {}
+            if "set_difficulties" not in endless_lobby:
+                endless_lobby["set_difficulties"] = []
+            
+            current_items = endless_lobby["items"]
+            if "Ivory Dice" not in current_items:
+                current_items["Ivory Dice"] = 0
+            if "Apples" not in current_items:
+                current_items["Apples"] = 0
+            if "Shields" not in current_items:
+                current_items["Shields"] = 0
+            if "Chronographs" not in current_items:
+                current_items["Chronographs"] = 0
+
 
     def lobby_name_user_is_hosting(self, uid):
         for lobby_name in self.game_data["lobbies"]:
@@ -155,6 +202,10 @@ class MatchmakingBot(Bot):
 
         return achievement_list
 
+
+    def get_sets_config(self):
+        path = data.get_path("resources/data")
+        return data.read_file(path, "sets_config.json")
 
     async def on_ready(self):
         print(f"{self.user.name} is alive!")

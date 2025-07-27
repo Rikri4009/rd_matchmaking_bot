@@ -1,6 +1,6 @@
-def rank_players(unsorted_scores):
+def rank_players(unsorted_scores, reverse):
     sorted_scores = {}
-    for uid in sorted(unsorted_scores, key=unsorted_scores.get, reverse=True):
+    for uid in sorted(unsorted_scores, key=unsorted_scores.get, reverse=reverse):
         sorted_scores[uid] = unsorted_scores[uid]
 
     users_disqualified = []

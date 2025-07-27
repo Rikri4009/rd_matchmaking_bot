@@ -103,6 +103,32 @@
                 17,
                 20
             ]
+        },
+        "Another Team Tries": {
+            "Description": "Highest set beaten",
+            "Assoc_Stat": "highest_set_beaten",
+            "Requirements": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ]
+        },
+        "Synthesis.": {
+            "Description": "Total sets beaten",
+            "Assoc_Stat": "total_sets_beaten",
+            "Requirements": [
+                2,
+                4,
+                8,
+                13,
+                20,
+                30,
+                50
+            ]
         }
     },
     "Secret": {
@@ -149,6 +175,11 @@
         "Bearer of the Cosmos": {
             "Description": "Survive Quaver's challenge",
             "Assoc_Stat": "divine_intervention",
+            "Requirement": 1
+        },
+        "Modifier Master": {
+            "Description": "S-rank a Tough or above with a modifier active",
+            "Assoc_Stat": "tough_plus_s_ranked_modifier",
             "Requirement": 1
         }
     }

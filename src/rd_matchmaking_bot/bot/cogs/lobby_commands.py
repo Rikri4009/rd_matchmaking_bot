@@ -133,18 +133,13 @@ class LobbyCommands(commands.Cog):
 
         if name == 'the light': #secret
             await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
-    \"...okay, fine, I\'m supposed to let those with 15★ or more in. Don\'t think your attempt will be easy, though!\"\n\
-    \"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
-    \"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"', ephemeral=True)
-            #user_achievements = get_user_achievements(ctx, user)
-            #if user_achievements['total'] >= 15:
-                #await the_light_welcome(ctx, user)
+\"...okay, fine, I\'m supposed to let those with 15★ or more in. Don\'t think your attempt will be easy, though!\"\n\
+\"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
+\"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"', ephemeral=True)
+            user_achievements = self.bot.get_user_achievements(ctx, uid)
+            if user_achievements['total'] >= 15:
+                await self.endless_welcome(ctx, uid)
             return
-
-        #if uid in current_lobbies['the light']:
-        #    if name == 'the light begin':
-        #        await the_light_begin(ctx, user)
-        #        return
 
         # if user is playing in a lobby
         lobby_name_user_is_playing_in = self.bot.lobby_name_user_is_playing_in(uid)
@@ -204,6 +199,7 @@ class LobbyCommands(commands.Cog):
 
         await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, name, lobby_host, lobby_players, level_chosen))
 
+
     @lobby.command(description="Leave the lobby you're in")
     async def leave(self, ctx
     ):
@@ -240,6 +236,7 @@ class LobbyCommands(commands.Cog):
         lobby_host = current_lobbies[lobby_name_user_is_playing_in]['host']
         await self.is_everyone_ready(ctx, lobby_name_user_is_playing_in, lobby_host)
         await self.has_everyone_submitted(ctx, lobby_name_user_is_playing_in, lobby_host)
+
 
     @lobby.command(description="Kick a player from your lobby")
     async def kick(self, ctx,
@@ -288,6 +285,7 @@ class LobbyCommands(commands.Cog):
         await self.is_everyone_ready(ctx, lobby_name_user_is_hosting, uid)
         await self.has_everyone_submitted(ctx, lobby_name_user_is_hosting, uid)
 
+
     @lobby.command(description="Delete your lobby")
     async def delete(self, ctx
     ):
@@ -314,11 +312,13 @@ class LobbyCommands(commands.Cog):
 
         self.bot.save_data()
 
+
     @lobby.command(description="Roll a random level for your lobby with specified settings")
     async def roll(self, ctx,
         peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
         played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
-        difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Not Easy', 'Not Very Tough', 'Polarity'], default = 'Any', description = 'Default: Any')
+        difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Not Easy', 'Not Very Tough', 'Polarity'], default = 'Any', description = 'Default: Any'),
+        tags: discord.Option(discord.SlashCommandOptionType.string, default = '', description = 'List of tags the level must have. Default: None')
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
@@ -354,13 +354,26 @@ class LobbyCommands(commands.Cog):
             await ctx.respond(f'No one is playing!', ephemeral=True)
             return
 
+        tags_array = tags.split(',')
+        if tags == '':
+            tags_array = []
+
+        for i, tag in enumerate(tags_array):
+            tags_array[i] = tag.lstrip()
+
+        roll_player_id_list = (current_lobby['players']).keys()
+
+        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, self.bot.users_rdsaves, tags_array, None)
+
+        if level_chosen == None:
+            await ctx.respond("No levels found with those arguments!", ephemeral=True)
+            return
+
         current_lobby['status'] = 'Rolling'
         current_lobby['roll_settings']['peer_reviewed'] = peer_reviewed
         current_lobby['roll_settings']['played_before'] = played_before
         current_lobby['roll_settings']['difficulty'] = difficulty
-        roll_player_id_list = (current_lobby['players']).keys()
-
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, self.bot.users_rdsaves)
+        current_lobby['roll_settings']['tags'] = tags_array
 
         current_lobby['level'] = level_chosen
 
@@ -374,6 +387,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['message_id'] = lobby_new_message.id
 
         self.bot.save_data()
+
 
     async def unroll_level(self, ctx, lobby_name, host_id):
         current_lobby = self.bot.game_data['lobbies'][lobby_name]
@@ -397,6 +411,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['message_id'] = lobby_new_message.id
 
         self.bot.save_data()
+
 
     @lobby.command(description="Trash your lobby's level selection and re-open it")
     async def unroll(self, ctx
@@ -432,6 +447,7 @@ class LobbyCommands(commands.Cog):
         await self.unroll_level(ctx, lobby_name_user_is_hosting, uid)
 
         await ctx.respond("Unrolled.", ephemeral=True)
+
 
     @lobby.command(description="Use this command if you've seen the rolled level before")
     async def already_seen(self, ctx
@@ -476,9 +492,11 @@ class LobbyCommands(commands.Cog):
             new_peer_reviewed = current_lobby['roll_settings']['peer_reviewed']
             new_played_before = current_lobby['roll_settings']['played_before']
             new_difficulty = current_lobby['roll_settings']['difficulty']
+            new_level_tags = current_lobby['roll_settings']['tags']
             roll_player_id_list = (current_lobby['players']).keys()
 
-            new_level_chosen = levels.roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list, self.bot.users_rdsaves)
+            # SHOULD be impossible for this to return None
+            new_level_chosen = levels.roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list, self.bot.users_rdsaves, new_level_tags, None)
 
             current_lobby['level'] = new_level_chosen
 
@@ -510,6 +528,7 @@ class LobbyCommands(commands.Cog):
             await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
             await self.has_everyone_submitted(ctx, lobby_name_user_is_playing_in, lobby_host)
+
 
     async def begin_match(self, ctx, lobby_name):
         current_lobbies = self.bot.game_data["lobbies"]
@@ -545,6 +564,7 @@ class LobbyCommands(commands.Cog):
 
         self.bot.save_data()
 
+
     async def is_everyone_ready(self, ctx, lobby_name, host):
         current_lobbies = self.bot.game_data["lobbies"]
         current_lobby = current_lobbies[lobby_name]
@@ -563,6 +583,7 @@ class LobbyCommands(commands.Cog):
 
         await self.begin_match(ctx, lobby_name)
 
+
     async def finish_match(self, ctx, lobby_name, host):
         current_lobbies = self.bot.game_data["lobbies"]
         current_lobby = current_lobbies[lobby_name]
@@ -572,7 +593,7 @@ class LobbyCommands(commands.Cog):
         for player in current_lobby['players']:
             unsorted_misses[player] = current_lobby['players'][player]['miss_count']
 
-        players_places = misc.rank_players(unsorted_misses)
+        players_places = misc.rank_players(unsorted_misses, False)
 
         level_artist = current_lobby['level']['artist']
         level_song = current_lobby['level']['song']
@@ -668,6 +689,7 @@ class LobbyCommands(commands.Cog):
 
         self.bot.save_data()
 
+
     async def has_everyone_submitted(self, ctx, lobby_name, host_id):
         current_lobbies = self.bot.game_data["lobbies"]
         current_lobby = current_lobbies[lobby_name]
@@ -685,6 +707,7 @@ class LobbyCommands(commands.Cog):
                 return
 
         await self.finish_match(ctx, lobby_name, host_id)
+
 
     @lobby.command(description="MAKE SURE YOU\'RE AT THE BUTTON SCREEN!")
     async def ready(self, ctx
@@ -734,6 +757,7 @@ class LobbyCommands(commands.Cog):
 
         await self.is_everyone_ready(ctx, lobby_name_user_is_playing_in, lobby_host)
 
+
     @lobby.command(description="Use this command if you\'re no longer ready")
     async def unready(self, ctx
     ):
@@ -773,6 +797,7 @@ class LobbyCommands(commands.Cog):
         await lobby_curr_message.edit(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], lobby_level_chosen))
 
         await ctx.respond(f'Unreadied.', ephemeral=True)
+
 
     @lobby.command(description="Submit your miss count")
     async def submit_misses(self, ctx,
@@ -821,6 +846,26 @@ class LobbyCommands(commands.Cog):
         await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
         await self.has_everyone_submitted(ctx, lobby_name_user_is_playing_in, lobby_host)
+
+
+    async def endless_welcome(self, ctx, player_id):
+        welcome_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Lobby: \"`   ` `     `\"", description = f"Player: <@{player_id}>\n\n\
+    Welcome to Endless Setlists!\n\
+Here, your goal is to play levels to reach `   ` `     ` at the end of Set 7.\n\
+(Note: As this is a beta test, runs currently end when completing Set 5.)\n\
+Each set will consist of 4 levels. You start with ★HP, and will lose 1 for each miss.\n\
+\nYou can join other lobbies during your attempt.\n\
+(Starting runs will cost a currency once testing is complete, but is currently free.)\n\n\
+To begin an attempt, type \"**/admin_command endless begin**\".\n\
+(Tip: \"endless\" can be shortened to \"e\" in commands.)")
+        await ctx.channel.send(embed = welcome_embed)
+
+        endless_lobbies = self.bot.game_data["endless"]
+
+        if player_id not in endless_lobbies:
+            endless_lobbies[player_id] = {}
+            self.bot.validate_game_data()
+            self.bot.save_data()
 
 
 def setup(bot: MatchmakingBot):
