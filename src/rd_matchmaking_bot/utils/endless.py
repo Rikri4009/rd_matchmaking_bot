@@ -202,7 +202,7 @@ async def use_item(self, ctx, player_id, item):
         endless_lobby["items"]["Ivory Dice"] = endless_lobby["items"]["Ivory Dice"] - 1
         endless_lobby["chronograph_used"] = False #since chronographed level was rerolled
         await ctx.channel.send("Ivory Die used!")
-        await reroll(ctx, player_id)
+        await reroll(self, ctx, player_id)
         return
 
     if (item == "apples") or (item == "apple") or (item == "pineapples") or (item == "pineapple"):
@@ -295,7 +295,7 @@ async def submit_misses(self, ctx, player_id, miss_count):
         endless_lobby["level_number"] = endless_lobby["level_number"] + 1
         endless_lobby["status"] = "Started"
         self.bot.save_data()
-        await show_status(ctx, player_id)
+        await show_status(self, ctx, player_id)
         return
 
     # is the last level but not the last set: offer item
@@ -323,7 +323,7 @@ async def submit_misses(self, ctx, player_id, miss_count):
 
         else:
             endless_lobby["status"] = "Choice"
-            await forage(ctx, player_id, endless_lobby["extra"])
+            await forage(self, ctx, player_id, endless_lobby["extra"])
             return
 
     # is the last set:
