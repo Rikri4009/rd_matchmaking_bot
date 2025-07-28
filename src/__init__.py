@@ -4,7 +4,8 @@ import rd_matchmaking_bot.utils.data as data
 
 cogs = (
     "user_commands",
-    "lobby_commands"
+    "lobby_commands",
+    "admin_commands"
 )
 
 if __name__ == "__main__":
