@@ -43,7 +43,8 @@
             "Freezeshots"
         ],
         "modifier": [
-            "Double Boss"
+            "Double Boss",
+            "Polarity"
         ]
     },
     "5": {
@@ -79,7 +80,8 @@
             "Window Dance"
         ],
         "modifier": [
-            "Extreme"
+            "Extreme",
+            "Hard Button + 2-Player"
         ]
     },
     "None": {
@@ -219,6 +221,15 @@
         "tags": [],
         "facets": {}
     },
+    "Polarity": {
+        "diff_override": [
+            "Easy",
+            "Very Tough"
+        ],
+        "description": "Uh oh.",
+        "tags": [],
+        "facets": {}
+    },
     "Extreme": {
         "diff_override": [
             "Easy",
@@ -229,5 +240,17 @@
         "description": "This set is impossible.",
         "tags": [],
         "facets": {}
+    },
+    "Hard Button + 2-Player": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough"
+        ],
+        "description": "You must use the hard difficulty button,\n**AND** you must play on 2-player mode!",
+        "tags": [],
+        "facets": {
+            "two_player": 1
+        }
     }
 }
