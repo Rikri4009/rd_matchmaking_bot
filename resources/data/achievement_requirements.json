@@ -178,8 +178,13 @@
             "Requirement": 1
         },
         "Modifier Master": {
-            "Description": "S-rank a Tough or above with a modifier active",
+            "Description": "S-rank a Tough or above with a modifier active, on sightread",
             "Assoc_Stat": "tough_plus_s_ranked_modifier",
+            "Requirement": 1
+        },
+        "Second Try's The Charm": {
+            "Description": "S-rank a level on your second try",
+            "Assoc_Stat": "s_ranked_with_chronograph",
             "Requirement": 1
         }
     }

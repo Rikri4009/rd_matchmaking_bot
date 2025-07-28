@@ -92,6 +92,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["chosen_item_2"] = None
             if "extra" not in endless_lobby:
                 endless_lobby["extra"] = 0
+            if "chronograph_used" not in endless_lobby:
+                endless_lobby["chronograph_used"] = False
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None

@@ -36,14 +36,15 @@
         "difficulties": [
             "Easy",
             "Medium",
-            "Medium",
             "Tough"
         ],
         "theme": [
-            "No Classics",
-            "Syncopation"
+            "No Oneshots",
+            "Freezeshots"
         ],
-        "modifier": []
+        "modifier": [
+            "Double Boss"
+        ]
     },
     "5": {
         "difficulties": [],
@@ -56,8 +57,8 @@
     "6": {
         "difficulties": [],
         "theme": [
-            "No Oneshots",
-            "Freezeshots"
+            "No Classics",
+            "Syncopation"
         ],
         "modifier": [
             "Double Damage",
@@ -199,11 +200,22 @@
         "diff_override": [
             "Easy",
             "Medium",
-            "Easy",
+            "Medium",
             "Medium",
             "Tough"
         ],
         "description": "This set is extra long!",
+        "tags": [],
+        "facets": {}
+    },
+    "Double Boss": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough",
+            "Tough"
+        ],
+        "description": "This set has 2 Toughs!",
         "tags": [],
         "facets": {}
     },

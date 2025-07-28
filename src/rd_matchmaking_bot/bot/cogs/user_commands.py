@@ -198,6 +198,7 @@ class UserCommands(commands.Cog):
         endless_lobby["max_hp"] = achievement_count
         endless_lobby["current_hp"] = achievement_count
         endless_lobby["shields_used"] = 0
+        endless_lobby["chronograph_used"] = False
 
         endless_lobby["current_set"] = 1
         endless_lobby["level_number"] = 0
@@ -377,6 +378,7 @@ To submit your miss count, type \"**/admin_command endless submit [miss count]**
                 return
 
             endless_lobby["items"]["Ivory Dice"] = endless_lobby["items"]["Ivory Dice"] - 1
+            endless_lobby["chronograph_used"] = False #since chronographed level was rerolled
             await ctx.channel.send("Ivory Die used!")
             await self.endless_reroll(ctx, player_id)
             return
@@ -409,6 +411,7 @@ To submit your miss count, type \"**/admin_command endless submit [miss count]**
                 return
 
             endless_lobby["items"]["Chronographs"] = endless_lobby["items"]["Chronographs"] - 1
+            endless_lobby["chronograph_used"] = True
             await ctx.respond("Chronograph used!")
             return
 
@@ -447,20 +450,23 @@ To submit your miss count, type \"**/admin_command endless submit [miss count]**
 
         set_difficulty = endless_lobby["set_difficulties"][endless_lobby["level_number"]]
         if miss_count == 0:
-            if set_difficulty == 'Easy':
-                player_stats['easy_s_ranked'] = player_stats['easy_s_ranked'] + 1
-            elif set_difficulty == 'Medium':
-                player_stats['medium_s_ranked'] = player_stats['medium_s_ranked'] + 1
-            elif set_difficulty == 'Tough':
-                player_stats['tough_s_ranked'] = player_stats['tough_s_ranked'] + 1
-            elif set_difficulty == 'Very Tough':
-                player_stats['vt_s_ranked'] = player_stats['vt_s_ranked'] + 1
-            else:
-                print("HUGE ISSUE IN DIFF")
+            if endless_lobby["chronograph_used"] == False:
+                if set_difficulty == 'Easy':
+                    player_stats['easy_s_ranked'] = player_stats['easy_s_ranked'] + 1
+                elif set_difficulty == 'Medium':
+                    player_stats['medium_s_ranked'] = player_stats['medium_s_ranked'] + 1
+                elif set_difficulty == 'Tough':
+                    player_stats['tough_s_ranked'] = player_stats['tough_s_ranked'] + 1
+                elif set_difficulty == 'Very Tough':
+                    player_stats['vt_s_ranked'] = player_stats['vt_s_ranked'] + 1
+                else:
+                    print("HUGE ISSUE IN DIFF")
 
-            if (set_difficulty == 'Tough') or (set_difficulty == 'Very Tough'):
-                if (endless_lobby["set_modifier"] != "None") and (endless_lobby["set_modifier"] != None):
-                    player_stats['tough_plus_s_ranked_modifier'] = player_stats['tough_plus_s_ranked_modifier'] + 1
+                if (set_difficulty == 'Tough') or (set_difficulty == 'Very Tough'):
+                    if (endless_lobby["set_modifier"] == "Hard Difficulty Button") or (endless_lobby["set_modifier"] == "2-Player"): #todo
+                        player_stats['tough_plus_s_ranked_modifier'] = player_stats['tough_plus_s_ranked_modifier'] + 1
+            else: #chronograph used
+                player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
 
         # not the last level: advance to next level in set
         if endless_lobby["level_number"] < len(endless_lobby["set_difficulties"]) - 1:
