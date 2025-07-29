@@ -131,6 +131,10 @@ class LobbyCommands(commands.Cog):
 
         uid = str(ctx.user.id)
 
+        if uid == "340013796976492552":
+            await ctx.respond("You are banned from playing!")
+            return
+
         if name == 'the light': #secret
             await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
 \"...okay, fine, I\'m supposed to let those with 15★ or more in. Don\'t think your attempt will be easy, though!\"\n\
@@ -286,6 +290,51 @@ class LobbyCommands(commands.Cog):
         await self.has_everyone_submitted(ctx, lobby_name_user_is_hosting, uid)
 
 
+    @lobby.command(description="Transfer a lobby you're hosting to a player in the lobby")
+    async def transfer_host(self, ctx,
+        player: discord.Option(discord.SlashCommandOptionType.user)
+    ):
+        current_lobbies = self.bot.game_data["lobbies"]
+
+        uid = str(ctx.user.id)
+
+        player_to_transfer_to = str(player.id)
+
+        # if user is not hosting
+        lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
+        if lobby_name_user_is_hosting == None:
+            await ctx.respond(f'You are not hosting!', ephemeral=True)
+            return
+
+        current_lobby = current_lobbies[lobby_name_user_is_hosting]
+
+        lobby_channel_id = current_lobby['channel_id']
+
+        # if user isn't in lobby's channel
+        user_channel_id = ctx.channel.id
+        if user_channel_id != lobby_channel_id:
+            await ctx.respond(f'You are not in the lobby\'s channel!', ephemeral=True)
+            return
+
+        # if player is not in the lobby
+        if player_to_transfer_to not in current_lobby['players']:
+            await ctx.respond(f'User not found in lobby!', ephemeral=True)
+            return
+
+        # transfer ownership
+        current_lobby['host'] = player_to_transfer_to
+
+        await ctx.respond(f'Transferred host to <@{player_to_transfer_to}>.')
+
+        # edit lobby message
+        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_status = current_lobby['status']
+        lobby_players = current_lobby['players']
+        level_chosen = current_lobby['level']
+
+        await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, lobby_name_user_is_hosting, uid, lobby_players, level_chosen))
+
+
     @lobby.command(description="Delete your lobby")
     async def delete(self, ctx
     ):
@@ -363,7 +412,7 @@ class LobbyCommands(commands.Cog):
 
         roll_player_id_list = (current_lobby['players']).keys()
 
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, self.bot.users_rdsaves, tags_array, None)
+        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, self.bot.users_rdsaves, tags_array, None, False)
 
         if level_chosen == None:
             await ctx.respond("No levels found with those arguments!", ephemeral=True)
@@ -496,7 +545,7 @@ class LobbyCommands(commands.Cog):
             roll_player_id_list = (current_lobby['players']).keys()
 
             # SHOULD be impossible for this to return None
-            new_level_chosen = levels.roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list, self.bot.users_rdsaves, new_level_tags, None)
+            new_level_chosen = levels.roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list, self.bot.users_rdsaves, new_level_tags, None, False)
 
             current_lobby['level'] = new_level_chosen
 

@@ -15,6 +15,19 @@ class UserCommands(commands.Cog):
         self.bot = bot
 
 
+    @discord.slash_command(description="Primer to the bot")
+    async def about(self, ctx
+    ):
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the Rhythm Doctor Program for International Treatments (RD PITS)!\n\
+Treating patients from across the globe can require multiple interns at once.\n\
+To facilitate this, **Synchronized Operations** (Syncope), designed to synchronize interns with their patients, was created.\n\n\
+To begin a treatment session, do `/lobby create`!\n\n\
+-# This bot is developed by <@1207345676141465622>, with support from <@758112945636376677> and <@340013796976492552>.\n\
+-# Character and artwork by <@201091631795929089>.")
+
+        await ctx.respond(embed=tooltipEmbed)
+
+
     @discord.slash_command(description="Upload your \"settings.rdsave\" file, located in the \"User\" directory of your RD installation")
     async def upload_rdsave(self, ctx,
         attachment: discord.Option(Attachment, description="settings.rdsave file")
@@ -71,7 +84,7 @@ class UserCommands(commands.Cog):
         for i, tag in enumerate(tags_array):
             tags_array[i] = tag.lstrip()
 
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_array, None)
+        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_array, None, False)
 
         if level_chosen == None:
             await ctx.respond("No levels found with those arguments!") #intentionally not ephemeral
@@ -144,9 +157,16 @@ class UserCommands(commands.Cog):
     ):
         uid = str(ctx.user.id)
 
+        user_stats = (self.bot.users_stats)[uid]
+
         if (command == "endless begin") or (command == "e begin"):
-            await endless.begin(self, ctx, uid)
+            await endless.begin(self, ctx, uid, None)
             return
+        
+        if (command == "endless begin FIFTEEN") or (command == "e begin FIFTEEN"):
+            if user_stats["highest_set_beaten"] >= 5:
+                await endless.begin(self, ctx, uid, 15)
+                return
         
         if (command == "endless roll") or (command == "e roll"):
             await endless.roll(self, ctx, uid)
@@ -166,6 +186,10 @@ class UserCommands(commands.Cog):
 
         if (command == "endless forage 2") or (command == "e forage 2"):
             await endless.roll_extra(self, ctx, uid, 2, "Tough")
+            return
+        
+        if (command == "endless SKIP SET TWO") or (command == "e SKIP SET TWO"):
+            await endless.roll_extra(self, ctx, uid, -1, "Very Tough")
             return
 
         args = command.split()

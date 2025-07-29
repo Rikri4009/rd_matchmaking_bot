@@ -4,7 +4,10 @@ import hashlib
 
 import rd_matchmaking_bot.utils.data as data
 
-def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets):
+def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets, require_gameplay):
+
+    if difficulty == "Polarity":
+        difficulty = random.choice(["Easy", "Easy", "Very Tough"])
 
     if tags == None:
         tags = []
@@ -55,10 +58,17 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         for facet in facets:
             if facet not in line:
                 print("HUGE MISTAKE")
-            if str(facets[facet]) != str(line[facet]):
+            elif str(facets[facet]) != str(line[facet]):
                 facets_check = False
 
-        if pr_check and diff_check and facets_check and tags_check:
+        # require_gameplay check
+        has_gameplay_check = False
+        if require_gameplay == False:
+            has_gameplay_check = True # boolean zen blah blah shut up
+        elif (str(line["has_classics"]) == "1") or (str(line["has_oneshots"]) == "1"):
+            has_gameplay_check = True
+
+        if pr_check and diff_check and facets_check and tags_check and has_gameplay_check:
             authors_list = json.loads(line['authors'])
             authors = ', '.join(authors_list)
 
@@ -127,7 +137,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
     return chosen_level
 
 def add_level_to_embed(level_embed, level_chosen):
-    level_embed.add_field(name = 'Level', value = f"{level_chosen['artist']} - {level_chosen['song']}", inline = True)
+    level_embed.add_field(name = 'Level', value = f"{level_chosen['artist']} - **{level_chosen['song']}**", inline = True)
     level_embed.add_field(name = 'Creator', value = level_chosen['authors'], inline = True)
     level_embed.add_field(name = 'Description', value = level_chosen['description'], inline = False)
     level_embed.add_field(name = 'Tags', value = ', '.join(level_chosen['tags']), inline = False)

@@ -3,8 +3,12 @@ import random
 import math
 import rd_matchmaking_bot.utils.levels as levels
 
-async def begin(self, ctx, player_id):
+async def begin(self, ctx, player_id, max_hp):
     endless_lobbies = self.bot.game_data["endless"]
+
+    if player_id == "340013796976492552":
+        await ctx.respond("You are banned from playing!")
+        return
 
     if player_id not in endless_lobbies:
         await ctx.respond("You need to join `   ` `     ` first!", ephemeral=True)
@@ -17,8 +21,14 @@ async def begin(self, ctx, player_id):
         return
 
     achievement_count = (self.bot.get_user_achievements(ctx, player_id))["total"]
+
     endless_lobby["max_hp"] = achievement_count
     endless_lobby["current_hp"] = achievement_count
+
+    if max_hp != None:
+        endless_lobby["max_hp"] = max_hp
+        endless_lobby["current_hp"] = max_hp
+
     endless_lobby["shields_used"] = 0
     endless_lobby["chronograph_used"] = False
 
@@ -145,7 +155,10 @@ async def roll(self, ctx, player_id):
 
     endless_lobby['status'] = 'Rolled'
 
-    level_chosen = levels.roll_random_level("Yes", "No", endless_lobby['set_difficulties'][level_number], [player_id], self.bot.users_rdsaves, endless_lobby['roll_tags'], endless_lobby['roll_facets'])
+    level_chosen = levels.roll_random_level("Yes", "No", endless_lobby['set_difficulties'][level_number], [player_id], self.bot.users_rdsaves, endless_lobby['roll_tags'], endless_lobby['roll_facets'], True)
+
+    if level_chosen == None:
+        level_chosen = levels.roll_random_level("Yes", "No", endless_lobby['set_difficulties'][level_number], [player_id], self.bot.users_rdsaves, None, None, False)
 
     if level_chosen == None:
         await ctx.respond("HUGE MISTAKE ping me lol")
@@ -287,8 +300,8 @@ async def submit_misses(self, ctx, player_id, miss_count):
             if (set_difficulty == 'Tough') or (set_difficulty == 'Very Tough'):
                 if (endless_lobby["set_modifier"] == "Hard Difficulty Button") or (endless_lobby["set_modifier"] == "2-Player"): #todo
                     player_stats['tough_plus_s_ranked_modifier'] = player_stats['tough_plus_s_ranked_modifier'] + 1
-            else: #chronograph used
-                player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
+        else: #chronograph used
+            player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
 
     # not the last level: advance to next level in set
     if endless_lobby["level_number"] < len(endless_lobby["set_difficulties"]) - 1:
@@ -314,11 +327,23 @@ async def submit_misses(self, ctx, player_id, miss_count):
             endless_lobby["chosen_item_2"] = random.choice(item_list)
             endless_lobby["status"] = "Choice"
 
-            await ctx.respond(f"You have beaten this set and have {endless_lobby['current_hp']}/{endless_lobby['max_hp']} HP!\n\
-    You can choose to \"**/admin_command endless recover**\" 2/3rds of your missing HP now...\n\
-    Or, you can first play an extra Medium this set to also \"**/admin_command endless forage 1**\" __{endless_lobby['chosen_item_1']}__...\n\
-    Or, you can play an extra Tough to \"**/admin_command endless forage 2**\" __{endless_lobby['chosen_item_2']}__.")
+            message_string = f"You have beaten this set and have {endless_lobby['current_hp']}/{endless_lobby['max_hp']} HP!\n\
+You can choose to \"**/admin_command endless recover**\" 2/3rds of your missing HP now...\n\
+Or, you can first play an extra Medium this set to also \"**/admin_command endless forage 1**\" __{endless_lobby['chosen_item_1']}__ then recover...\n\
+Or, you can play an extra Tough to \"**/admin_command endless forage 2**\" __{endless_lobby['chosen_item_2']}__ then recover."
+            
+            if (player_stats["highest_set_beaten"] == 5) and (endless_lobby["current_set"] == 1):
+                message_string = message_string + "..\n...OR, you can play an extra Very Tough to \"**/admin_command endless SKIP SET TWO**\" then recover."
+
+            await ctx.respond(message_string)
             self.bot.save_data()
+            return
+
+        elif endless_lobby["extra"] == -1:
+            endless_lobby["extra"] = 0
+            endless_lobby["current_set"] = endless_lobby["current_set"] + 1
+            endless_lobby["status"] = "Choice"
+            await recover(self, ctx, player_id)
             return
 
         else:
@@ -349,6 +374,10 @@ async def roll_extra(self, ctx, player_id, number, difficulty):
 
     if endless_lobby["status"] != "Choice":
         await ctx.respond("You haven't been offered a choice yet! Bozo") #ephemeral
+        return
+
+    if (number == -1) and (endless_lobby["current_set"] != 1):
+        await ctx.respond("You're not on Set 1!")
         return
 
     (endless_lobby["set_difficulties"]).append(difficulty)

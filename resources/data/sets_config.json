@@ -173,7 +173,7 @@
             "Easy",
             "Medium"
         ],
-        "description": "You must play with your eyes fully closed!",
+        "description": "You must play with your eyes fully closed! (You may `/endless already_seen` any level with CPU rows.)",
         "tags": [],
         "facets": {}
     },
