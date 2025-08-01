@@ -94,6 +94,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["extra"] = 0
             if "chronograph_used" not in endless_lobby:
                 endless_lobby["chronograph_used"] = False
+            if "s_ranked_so_far" not in endless_lobby:
+                endless_lobby["s_ranked_so_far"] = False
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None
@@ -160,31 +162,31 @@ class MatchmakingBot(Bot):
             match ach_tier:
                 case 1:
                     ach_level_desc = 'Bronze'
-                    ach_emoji = ':third_place:'
+                    ach_emoji = '<:bronze:1399860108665557043>'
                 case 2:
                     ach_level_desc = 'Silver'
-                    ach_emoji = ':second_place:'
+                    ach_emoji = '<:silver:1399860110389542915>'
                 case 3:
                     ach_level_desc = 'Gold'
-                    ach_emoji = ':first_place:'
+                    ach_emoji = '<:gold:1399860113883402270>'
                 case 4:
                     ach_level_desc = 'Distinguished'
-                    ach_emoji = ':trophy:'
+                    ach_emoji = '<:distinguished:1399860116119093529>'
                 case 5:
                     ach_level_desc = 'Illustrious'
-                    ach_emoji = ':gem:'
+                    ach_emoji = '<:illustrious:1399860117700087888>'
                 case 6:
-                    ach_level_desc = 'Otherworldly'
-                    ach_emoji = ':comet:'
+                    ach_level_desc = 'Stellar'
+                    ach_emoji = '<:stellar:1399860119092854936>'
                 case 7:
                     ach_level_desc = 'Medical-Grade'
-                    ach_emoji = ':syringe:'
+                    ach_emoji = '<:medical_grade:1399860122288783390>'
 
             ach_next_tier = ach_tier + 1
             if ach_tier == 7:
                 ach_next_tier = ach_tier #no next tier to speak of
 
-            achievement_list['message'] = achievement_list['message'] + f'{ach_emoji} [{achievement}]({ctx.channel.jump_url} "{ach_description}") ({ach_level_desc}): ({ach_user_current_stat}/{ach_requirements[ach_next_tier-1]})\n'
+            achievement_list['message'] = achievement_list['message'] + f'{ach_emoji} [{achievement}]({ctx.channel.jump_url} "{ach_description}"): ({ach_user_current_stat}/{ach_requirements[ach_next_tier-1]})\n'
 
             achievement_list['total'] = achievement_list['total'] + ach_tier
 

@@ -57,6 +57,7 @@ async def begin_set(self, ctx, player_id):
     endless_lobby['status'] = 'Started'
 
     endless_lobby["extra"] = 0
+    endless_lobby["s_ranked_so_far"] = True
 
     set_theme = 'None'
     if len(sets_config[set_number]['theme']) != 0:
@@ -267,6 +268,9 @@ async def submit_misses(self, ctx, player_id, miss_count):
         await ctx.respond("A level has not been rolled!", ephemeral=True)
         return
 
+    if miss_count > 0:
+        endless_lobby["s_ranked_so_far"] = False
+
     if endless_lobby["shields_used"]:
         endless_lobby["current_hp"] = endless_lobby["current_hp"] - (miss_count // (2 ** endless_lobby["shields_used"]))
         endless_lobby["shields_used"] = 0
@@ -281,7 +285,7 @@ async def submit_misses(self, ctx, player_id, miss_count):
 
     player_stats = self.bot.users_stats[player_id]
 
-    player_stats['exp'] = player_stats['exp'] + 5
+    # player_stats['exp'] = player_stats['exp'] + 5
 
     set_difficulty = endless_lobby["set_difficulties"][endless_lobby["level_number"]]
     if miss_count == 0:
@@ -298,7 +302,7 @@ async def submit_misses(self, ctx, player_id, miss_count):
                 print("HUGE ISSUE IN DIFF")
 
             if (set_difficulty == 'Tough') or (set_difficulty == 'Very Tough'):
-                if (endless_lobby["set_modifier"] == "Hard Difficulty Button") or (endless_lobby["set_modifier"] == "2-Player"): #todo
+                if (endless_lobby["set_modifier"] == "Hard Difficulty Button") or (endless_lobby["set_modifier"] == "2-Player") or (endless_lobby["set_modifier"] == "Blindfolded") or (endless_lobby["set_modifier"] == "Nightcore"): #todo
                     player_stats['tough_plus_s_ranked_modifier'] = player_stats['tough_plus_s_ranked_modifier'] + 1
         else: #chronograph used
             player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
@@ -311,12 +315,16 @@ async def submit_misses(self, ctx, player_id, miss_count):
         await show_status(self, ctx, player_id)
         return
 
+    # if last level
+    if endless_lobby["s_ranked_so_far"]:
+        player_stats["s_ranked_entire_set"] = player_stats["s_ranked_entire_set"] + 1
+
     # is the last level but not the last set: offer item
     if endless_lobby["current_set"] < 5:
         player_stats = self.bot.users_stats[player_id]
 
         if endless_lobby["extra"] == 0:
-            player_stats["exp"] = player_stats["exp"] + (10 * endless_lobby["current_set"])
+            # player_stats["exp"] = player_stats["exp"] + (5 * endless_lobby["current_set"])
             player_stats["highest_set_beaten"] = max(player_stats["highest_set_beaten"], endless_lobby["current_set"])
             player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
@@ -353,7 +361,7 @@ Or, you can play an extra Tough to \"**/admin_command endless forage 2**\" __{en
 
     # is the last set:
     player_stats = self.bot.users_stats[player_id]
-    player_stats["exp"] = player_stats["exp"] + 70
+    # player_stats["exp"] = player_stats["exp"] + 70
     player_stats["highest_set_beaten"] = max(player_stats["highest_set_beaten"], endless_lobby["current_set"])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 

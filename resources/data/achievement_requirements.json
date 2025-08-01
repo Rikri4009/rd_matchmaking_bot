@@ -4,17 +4,17 @@
             "Description": "Earned exp",
             "Assoc_Stat": "exp",
             "Requirements": [
-                100,
-                250,
-                500,
-                800,
-                1300,
+                200,
+                600,
+                1200,
                 2000,
-                3000
+                3000,
+                4500,
+                7000
             ]
         },
         "Place Your Bets": {
-            "Description": "Matches played",
+            "Description": "Matches played in lobbies",
             "Assoc_Stat": "matches_played",
             "Requirements": [
                 10,
@@ -185,6 +185,11 @@
         "Second Try's The Charm": {
             "Description": "S-rank a level on your second try",
             "Assoc_Stat": "s_ranked_with_chronograph",
+            "Requirement": 1
+        },
+        "The Perfect Run": {
+            "Description": "S-rank an entire set",
+            "Assoc_Stat": "s_ranked_entire_set",
             "Requirement": 1
         }
     }

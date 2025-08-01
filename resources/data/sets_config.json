@@ -52,7 +52,7 @@
         "theme": [],
         "modifier": [
             "Blindfolded",
-            "Chili Speed"
+            "Nightcore"
         ]
     },
     "6": {
@@ -177,7 +177,7 @@
         "tags": [],
         "facets": {}
     },
-    "Chili Speed": {
+    "Nightcore": {
         "diff_override": [
             "Easy",
             "Medium",
