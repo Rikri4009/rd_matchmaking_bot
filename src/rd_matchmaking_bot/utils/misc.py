@@ -1,3 +1,6 @@
+import discord
+from itertools import islice
+
 def rank_players(unsorted_scores, reverse):
     sorted_scores = {}
     for uid in sorted(unsorted_scores, key=unsorted_scores.get, reverse=reverse):
@@ -28,7 +31,7 @@ def rank_players(unsorted_scores, reverse):
 
     for user in sorted_scores:
         if sorted_scores[user] == -1:
-            users_places[user]["text"] = "Disqualified"
+            users_places[user]["text"] = "(Already Seen)"
         elif users_places[user]["rank"] == 1:
             users_places[user]["text"] = ":first_place:st"
         elif users_places[user]["rank"] == 2:
@@ -39,3 +42,28 @@ def rank_players(unsorted_scores, reverse):
             users_places[user]["text"] = str(users_places[user]["rank"]) + "th"
 
     return users_places
+
+def get_leaderboard_embed(ctx, bot, category, page):
+    unsorted_scores = {}
+
+    if category == 'exp':
+        category = ' ' + category
+        for uid in bot.users_stats:
+            if bot.users_stats[uid]['exp'] > 0: #remove people with 0 exp
+                unsorted_scores[uid] = bot.users_stats[uid]['exp']
+    else:
+        for uid in bot.users_stats:
+            user_achievements = bot.get_user_achievements(ctx, uid)
+            if user_achievements['total'] > 0:
+                unsorted_scores[uid] = user_achievements['total']
+
+    users_places = rank_players(unsorted_scores, True)
+
+    leaderboard_message = ''
+
+    page_start = (page-1)*10
+    page_end = page*10
+    for user in islice(users_places, page_start, page_end):
+        leaderboard_message = leaderboard_message + f"{users_places[user]['text']} ({unsorted_scores[user]}{category}): <@{user}>\n"
+
+    return discord.Embed(colour = discord.Colour.yellow(), title = f"{category} Leaderboard (Page {page})", description = leaderboard_message)

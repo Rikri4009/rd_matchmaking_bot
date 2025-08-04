@@ -10,6 +10,38 @@ import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.endless as endless
 import rd_matchmaking_bot.utils.misc as misc
 
+class LeaderboardButtons(discord.ui.View):
+
+    def __init__(self, bot: MatchmakingBot):
+        super().__init__()
+        self.bot = bot
+
+    @discord.ui.button(label="<-", style=discord.ButtonStyle.secondary)
+    async def prev_pressed(self, button, interaction):
+        embed_title = interaction.message.embeds[0].title
+        category = "exp"
+        if embed_title[0] == "★":
+            category = "★"
+        page_start = embed_title.find("Page") + 5
+        page_end = embed_title.find(")")
+        current_page_num = int(embed_title[page_start:page_end])
+        if current_page_num < 2:
+            await interaction.respond("Already on first page!", ephemeral=True)
+        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, category, current_page_num-1)
+        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
+
+    @discord.ui.button(label="->", style=discord.ButtonStyle.secondary)
+    async def next_pressed(self, button, interaction):
+        embed_title = interaction.message.embeds[0].title
+        category = "exp"
+        if embed_title[0] == "★":
+            category = "★"
+        page_start = embed_title.find("Page") + 5
+        page_end = embed_title.find(")")
+        current_page_num = int(embed_title[page_start:page_end])
+        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, category, current_page_num+1)
+        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
+
 class UserCommands(commands.Cog):
     def __init__(self, bot: MatchmakingBot):
         self.bot = bot
@@ -127,28 +159,9 @@ To begin a treatment session, do `/lobby create`!\n\n\
     async def leaderboard(self, ctx,
         category: discord.Option(choices = ['exp', '★'], default = 'exp', description = 'Default: exp')
     ):
-        unsorted_scores = {}
-
-        if category == 'exp':
-            category = ' ' + category
-            for uid in self.bot.users_stats:
-                if self.bot.users_stats[uid]['exp'] > 0: #remove people with 0 exp
-                    unsorted_scores[uid] = self.bot.users_stats[uid]['exp']
-        else:
-            for uid in self.bot.users_stats:
-                user_achievements = self.bot.get_user_achievements(ctx, uid)
-                if user_achievements['total'] > 0:
-                    unsorted_scores[uid] = user_achievements['total']
-
-        users_places = misc.rank_players(unsorted_scores, True)
-
-        leaderboard_message = ''
-
-        for user in users_places:
-            leaderboard_message = leaderboard_message + f"{users_places[user]['text']} ({unsorted_scores[user]}{category}): <@{user}>\n"
-
-        leaderboard_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{category} Leaderboard", description = leaderboard_message)
-        await ctx.respond(embed=leaderboard_embed)
+        leaderboard_embed = misc.get_leaderboard_embed(ctx, self.bot, category, 1)
+        
+        await ctx.respond(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
 
 
     @discord.slash_command(description="(ADVANCED) Run an admin command.")

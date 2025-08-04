@@ -1,9 +1,36 @@
 import discord
 from discord.ext import commands
 import time
+import re
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
+
+
+class LobbyButtonsOpen(discord.ui.View):
+    @discord.ui.button(label="Join", style=discord.ButtonStyle.success)
+    async def join_pressed(self, button, interaction):
+        lobby_title = interaction.message.embeds[0].title
+        lobby_name = re.findall('"([^"]*)"', lobby_title)[0]
+        await LobbyCommands.join(interaction, lobby_name)
+
+    @discord.ui.button(label="Leave", style=discord.ButtonStyle.secondary)
+    async def leave_pressed(self, button, interaction):
+        await LobbyCommands.leave(interaction)
+
+
+class LobbyButtonsRolling(discord.ui.View):
+    @discord.ui.button(label="Ready", style=discord.ButtonStyle.success)
+    async def ready_pressed(self, button, interaction):
+        await LobbyCommands.ready(interaction)
+
+    @discord.ui.button(label="Unready", style=discord.ButtonStyle.secondary)
+    async def unready_pressed(self, button, interaction):
+        await LobbyCommands.unready(interaction)
+
+    @discord.ui.button(label="Leave", style=discord.ButtonStyle.danger)
+    async def leave_pressed(self, button, interaction):
+        await LobbyCommands.leave(interaction)
 
 
 class LobbyCommands(commands.Cog):
@@ -21,7 +48,7 @@ class LobbyCommands(commands.Cog):
 
         players = ', '.join(player_list)
 
-        return discord.Embed(colour = discord.Colour.blue(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nDo \"**/lobby join {lobby_name}**\" to join.\n\n**Players:** {players}")
+        return discord.Embed(colour = discord.Colour.blue(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
 
 
     def get_lobby_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen):
@@ -30,7 +57,7 @@ class LobbyCommands(commands.Cog):
         for id in player_id_dict:
             ready_list = ready_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-        level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, do \"**/lobby ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n", image = level_chosen['image_url'])
+        level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n", image = level_chosen['image_url'])
         levels.add_level_to_embed(level_embed, level_chosen)
         return level_embed
 
@@ -106,19 +133,22 @@ class LobbyCommands(commands.Cog):
         current_lobby['status'] = 'Open'
         current_lobby['host'] = uid
         current_lobby['players'] = {}
+        current_lobby['players'][uid] = {}
+        current_lobby['players'][uid]['ready_status'] = 'Not Ready'
+        current_lobby['players'][uid]['miss_count'] = None
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
 
-        message = await ctx.channel.send(embed=self.get_lobby_open_embed(name, uid, []))
+        message = await ctx.channel.send(embed=self.get_lobby_open_embed(name, uid, [uid]), view=LobbyButtonsOpen())
 
         current_lobby['channel_id'] = message.channel.id
         current_lobby['message_id'] = message.id
 
         await ctx.respond(f"<@{uid}> You have started hosting the lobby \"{name}\"!\n\
-    Make sure to do \"**/lobby join {name}**\" if you want to play.\n\
-    You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
-    You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
-    Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=True)
+Make sure to press \"**Leave**\" if you don't want to play.\n\
+You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
+You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
+Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=True)
 
         self.bot.save_data()
 
@@ -131,13 +161,9 @@ class LobbyCommands(commands.Cog):
 
         uid = str(ctx.user.id)
 
-        if uid == "340013796976492552":
-            await ctx.respond("You are banned from playing!")
-            return
-
         if name == 'the light': #secret
             await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
-\"...okay, fine, I\'m supposed to let those with 15★ or more in. Don\'t think your attempt will be easy, though!\"\n\
+\"If you really want to prove your worth, make an Ascension lobby!\"\n\
 \"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
 \"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"', ephemeral=True)
             user_achievements = self.bot.get_user_achievements(ctx, uid)
@@ -191,11 +217,11 @@ class LobbyCommands(commands.Cog):
         current_lobby['players'][uid]['ready_status'] = 'Not Ready'
         current_lobby['players'][uid]['miss_count'] = None
 
-        await ctx.respond(f'Joined \"{name}\".\nDo \"**/lobby leave**\" to leave.\nWait for the host to roll a level...', ephemeral=True)
+        await ctx.respond(f'Joined \"{name}\".\nWait for the host to roll a level...', ephemeral=True)
         await lobby_channel.send(f'<@{uid}> Joined \"{name}\"!')
 
         # edit lobby message
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_status = current_lobby['status']
         lobby_host = current_lobby['host']
         lobby_players = current_lobby['players']
@@ -229,7 +255,7 @@ class LobbyCommands(commands.Cog):
         await lobby_channel.send(f'<@{uid}> left \"{lobby_name_user_is_playing_in}\".')
 
         # edit lobby message
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_status = current_lobby['status']
         lobby_host = current_lobby['host']
         lobby_players = current_lobby['players']
@@ -279,7 +305,7 @@ class LobbyCommands(commands.Cog):
         await ctx.respond(f'Kicked <@{player_to_kick}>.')
 
         # edit lobby message
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_status = current_lobby['status']
         lobby_players = current_lobby['players']
         level_chosen = current_lobby['level']
@@ -327,7 +353,7 @@ class LobbyCommands(commands.Cog):
         await ctx.respond(f'Transferred host to <@{player_to_transfer_to}>.')
 
         # edit lobby message
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_status = current_lobby['status']
         lobby_players = current_lobby['players']
         level_chosen = current_lobby['level']
@@ -351,9 +377,10 @@ class LobbyCommands(commands.Cog):
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         # edit lobby message; possible await race condition here but very unlikely? also not a big deal lol
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_channel_id = current_lobby['channel_id']
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         if lobby_curr_message != None:
-            await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None)
+            await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
 
         del current_lobbies[lobby_name_user_is_hosting]
 
@@ -426,11 +453,11 @@ class LobbyCommands(commands.Cog):
 
         current_lobby['level'] = level_chosen
 
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
 
-        await lobby_curr_message.edit(f'The lobby \"{lobby_name_user_is_hosting}\" has rolled a level!', embed=None)
+        await lobby_curr_message.edit(f'The lobby \"{lobby_name_user_is_hosting}\" has rolled a level!', embed=None, view=None)
 
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_hosting, uid, current_lobby['players'], level_chosen))
+        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_hosting, uid, current_lobby['players'], level_chosen), view=LobbyButtonsRolling())
 
         await ctx.respond(f'<@{uid}> You have rolled a level! No more players may join this lobby.\nYou can do \"**/lobby unroll**\" to trash this selection and allow more players to join.', ephemeral=True)
         current_lobby['message_id'] = lobby_new_message.id
@@ -441,7 +468,8 @@ class LobbyCommands(commands.Cog):
     async def unroll_level(self, ctx, lobby_name, host_id):
         current_lobby = self.bot.game_data['lobbies'][lobby_name]
 
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_channel_id = current_lobby['channel_id']
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         unrolled_artist = current_lobby['level']['artist']
         unrolled_song = current_lobby['level']['song']
         unrolled_authors = current_lobby['level']['authors']
@@ -450,12 +478,11 @@ class LobbyCommands(commands.Cog):
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
 
-        await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!", embed=None)
+        await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!", embed=None, view=None)
 
-        lobby_channel_id = current_lobby['channel_id']
         lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host_id, current_lobby['players']))
+        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host_id, current_lobby['players']), view=LobbyButtonsOpen())
 
         current_lobby['message_id'] = lobby_new_message.id
 
@@ -549,11 +576,11 @@ class LobbyCommands(commands.Cog):
 
             current_lobby['level'] = new_level_chosen
 
-            lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
-            await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!", embed=None)
+            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+            await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!", embed=None, view=None)
 
             lobby_host = current_lobby['host']
-            lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], new_level_chosen))
+            lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], new_level_chosen), view=LobbyButtonsRolling())
 
             await ctx.respond(f'Rerolled!', ephemeral=True)
 
@@ -570,7 +597,7 @@ class LobbyCommands(commands.Cog):
             current_lobby['players'][uid]['ready_status'] = 'Submitted'
             current_lobby['players'][uid]['miss_count'] = -1
 
-            lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
             lobby_host = current_lobby['host']
             await lobby_curr_message.edit(embed=self.get_lobby_playing_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players']))
 
@@ -732,7 +759,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['level'] = {}
 
         player_list = current_lobby['players']
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host, player_list))
+        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host, player_list), view=LobbyButtonsOpen())
 
         current_lobby['message_id'] = lobby_new_message.id
 
@@ -796,7 +823,7 @@ class LobbyCommands(commands.Cog):
 
         current_lobby['players'][uid]['ready_status'] = 'Ready'
 
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_level_chosen = current_lobby['level']
 
         lobby_host = current_lobby['host']
@@ -839,7 +866,8 @@ class LobbyCommands(commands.Cog):
 
         current_lobby['players'][uid]['ready_status'] = 'Not Ready'
 
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_channel_id = current_lobby['channel_id']
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_level_chosen = current_lobby['level']
 
         lobby_host = current_lobby['host']
@@ -888,7 +916,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['players'][uid]['ready_status'] = 'Submitted'
         current_lobby['players'][uid]['miss_count'] = miss_count
 
-        lobby_curr_message = await ctx.fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
         lobby_host = current_lobby['host']
         await lobby_curr_message.edit(embed=self.get_lobby_playing_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players']))
 
