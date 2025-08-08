@@ -7,40 +7,40 @@ from discord import Attachment
 from discord.ext import commands
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
-import rd_matchmaking_bot.utils.endless as endless
+import rd_matchmaking_bot.utils.ascension as ascension
 import rd_matchmaking_bot.utils.misc as misc
 
 class LeaderboardButtons(discord.ui.View):
-
-    def __init__(self, bot: MatchmakingBot):
+    def __init__(self, bot: MatchmakingBot, uid, category, page):
         super().__init__()
         self.bot = bot
+        self.uid = uid
+        self.category = category
+        self.page = page
 
     @discord.ui.button(label="<-", style=discord.ButtonStyle.secondary)
     async def prev_pressed(self, button, interaction):
-        embed_title = interaction.message.embeds[0].title
-        category = "exp"
-        if embed_title[0] == "★":
-            category = "★"
-        page_start = embed_title.find("Page") + 5
-        page_end = embed_title.find(")")
-        current_page_num = int(embed_title[page_start:page_end])
-        if current_page_num < 2:
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        if self.page < 2:
             await interaction.respond("Already on first page!", ephemeral=True)
-        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, category, current_page_num-1)
-        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
+            return
+
+        new_page = self.page - 1
+        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, self.category, new_page)
+        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, self.uid, self.category, new_page))
 
     @discord.ui.button(label="->", style=discord.ButtonStyle.secondary)
     async def next_pressed(self, button, interaction):
-        embed_title = interaction.message.embeds[0].title
-        category = "exp"
-        if embed_title[0] == "★":
-            category = "★"
-        page_start = embed_title.find("Page") + 5
-        page_end = embed_title.find(")")
-        current_page_num = int(embed_title[page_start:page_end])
-        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, category, current_page_num+1)
-        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        new_page = self.page + 1
+        leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, self.category, new_page)
+        await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, self.uid, self.category, new_page))
 
 class UserCommands(commands.Cog):
     def __init__(self, bot: MatchmakingBot):
@@ -100,7 +100,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         # if user doesn't have an rdsettings
         if uid not in self.bot.users_rdsaves:
-            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsettings** to do this.)', ephemeral=True)
+            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use `/upload_rdsave` to do this.)', ephemeral=True)
             return
 
         if players == None:
@@ -159,9 +159,11 @@ To begin a treatment session, do `/lobby create`!\n\n\
     async def leaderboard(self, ctx,
         category: discord.Option(choices = ['exp', '★'], default = 'exp', description = 'Default: exp')
     ):
+        uid = str(ctx.user.id)
+
         leaderboard_embed = misc.get_leaderboard_embed(ctx, self.bot, category, 1)
-        
-        await ctx.respond(embed=leaderboard_embed, view=LeaderboardButtons(self.bot))
+
+        await ctx.respond(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, uid, category, 1))
 
 
     @discord.slash_command(description="(ADVANCED) Run an admin command.")
@@ -173,46 +175,46 @@ To begin a treatment session, do `/lobby create`!\n\n\
         user_stats = (self.bot.users_stats)[uid]
 
         if (command == "endless begin") or (command == "e begin"):
-            await endless.begin(self, ctx, uid, None)
+            await ascension.begin(self, ctx, uid, None)
             return
         
         if (command == "endless begin FIFTEEN") or (command == "e begin FIFTEEN"):
             if user_stats["highest_set_beaten"] >= 5:
-                await endless.begin(self, ctx, uid, 15)
+                await ascension.begin(self, ctx, uid, 15)
                 return
         
         if (command == "endless roll") or (command == "e roll"):
-            await endless.roll(self, ctx, uid)
+            await ascension.roll(self, ctx, uid)
             return
 
         if (command == "endless already_seen") or (command == "e already_seen"):
-            await endless.reroll(self, ctx, uid)
+            await ascension.reroll(self, ctx, uid)
             return
 
         if (command == "endless recover") or (command == "e recover"):
-            await endless.recover(self, ctx, uid)
+            await ascension.recover(self, ctx, uid)
             return
         
         if (command == "endless forage 1") or (command == "e forage 1"):
-            await endless.roll_extra(self, ctx, uid, 1, "Medium")
+            await ascension.roll_extra(self, ctx, uid, 1, "Medium")
             return
 
         if (command == "endless forage 2") or (command == "e forage 2"):
-            await endless.roll_extra(self, ctx, uid, 2, "Tough")
+            await ascension.roll_extra(self, ctx, uid, 2, "Tough")
             return
         
         if (command == "endless SKIP SET TWO") or (command == "e SKIP SET TWO"):
-            await endless.roll_extra(self, ctx, uid, -1, "Very Tough")
+            await ascension.roll_extra(self, ctx, uid, -1, "Very Tough")
             return
 
         args = command.split()
 
         if (len(args) == 3) and ((args[0] == "endless") or (args[0] == "e")) and (args[1] == "use"):
-            await endless.use_item(self, ctx, uid, args[2])
+            await ascension.use_item(self, ctx, uid, args[2])
             return
 
         if (len(args) == 3) and ((args[0] == "endless") or (args[0] == "e")) and (args[1] == "submit") and ((args[2]).isdigit()):
-            await endless.submit_misses(self, ctx, uid, int(args[2]))
+            await ascension.submit_misses(self, ctx, uid, int(args[2]))
             return
 
         await ctx.respond(f"Invalid command!", ephemeral=True)

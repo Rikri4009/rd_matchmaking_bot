@@ -129,6 +129,19 @@
                 30,
                 50
             ]
+        },
+        "Supporter": {
+            "Description": "SP earned",
+            "Assoc_Stat": "total_sp_earned",
+            "Requirements": [
+                30,
+                80,
+                160,
+                300,
+                450,
+                700,
+                1000
+            ]
         }
     },
     "Secret": {

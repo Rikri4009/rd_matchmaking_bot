@@ -5,6 +5,7 @@ import re
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
+import rd_matchmaking_bot.utils.ascension as ascension
 
 
 class LobbyButtonsOpen(discord.ui.View):
@@ -48,7 +49,7 @@ class LobbyCommands(commands.Cog):
 
         players = ', '.join(player_list)
 
-        return discord.Embed(colour = discord.Colour.blue(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
+        return discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
 
 
     def get_lobby_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen):
@@ -57,7 +58,7 @@ class LobbyCommands(commands.Cog):
         for id in player_id_dict:
             ready_list = ready_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-        level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n", image = level_chosen['image_url'])
+        level_embed = discord.Embed(colour = discord.Colour.green(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}\n", image = level_chosen['image_url'])
         levels.add_level_to_embed(level_embed, level_chosen)
         return level_embed
 
@@ -68,18 +69,104 @@ class LobbyCommands(commands.Cog):
         for id in player_id_dict:
             submitted_list = submitted_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-        return discord.Embed(colour = discord.Colour.red(), title = f"Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do \"**/lobby already_seen**\" if you recognize this level!\nOtherwise, when you\'re done, do \"**/lobby submit_misses**\" to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
+        return discord.Embed(colour = discord.Colour.red(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
 
 
-    def get_lobby_embed(self, status, lobby_name, host_id, player_id_dict, level_chosen):
-        if status == 'Open':
-            return self.get_lobby_open_embed(lobby_name, host_id, player_id_dict)
+    def get_current_lobby_embed(self, ctx, lobby_name):
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+        mode = current_lobby["mode"]
+        status = current_lobby["status"]
+        host_id = current_lobby["host"]
+        player_id_dict = current_lobby["players"]
+        level_chosen = current_lobby["level"]
+
+        if mode == 'Free Play':
+            if status == 'Open':
+                return self.get_lobby_open_embed(lobby_name, host_id, player_id_dict)
+            elif status == 'Rolling':
+                return self.get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen)
+            elif status == 'Playing':
+                return self.get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
+        elif mode == 'Ascension':
+            ascension_lobby = self.bot.game_data["ascension"][host_id]
+            if status == 'Not Started':
+                return ascension.get_ascension_welcome_embed(self, lobby_name, host_id)
+            elif status == 'Open':
+                return ascension.get_ascension_open_embed(self, ctx, lobby_name, host_id, player_id_dict)
+            elif status == 'Rolling':
+                return ascension.get_ascension_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen, ascension_lobby)
+            elif status == 'Playing':
+                return self.get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
+            elif status == 'Item':
+                return ascension.get_ascension_item_embed(ctx, lobby_name, host_id, ascension_lobby)
+            elif status == 'Choice':
+                return ascension.get_ascension_choice_embed(lobby_name, host_id, ascension_lobby)
+            elif status == 'Game Over':
+                return ascension.get_ascension_gameover_embed(lobby_name, host_id, ascension_lobby)
+        print('Huge Mistake')
+
+
+    def get_current_lobby_view(self, lobby_name):
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+        mode = current_lobby["mode"]
+        status = current_lobby["status"]
+        host_id = current_lobby["host"]
+        player_id_dict = current_lobby["players"]
+        level_chosen = current_lobby["level"]
+        if status == 'Not Started':
+            return ascension.AscensionButtonsWelcome(self, lobby_name, host_id)
+        elif status == 'Open':
+            return LobbyButtonsOpen()
         elif status == 'Rolling':
-            return self.get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen)
+            return LobbyButtonsRolling()
         elif status == 'Playing':
-            return self.get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
+            return None
+        elif status == 'Item':
+            return ascension.AscensionButtonsItem(self, lobby_name, host_id)
+        elif status == 'Choice':
+            return ascension.AscensionButtonsChoice(self, lobby_name, host_id)
+        elif status == 'Game Over':
+            return ascension.AscensionButtonsGameOver(self, lobby_name, host_id)
+        print('Huge Mistake')
+
+
+    async def send_current_lobby_message(self, lobby_name, ctx, is_response): #is_response currently unused
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+        lobby_embed = self.get_current_lobby_embed(ctx, lobby_name)
+        lobby_view = self.get_current_lobby_view(lobby_name)
+
+        #await self.disable_current_message_view(current_lobby)
+
+        message = None
+        if is_response:
+            message = await ctx.respond(embed=lobby_embed, view=lobby_view)
         else:
-            print('Huge Mistake')
+            message = await ctx.channel.send(embed=lobby_embed, view=lobby_view)
+
+        current_lobby["channel_id"] = message.channel.id
+        current_lobby["message_id"] = message.id
+
+
+    async def disable_current_message_view(self, current_lobby): #doesnt work???
+        if "message_id" in current_lobby:
+            lobby_curr_message = await (await self.bot.fetch_channel(current_lobby["channel_id"])).fetch_message(current_lobby["message_id"])
+            for component in lobby_curr_message.components:
+                if isinstance(component, discord.ActionRow):
+                    for child in component.children:
+                        child.disabled = True
+
+
+    async def edit_current_lobby_message(self, lobby_name, ctx):
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+
+        lobby_channel_id = current_lobby["channel_id"]
+
+        lobby_embed = self.get_current_lobby_embed(ctx, lobby_name)
+        lobby_view = self.get_current_lobby_view(lobby_name)
+
+        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby["message_id"])
+
+        await lobby_curr_message.edit(embed=lobby_embed, view=lobby_view)
 
     
     @lobby.command(description="List all existing lobbies")
@@ -101,7 +188,8 @@ class LobbyCommands(commands.Cog):
 
     @lobby.command(description="Create a lobby")
     async def create(self, ctx,
-        name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name')
+        name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name'),
+        mode: discord.Option(choices = ['Free Play', 'Ascension', 'Archipelago'], default = 'Free Play', description = 'Default: Free Play')
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
@@ -127,10 +215,14 @@ class LobbyCommands(commands.Cog):
             await ctx.respond(f'That lobby name is already in use!', ephemeral=True)
             return
 
+        if mode == "Archipelago":
+            await ctx.respond("That mode is currently being implemented!", ephemeral=True)
+            return
+
         current_lobbies[name] = {}
         current_lobby = current_lobbies[name]
 
-        current_lobby['status'] = 'Open'
+        current_lobby['mode'] = mode
         current_lobby['host'] = uid
         current_lobby['players'] = {}
         current_lobby['players'][uid] = {}
@@ -139,16 +231,25 @@ class LobbyCommands(commands.Cog):
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
 
-        message = await ctx.channel.send(embed=self.get_lobby_open_embed(name, uid, [uid]), view=LobbyButtonsOpen())
+        if mode == "Free Play":
+            current_lobby['status'] = 'Open'
+        elif mode == "Ascension":
+            current_lobby['status'] = 'Not Started'
 
-        current_lobby['channel_id'] = message.channel.id
-        current_lobby['message_id'] = message.id
-
-        await ctx.respond(f"<@{uid}> You have started hosting the lobby \"{name}\"!\n\
+        if mode == "Free Play":
+            await ctx.respond(f"<@{uid}> You have started hosting the lobby \"{name}\"!\n\
 Make sure to press \"**Leave**\" if you don't want to play.\n\
-You can do \"**/lobby kick [player]**\" to kick an AFK player.\n\
-You can do \"**/lobby delete**\" to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
-Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=True)
+Do `/lobby kick [player]` to kick an AFK player.\n\
+Do `/lobby transfer_host [player]` to transfer host status to another player.\n\
+Do `/lobby delete` to delete this lobby. (Don't do this until after level results are sent, it's rude!)\n\n\
+Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
+        elif mode == "Ascension":
+            await ctx.respond(f"<@{uid}> You have started hosting the lobby \"{name}\"!\n\
+Do `/lobby kick [player]` to kick an AFK player.\n\
+Do `/lobby delete` to delete this lobby. (Your current run will be saved.)\n\n\
+Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
+
+        await self.send_current_lobby_message(name, ctx, False)
 
         self.bot.save_data()
 
@@ -202,15 +303,18 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         # if lobby is not open
         if current_lobby['status'] == 'Rolling':
-            await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to **/lobby unroll** so that you can join.)', ephemeral=True)
+            await ctx.respond(f'That lobby is already rolling for a level! (Consider asking the host to `/lobby unroll` so that you can join.)', ephemeral=True)
             return
         elif current_lobby['status'] == 'Playing':
             await ctx.respond(f'That lobby is already playing!', ephemeral=True)
             return
+        elif current_lobby['status'] != 'Open':
+            await ctx.respond(f'That lobby is not open!', ephemeral=True)
+            return
 
         # if user doesn't have an rdsettings
         if uid not in self.bot.users_rdsaves:
-            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use **/upload_rdsave** to do this.)', ephemeral=True)
+            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use `/upload_rdsave` to do this.)', ephemeral=True)
             return
 
         current_lobby['players'][uid] = {}
@@ -220,14 +324,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         await ctx.respond(f'Joined \"{name}\".\nWait for the host to roll a level...', ephemeral=True)
         await lobby_channel.send(f'<@{uid}> Joined \"{name}\"!')
 
-        # edit lobby message
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_status = current_lobby['status']
-        lobby_host = current_lobby['host']
-        lobby_players = current_lobby['players']
-        level_chosen = current_lobby['level']
-
-        await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, name, lobby_host, lobby_players, level_chosen))
+        await self.edit_current_lobby_message(name, ctx)
 
 
     @lobby.command(description="Leave the lobby you're in")
@@ -245,6 +342,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         current_lobby = current_lobbies[lobby_name_user_is_playing_in]
 
+        # if host tries to leave ascension lobby
+        if (current_lobby["mode"] != "Free Play") and (uid == current_lobby["host"]):
+            await ctx.respond(f"You can't do that in this mode!", ephemeral=True)
+            return
+
         lobby_channel_id = current_lobby['channel_id']
         lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
@@ -255,13 +357,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         await lobby_channel.send(f'<@{uid}> left \"{lobby_name_user_is_playing_in}\".')
 
         # edit lobby message
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_status = current_lobby['status']
-        lobby_host = current_lobby['host']
-        lobby_players = current_lobby['players']
-        level_chosen = current_lobby['level']
-
-        await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, lobby_name_user_is_playing_in, lobby_host, lobby_players, level_chosen))
+        await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
         lobby_host = current_lobbies[lobby_name_user_is_playing_in]['host']
         await self.is_everyone_ready(ctx, lobby_name_user_is_playing_in, lobby_host)
@@ -273,18 +369,21 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         player: discord.Option(discord.SlashCommandOptionType.user)
     ):
         current_lobbies = self.bot.game_data["lobbies"]
+        current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         uid = str(ctx.user.id)
-
         player_to_kick = str(player.id)
+
+        # if not free play and host tries to kick themselves
+        if (current_lobby["mode"] != "Free Play") and (uid == player_to_kick):
+            await ctx.respond(f"You can't leave in this mode!", ephemeral=True)
+            return
 
         # if user is not hosting
         lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
         if lobby_name_user_is_hosting == None:
             await ctx.respond(f'You are not hosting!', ephemeral=True)
             return
-
-        current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         lobby_channel_id = current_lobby['channel_id']
 
@@ -305,12 +404,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         await ctx.respond(f'Kicked <@{player_to_kick}>.')
 
         # edit lobby message
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_status = current_lobby['status']
-        lobby_players = current_lobby['players']
-        level_chosen = current_lobby['level']
-
-        await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, lobby_name_user_is_hosting, uid, lobby_players, level_chosen))
+        await self.edit_current_lobby_message(lobby_name_user_is_hosting, ctx)
 
         await self.is_everyone_ready(ctx, lobby_name_user_is_hosting, uid)
         await self.has_everyone_submitted(ctx, lobby_name_user_is_hosting, uid)
@@ -324,17 +418,20 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         uid = str(ctx.user.id)
 
-        player_to_transfer_to = str(player.id)
-
         # if user is not hosting
         lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
         if lobby_name_user_is_hosting == None:
-            await ctx.respond(f'You are not hosting!', ephemeral=True)
+            await ctx.respond(f"You are not hosting!", ephemeral=True)
             return
 
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
-        lobby_channel_id = current_lobby['channel_id']
+        # if not free play
+        if current_lobby["mode"] != "Free Play":
+            await ctx.respond(f"You can't do that in this mode!", ephemeral=True)
+            return
+
+        lobby_channel_id = current_lobby["channel_id"]
 
         # if user isn't in lobby's channel
         user_channel_id = ctx.channel.id
@@ -343,6 +440,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             return
 
         # if player is not in the lobby
+        player_to_transfer_to = str(player.id)
         if player_to_transfer_to not in current_lobby['players']:
             await ctx.respond(f'User not found in lobby!', ephemeral=True)
             return
@@ -353,12 +451,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         await ctx.respond(f'Transferred host to <@{player_to_transfer_to}>.')
 
         # edit lobby message
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_status = current_lobby['status']
-        lobby_players = current_lobby['players']
-        level_chosen = current_lobby['level']
-
-        await lobby_curr_message.edit(embed=self.get_lobby_embed(lobby_status, lobby_name_user_is_hosting, uid, lobby_players, level_chosen))
+        await self.edit_current_lobby_message(lobby_name_user_is_hosting, ctx)
 
 
     @lobby.command(description="Delete your lobby")
@@ -376,17 +469,50 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
-        # edit lobby message; possible await race condition here but very unlikely? also not a big deal lol
+        # edit lobby message
         lobby_channel_id = current_lobby['channel_id']
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        if lobby_curr_message != None:
-            await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
+        try:
+            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+            if lobby_curr_message != None:
+                if current_lobby["status"] != "Game Over":
+                    await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
+                else:
+                    lobby_curr_message.edit(lobby_curr_message.content, embed=None, view=None)
+        except:
+            #print(current_lobbies[lobby_name_user_is_hosting])
+            print("Lobby message edit failed in delete")
 
         del current_lobbies[lobby_name_user_is_hosting]
 
         await ctx.respond(f'Deleted \"{lobby_name_user_is_hosting}\".')
 
         self.bot.save_data()
+
+
+    def roll_level_from_settings(self, lobby_name):
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+
+        # chronograph used: same level, played before, use up chronograph
+        if current_lobby["mode"] == "Ascension":
+            runner_id = current_lobby["host"]
+            ascension_lobby = self.bot.game_data["ascension"][runner_id]
+            if ascension_lobby["chronograph_used"]:
+                roll_settings["played_before"] = True
+                return
+
+        roll_settings = current_lobby["roll_settings"]
+
+        peer_reviewed = roll_settings["peer_reviewed"]
+        played_before = roll_settings["played_before"]
+        difficulty = roll_settings["difficulty"]
+        tags = roll_settings["tags"]
+        facets = roll_settings["facets"]
+        require_gameplay = roll_settings["require_gameplay"]
+
+        roll_player_id_list = (current_lobby["players"]).keys()
+        users_rdsaves = self.bot.users_rdsaves
+
+        current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tags, facets, require_gameplay)
 
 
     @lobby.command(description="Roll a random level for your lobby with specified settings")
@@ -409,20 +535,21 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         lobby_channel_id = current_lobby['channel_id']
-        lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
         # if user isn't in lobby's channel
-        user_channel_id = ctx.channel.id
-        if user_channel_id != lobby_channel_id:
+        if ctx.channel.id != lobby_channel_id:
             await ctx.respond(f'You are not in the lobby\'s channel!', ephemeral=True)
             return
 
         # if lobby is not in open state
         if current_lobby['status'] == 'Rolling':
-            await ctx.respond(f'Your lobby has already rolled a level! Use **/lobby unroll** to re-open your lobby.', ephemeral=True)
+            await ctx.respond(f'Your lobby has already rolled a level! Use `/lobby unroll` to re-open your lobby.', ephemeral=True)
             return
         elif current_lobby['status'] == 'Playing':
             await ctx.respond(f'Your lobby is already playing, or is waiting on people to submit their miss counts! Kick AFK players if you must.', ephemeral=True)
+            return
+        elif current_lobby['status'] != 'Open':
+            await ctx.respond(f'Your lobby is not open!', ephemeral=True)
             return
 
         # if no one is playing
@@ -430,37 +557,49 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             await ctx.respond(f'No one is playing!', ephemeral=True)
             return
 
-        tags_array = tags.split(',')
-        if tags == '':
-            tags_array = []
+        current_lobby["status"] = "Rolling"
 
-        for i, tag in enumerate(tags_array):
-            tags_array[i] = tag.lstrip()
+        if current_lobby["mode"] == "Free Play":
+            tags_array = tags.split(',')
+            if tags == '':
+                tags_array = []
 
-        roll_player_id_list = (current_lobby['players']).keys()
+            for i, tag in enumerate(tags_array):
+                tags_array[i] = tag.lstrip()
 
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, self.bot.users_rdsaves, tags_array, None, False)
+            current_lobby['roll_settings']['peer_reviewed'] = peer_reviewed
+            current_lobby['roll_settings']['played_before'] = played_before
+            current_lobby['roll_settings']['difficulty'] = difficulty
+            current_lobby['roll_settings']['tags'] = tags_array
+            current_lobby['roll_settings']['facets'] = {}
+            current_lobby['roll_settings']['require_gameplay'] = False
+
+        elif current_lobby["mode"] == "Ascension":
+            ascension_lobby = self.bot.game_data["ascension"][uid]
+
+            ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid)
+        else:
+            print('todo')
+
+        self.roll_level_from_settings(lobby_name_user_is_hosting)
+
+        level_chosen = current_lobby['level']
 
         if level_chosen == None:
-            await ctx.respond("No levels found with those arguments!", ephemeral=True)
+            if current_lobby["mode"] == "Free Play":
+                await ctx.respond("No levels found with those arguments!") #deliberately not ephemeral
+            else:
+                self.bot.save_data()
+                await ctx.respond("<@1207345676141465622> HELP HELP HELP HELP HELP HELP HELP HELP HELP")
             return
 
-        current_lobby['status'] = 'Rolling'
-        current_lobby['roll_settings']['peer_reviewed'] = peer_reviewed
-        current_lobby['roll_settings']['played_before'] = played_before
-        current_lobby['roll_settings']['difficulty'] = difficulty
-        current_lobby['roll_settings']['tags'] = tags_array
+        if current_lobby["mode"] == "Free Play":
+            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+            await lobby_curr_message.edit(f'The lobby \"{lobby_name_user_is_hosting}\" has rolled a level!', embed=None, view=None)
 
-        current_lobby['level'] = level_chosen
+        await self.send_current_lobby_message(lobby_name_user_is_hosting, ctx, False)
 
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-
-        await lobby_curr_message.edit(f'The lobby \"{lobby_name_user_is_hosting}\" has rolled a level!', embed=None, view=None)
-
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_hosting, uid, current_lobby['players'], level_chosen), view=LobbyButtonsRolling())
-
-        await ctx.respond(f'<@{uid}> You have rolled a level! No more players may join this lobby.\nYou can do \"**/lobby unroll**\" to trash this selection and allow more players to join.', ephemeral=True)
-        current_lobby['message_id'] = lobby_new_message.id
+        await ctx.respond(f'<@{uid}> You have rolled a level! No more players may join this lobby.\nYou can do `/lobby unroll` to trash this selection and allow more players to join.', ephemeral=True)
 
         self.bot.save_data()
 
@@ -480,11 +619,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!", embed=None, view=None)
 
-        lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
-
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host_id, current_lobby['players']), view=LobbyButtonsOpen())
-
-        current_lobby['message_id'] = lobby_new_message.id
+        await self.send_current_lobby_message(lobby_name, ctx, False)
 
         self.bot.save_data()
 
@@ -513,11 +648,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             return
 
         # if lobby is not in rolling state
-        if current_lobby['status'] == 'Open':
-            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
-            return
-        elif current_lobby['status'] == 'Playing':
+        if current_lobby['status'] == 'Playing':
             await ctx.respond(f'Your lobby is already playing! Wait for everyone to finish.', ephemeral=True)
+            return
+        elif current_lobby['status'] != 'Rolling':
+            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
             return
 
         await self.unroll_level(ctx, lobby_name_user_is_hosting, uid)
@@ -541,7 +676,6 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         current_lobby = current_lobbies[lobby_name_user_is_playing_in]
 
         lobby_channel_id = current_lobby['channel_id']
-        lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
         # if user isn't in lobby's channel
         user_channel_id = ctx.channel.id
@@ -552,6 +686,9 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         # if level isn't rolled yet
         if current_lobby['status'] == 'Open':
             await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
+            return
+        elif (current_lobby['status'] != 'Rolling') and (current_lobby['status'] != 'Playing'):
+            await ctx.respond(f'That command is not valid in this state!', ephemeral=True)
             return
 
         # if rolling
@@ -564,27 +701,23 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             for player in current_lobby['players']:
                 current_lobby['players'][player]['ready_status'] = 'Not Ready'
 
-            # choose a new level
-            new_peer_reviewed = current_lobby['roll_settings']['peer_reviewed']
-            new_played_before = current_lobby['roll_settings']['played_before']
-            new_difficulty = current_lobby['roll_settings']['difficulty']
-            new_level_tags = current_lobby['roll_settings']['tags']
-            roll_player_id_list = (current_lobby['players']).keys()
+            # chronograph used: sorry
+            if current_lobby["mode"] == "Ascension":
+                runner_id = current_lobby["host"]
+                ascension_lobby = self.bot.game_data["ascension"][runner_id]
+                if ascension_lobby["chronograph_used"]:
+                    await ctx.respond(f"Chronograph used, sorry! Wait until after everyone readies to do this command, or leave.", ephemeral=True)
+                    return
 
-            # SHOULD be impossible for this to return None
-            new_level_chosen = levels.roll_random_level(new_peer_reviewed, new_played_before, new_difficulty, roll_player_id_list, self.bot.users_rdsaves, new_level_tags, None, False)
-
-            current_lobby['level'] = new_level_chosen
+            # choose a new level, SHOULD be impossible for this to return None
+            self.roll_level_from_settings(lobby_name_user_is_playing_in)
 
             lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
             await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!", embed=None, view=None)
 
-            lobby_host = current_lobby['host']
-            lobby_new_message = await lobby_channel.send(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], new_level_chosen), view=LobbyButtonsRolling())
+            await self.send_current_lobby_message(lobby_name_user_is_playing_in, ctx, False)
 
             await ctx.respond(f'Rerolled!', ephemeral=True)
-
-            current_lobby['message_id'] = lobby_new_message.id
 
             self.bot.save_data()
 
@@ -597,9 +730,8 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             current_lobby['players'][uid]['ready_status'] = 'Submitted'
             current_lobby['players'][uid]['miss_count'] = -1
 
-            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
             lobby_host = current_lobby['host']
-            await lobby_curr_message.edit(embed=self.get_lobby_playing_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players']))
+            await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
             await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
@@ -618,6 +750,8 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             message = message + f"<@{player_id}> "
             current_lobby['players'][player_id]['ready_status'] = 'Not Yet Submitted'
 
+        #await self.disable_current_message_view(current_lobby)
+
         lobby_channel_id = current_lobby['channel_id']
         lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
@@ -633,10 +767,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         await lobby_channel.send('**GO!**')
         time.sleep(10)
 
-        lobby_host = current_lobby['host']
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_playing_embed(lobby_name, lobby_host, current_lobby['players']))
-
-        current_lobby['message_id'] = lobby_new_message.id
+        await self.send_current_lobby_message(lobby_name, ctx, False)
 
         self.bot.save_data()
 
@@ -661,8 +792,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
 
     async def finish_match(self, ctx, lobby_name, host):
-        current_lobbies = self.bot.game_data["lobbies"]
-        current_lobby = current_lobbies[lobby_name]
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
 
         unsorted_misses = {}
 
@@ -680,20 +810,37 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         users_stats = self.bot.users_stats #for convenience lol
 
+        total_sp_earned = 0
+
         for player in players_places:
             player_rank = players_places[player]['rank']
 
-            placement_message = placement_message + f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4} exp)\n" #(2*players - place) exp gained
+            sp_earned = 0
+            if current_lobby['mode'] == 'Ascension':
+                runner_misses = current_lobby["players"][host]["miss_count"]
+                support_misses = current_lobby["players"][player]["miss_count"]
+                if (runner_misses != -1) and (support_misses != -1) and (host != player):
+                    sp_earned = ascension.calculate_sp(runner_misses, support_misses)
+
+            total_sp_earned = total_sp_earned + sp_earned
+
+            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4} exp)\n"
+            if sp_earned > 0:
+                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4} exp) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
+
+            placement_message = placement_message + placement_message_line
 
             if player not in users_stats:
                 users_stats[player] = {}
-                self.bot.validate_users_stats()
+
+            self.bot.validate_users_stats()
 
             player_stats = users_stats[player]
 
             level_is_tough_plus = (current_lobby['level']['difficulty'] == 'Tough') or (current_lobby['level']['difficulty'] == 'Very Tough')
 
             player_stats['exp'] = player_stats['exp'] + num_players*2 - player_rank + 4
+            player_stats['total_sp_earned'] = player_stats['total_sp_earned'] + sp_earned
             player_stats['matches_played'] = player_stats['matches_played'] + 1
             player_stats['opponents_beaten'] = player_stats['opponents_beaten'] + num_players - player_rank
             if (current_lobby['roll_settings']['played_before'] == 'No'):
@@ -706,15 +853,23 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
                         if level_is_tough_plus:
                             player_stats['tough_plus_opponents_beaten_list'].append(player_beaten)
                             player_stats['tough_plus_opponents_beaten_list'] = list(set(player_stats['tough_plus_opponents_beaten_list'])) #remove duplicates
-            if (unsorted_misses[player] == 0) and (current_lobby['roll_settings']['played_before'] == 'No'):
-                if current_lobby['level']['difficulty'] == 'Easy':
-                    player_stats['easy_s_ranked'] = player_stats['easy_s_ranked'] + 1
-                elif current_lobby['level']['difficulty'] == 'Medium':
-                    player_stats['medium_s_ranked'] = player_stats['medium_s_ranked'] + 1
-                elif current_lobby['level']['difficulty'] == 'Tough':
-                    player_stats['tough_s_ranked'] = player_stats['tough_s_ranked'] + 1
-                else:
-                    player_stats['vt_s_ranked'] = player_stats['vt_s_ranked'] + 1
+            if unsorted_misses[player] == 0:
+                if current_lobby['roll_settings']['played_before'] == 'No':
+                    if current_lobby['level']['difficulty'] == 'Easy':
+                        player_stats['easy_s_ranked'] = player_stats['easy_s_ranked'] + 1
+                    elif current_lobby['level']['difficulty'] == 'Medium':
+                        player_stats['medium_s_ranked'] = player_stats['medium_s_ranked'] + 1
+                    elif current_lobby['level']['difficulty'] == 'Tough':
+                        player_stats['tough_s_ranked'] = player_stats['tough_s_ranked'] + 1
+                    elif current_lobby['level']['difficulty'] == 'Very Tough':
+                        player_stats['vt_s_ranked'] = player_stats['vt_s_ranked'] + 1
+                if current_lobby['mode'] == 'Ascension':
+                    if current_lobby['roll_settings']['played_before'] == 'Yes': #means chronograph was used
+                        player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
+                    if (current_lobby['level']['difficulty'] == 'Tough') or (current_lobby['level']['difficulty'] == 'Very Tough'):
+                        ascension_lobby = self.bot.game_data["ascension"][host]
+                        if (ascension_lobby["set_modifier"] == "Hard Difficulty Button") or (ascension_lobby["set_modifier"] == "2-Player") or (ascension_lobby["set_modifier"] == "Blindfolded") or (ascension_lobby["set_modifier"] == "Nightcore"): #todo
+                            player_stats['tough_plus_s_ranked_modifier'] = player_stats['tough_plus_s_ranked_modifier'] + 1
             if len(unsorted_misses) > player_stats['largest_match_played']:
                 player_stats['largest_match_played'] = len(unsorted_misses)
             if (player_rank == 1) and (len(unsorted_misses) > player_stats['largest_match_won']):
@@ -750,18 +905,40 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         placement_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"Results for {level_artist} - {level_song} (by {level_authors}):", description = placement_message)
         await lobby_channel.send(embed=placement_embed)
 
+        if current_lobby['mode'] == 'Free Play':
+            current_lobby['status'] = 'Open'
+            current_lobby['roll_settings'] = {}
+            current_lobby['level'] = {}
+
+        elif current_lobby['mode'] == 'Ascension':
+            ascension_lobby = self.bot.game_data["ascension"][host]
+
+            runner_misses = current_lobby["players"][host]["miss_count"]
+
+            ascension_lobby['current_sp'] = ascension_lobby['current_sp'] + total_sp_earned
+
+            damage_factor = 1
+            if ascension_lobby["set_modifier"] == "Double Damage":
+                damage_factor = damage_factor * 2
+
+            ascension_lobby['incoming_damage'] = runner_misses * damage_factor
+
+            if runner_misses == -1:
+                current_lobby['status'] = 'Open'
+                ascension_lobby['status'] = 'Open'
+            else:
+                if runner_misses > 0:
+                    ascension_lobby["s_ranked_so_far"] = False
+                current_lobby['status'] = 'Item'
+                ascension_lobby['status'] = 'Item'
+
+            ascension_lobby["chronograph_used"] = False #no ones gonna chronograph an already seen level
+
         for player in current_lobby['players']:
             current_lobby['players'][player]['ready_status'] = 'Not Ready'
             current_lobby['players'][player]['miss_count'] = None
 
-        current_lobby['status'] = 'Open'
-        current_lobby['roll_settings'] = {}
-        current_lobby['level'] = {}
-
-        player_list = current_lobby['players']
-        lobby_new_message = await lobby_channel.send(embed=self.get_lobby_open_embed(lobby_name, host, player_list), view=LobbyButtonsOpen())
-
-        current_lobby['message_id'] = lobby_new_message.id
+        await self.send_current_lobby_message(lobby_name, ctx, False)
 
         self.bot.save_data()
 
@@ -809,11 +986,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             return
 
         # if level isn't rolled yet
-        if current_lobby['status'] == 'Open':
-            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
-            return
-        elif current_lobby['status'] == 'Playing':
+        if current_lobby['status'] == 'Playing':
             await ctx.respond(f'Your lobby is already playing!', ephemeral=True)
+            return
+        elif current_lobby['status'] != 'Rolling':
+            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
             return
 
         # if user is already ready
@@ -823,14 +1000,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         current_lobby['players'][uid]['ready_status'] = 'Ready'
 
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_level_chosen = current_lobby['level']
-
-        lobby_host = current_lobby['host']
-        await lobby_curr_message.edit(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], lobby_level_chosen))
+        await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
         await ctx.respond(f'Readied!', ephemeral=True)
 
+        lobby_host = current_lobby['host']
         await self.is_everyone_ready(ctx, lobby_name_user_is_playing_in, lobby_host)
 
 
@@ -852,11 +1026,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         # deliberately do not have to be in the correct channel
 
         # if level isn't rolled yet
-        if current_lobby['status'] == 'Open':
-            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
-            return
         if current_lobby['status'] == 'Playing':
             await ctx.respond(f'Your lobby is already playing!', ephemeral=True)
+            return
+        elif current_lobby['status'] != 'Rolling':
+            await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
             return
 
         # if user is already not ready
@@ -866,12 +1040,7 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
 
         current_lobby['players'][uid]['ready_status'] = 'Not Ready'
 
-        lobby_channel_id = current_lobby['channel_id']
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_level_chosen = current_lobby['level']
-
-        lobby_host = current_lobby['host']
-        await lobby_curr_message.edit(embed=self.get_lobby_rolling_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players'], lobby_level_chosen))
+        await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
         await ctx.respond(f'Unreadied.', ephemeral=True)
 
@@ -901,11 +1070,11 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
             return
 
         # if lobby isn't playing
-        if current_lobby['status'] == 'Open':
-            await ctx.respond(f'Your lobby has not yet rolled a level! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
-            return
-        elif current_lobby['status'] == 'Rolling':
+        if current_lobby['status'] == 'Rolling':
             await ctx.respond(f'Your lobby has not yet started playing! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
+            return
+        elif current_lobby['status'] != 'Playing':
+            await ctx.respond(f'Your lobby has not yet rolled a level! (Contact <@1207345676141465622> if you made a mistake.)', ephemeral=True)
             return
 
         # if user has already submitted
@@ -916,33 +1085,27 @@ Once everyone has joined, do \"**/lobby roll**\" to roll a level.", ephemeral=Tr
         current_lobby['players'][uid]['ready_status'] = 'Submitted'
         current_lobby['players'][uid]['miss_count'] = miss_count
 
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        lobby_host = current_lobby['host']
-        await lobby_curr_message.edit(embed=self.get_lobby_playing_embed(lobby_name_user_is_playing_in, lobby_host, current_lobby['players']))
+        await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
         await ctx.respond(f'Submitted! Just wait for everyone else to submit...', ephemeral=True)
 
+        lobby_host = current_lobby['host']
         await self.has_everyone_submitted(ctx, lobby_name_user_is_playing_in, lobby_host)
 
 
-    async def endless_welcome(self, ctx, player_id):
-        welcome_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Lobby: \"`   ` `     `\"", description = f"Player: <@{player_id}>\n\n\
-    Welcome to Endless Setlists!\n\
-Here, your goal is to play levels to reach `   ` `     ` at the end of Set 7.\n\
-(Note: As this is a beta test, runs currently end when completing Set 5.)\n\
-Each set will consist of 4 levels. You start with ★HP, and will lose 1 for each miss.\n\
-\nYou can join other lobbies during your attempt.\n\
-(Starting runs will cost a currency once testing is complete, but is currently free.)\n\n\
-To begin an attempt, type \"**/admin_command endless begin**\".\n\
-(Tip: \"endless\" can be shortened to \"e\" in commands.)")
-        await ctx.channel.send(embed = welcome_embed)
+    @lobby.command(description="Resend a lobby's status (try this command if buttons break)")
+    async def resend(self, ctx,
+        name: discord.Option(discord.SlashCommandOptionType.string, description = 'The lobby\'s name')
+    ):
+        current_lobbies = self.bot.game_data["lobbies"]
 
-        endless_lobbies = self.bot.game_data["endless"]
+        if name not in current_lobbies:
+            await ctx.respond(f'That lobby doesn\'t exist!', ephemeral=True)
+            return
 
-        if player_id not in endless_lobbies:
-            endless_lobbies[player_id] = {}
-            self.bot.validate_game_data()
-            self.bot.save_data()
+        await ctx.respond(f'Resent in the lobby\'s channel!', ephemeral=True)
+
+        await self.send_current_lobby_message(name, ctx, False)
 
 
 def setup(bot: MatchmakingBot):

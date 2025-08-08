@@ -64,10 +64,10 @@ class MatchmakingBot(Bot):
     def validate_game_data(self):
         if "lobbies" not in self.game_data:
             self.game_data["lobbies"] = {}
-        if "endless" not in self.game_data:
-            self.game_data["endless"] = {}
+        if "ascension" not in self.game_data:
+            self.game_data["ascension"] = {}
 
-        endless_lobbies = self.game_data["endless"]
+        endless_lobbies = self.game_data["ascension"]
 
         for player in endless_lobbies:
             endless_lobby = endless_lobbies[player]
@@ -78,6 +78,14 @@ class MatchmakingBot(Bot):
                 endless_lobby["max_hp"] = -1
             if "current_hp" not in endless_lobby:
                 endless_lobby["current_hp"] = -1
+            if "incoming_damage" not in endless_lobby:
+                endless_lobby["incoming_damage"] = -1
+            if "current_sp" not in endless_lobby:
+                endless_lobby["current_sp"] = -1
+            if "sp_times_used" not in endless_lobby:
+                endless_lobby["sp_times_used"] = -1
+            if "sp_spent" not in endless_lobby:
+                endless_lobby["sp_spent"] = -1
             if "current_set" not in endless_lobby:
                 endless_lobby["current_set"] = -1
             if "level_number" not in endless_lobby:
@@ -92,6 +100,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["chosen_item_2"] = None
             if "extra" not in endless_lobby:
                 endless_lobby["extra"] = 0
+            if "die_used" not in endless_lobby:
+                endless_lobby["die_used"] = False
             if "chronograph_used" not in endless_lobby:
                 endless_lobby["chronograph_used"] = False
             if "s_ranked_so_far" not in endless_lobby:
