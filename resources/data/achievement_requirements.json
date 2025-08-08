@@ -105,7 +105,7 @@
             ]
         },
         "Another Team Tries": {
-            "Description": "Highest set beaten",
+            "Description": "Highest Ascension set beaten",
             "Assoc_Stat": "highest_set_beaten",
             "Requirements": [
                 1,
@@ -117,8 +117,8 @@
                 7
             ]
         },
-        "Synthesis.": {
-            "Description": "Total sets beaten",
+        "Sisyphus": {
+            "Description": "Total Ascension sets beaten",
             "Assoc_Stat": "total_sets_beaten",
             "Requirements": [
                 2,
@@ -131,7 +131,7 @@
             ]
         },
         "Supporter": {
-            "Description": "SP earned",
+            "Description": "SP earned in Ascension",
             "Assoc_Stat": "total_sp_earned",
             "Requirements": [
                 30,
@@ -141,6 +141,45 @@
                 450,
                 700,
                 1000
+            ]
+        },
+        "Beans": {
+            "Description": "Daily Blends played",
+            "Assoc_Stat": "daily_blends_played",
+            "Requirements": [
+                10,
+                25,
+                50,
+                80,
+                130,
+                200,
+                365
+            ]
+        },
+        "Eventful": {
+            "Description": "Event levels played",
+            "Assoc_Stat": "event_levels_played",
+            "Requirements": [
+                3,
+                8,
+                16,
+                30,
+                45,
+                70,
+                100
+            ]
+        },
+        "Set Go": {
+            "Description": "Unique setlists played (in normal lobbies)",
+            "Assoc_Stat": "unique_setlists_played",
+            "Requirements": [
+                2,
+                4,
+                8,
+                13,
+                20,
+                30,
+                50
             ]
         }
     },
