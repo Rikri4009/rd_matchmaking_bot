@@ -172,53 +172,28 @@ To begin a treatment session, do `/lobby create`!\n\n\
     ):
         uid = str(ctx.user.id)
 
-        user_stats = (self.bot.users_stats)[uid]
-
-        if (command == "endless begin") or (command == "e begin"):
-            await ascension.begin(self, ctx, uid, None)
-            return
-        
-        if (command == "endless begin FIFTEEN") or (command == "e begin FIFTEEN"):
-            if user_stats["highest_set_beaten"] >= 5:
-                await ascension.begin(self, ctx, uid, 15)
-                return
-        
-        if (command == "endless roll") or (command == "e roll"):
-            await ascension.roll(self, ctx, uid)
-            return
-
-        if (command == "endless already_seen") or (command == "e already_seen"):
-            await ascension.reroll(self, ctx, uid)
-            return
-
-        if (command == "endless recover") or (command == "e recover"):
-            await ascension.recover(self, ctx, uid)
-            return
-        
-        if (command == "endless forage 1") or (command == "e forage 1"):
-            await ascension.roll_extra(self, ctx, uid, 1, "Medium")
-            return
-
-        if (command == "endless forage 2") or (command == "e forage 2"):
-            await ascension.roll_extra(self, ctx, uid, 2, "Tough")
-            return
-        
-        if (command == "endless SKIP SET TWO") or (command == "e SKIP SET TWO"):
-            await ascension.roll_extra(self, ctx, uid, -1, "Very Tough")
-            return
-
         args = command.split()
 
-        if (len(args) == 3) and ((args[0] == "endless") or (args[0] == "e")) and (args[1] == "use"):
-            await ascension.use_item(self, ctx, uid, args[2])
-            return
-
-        if (len(args) == 3) and ((args[0] == "endless") or (args[0] == "e")) and (args[1] == "submit") and ((args[2]).isdigit()):
-            await ascension.submit_misses(self, ctx, uid, int(args[2]))
-            return
+        if (len(args) == 2) and ((args[0] == "ascension") or (args[0] == "a")) and ((args[1]).isdigit()):
+            await self.change_ascension_difficulty(self, ctx, uid, int(args[1]))
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
+
+
+    async def change_ascension_difficulty(self, ctx, uid, difficulty):
+        if (difficulty < 0) or (difficulty > 6):
+            await ctx.respond(f"Invalid difficulty!", ephemeral=True)
+
+        user_stats = self.bot.users_stats[uid]
+
+        if user_stats["highest_set_beaten"] < 7:
+            await ctx.respond(f"You need to beat Ascension mode as the runner first!", ephemeral=True)
+
+        if user_stats["highest_ascension_difficulty_beaten"]+1 < difficulty:
+            await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
+
+        user_stats["current_ascension_difficulty"] = difficulty
 
 
 def setup(bot: MatchmakingBot):

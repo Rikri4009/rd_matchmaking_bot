@@ -74,6 +74,8 @@ class MatchmakingBot(Bot):
 
             if "status" not in endless_lobby:
                 endless_lobby["status"] = "Not Started"
+            if "ascension_difficulty" not in endless_lobby:
+                endless_lobby["ascension_difficulty"] = 0
             if "max_hp" not in endless_lobby:
                 endless_lobby["max_hp"] = -1
             if "current_hp" not in endless_lobby:

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import time
 import re
+import math
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
@@ -100,7 +101,7 @@ class LobbyCommands(commands.Cog):
             elif status == 'Item':
                 return ascension.get_ascension_item_embed(ctx, lobby_name, host_id, ascension_lobby)
             elif status == 'Choice':
-                return ascension.get_ascension_choice_embed(lobby_name, host_id, ascension_lobby)
+                return ascension.get_ascension_choice_embed(ctx, lobby_name, host_id, ascension_lobby)
             elif status == 'Game Over':
                 return ascension.get_ascension_gameover_embed(lobby_name, host_id, ascension_lobby)
         print('Huge Mistake')
@@ -912,6 +913,8 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         elif current_lobby['mode'] == 'Ascension':
             ascension_lobby = self.bot.game_data["ascension"][host]
+            ascension_difficulty = ascension_lobby["ascension_difficulty"]
+            level_difficulty = current_lobby['level']['difficulty']
 
             runner_misses = current_lobby["players"][host]["miss_count"]
 
@@ -921,7 +924,18 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             if ascension_lobby["set_modifier"] == "Double Damage":
                 damage_factor = damage_factor * 2
 
-            ascension_lobby['incoming_damage'] = runner_misses * damage_factor
+            if ascension_difficulty >= 6:
+                if (level_difficulty == "Easy") or (level_difficulty == "Medium"):
+                    damage_factor = damage_factor * 2
+                elif (level_difficulty == "Tough") or (level_difficulty == "Very Tough"): #unnecessary check idc
+                    damage_factor = damage_factor * 1.5
+            elif ascension_difficulty >= 2:
+                if level_difficulty == "Easy":
+                    damage_factor = damage_factor * 2
+                elif level_difficulty == "Medium":
+                    damage_factor = damage_factor * 1.5
+
+            ascension_lobby["incoming_damage"] = math.floor(runner_misses * damage_factor)
 
             if runner_misses == -1:
                 current_lobby['status'] = 'Open'
