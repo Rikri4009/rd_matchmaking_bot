@@ -155,32 +155,6 @@
                 700,
                 1000
             ]
-        },
-        "temp_1": {
-            "Description": "",
-            "Assoc_Stat": "highest_ascension_difficulty_beaten",
-            "Requirements": [
-                30,
-                80,
-                160,
-                300,
-                450,
-                700,
-                1000
-            ]
-        },
-        "temp_2": {
-            "Description": "",
-            "Assoc_Stat": "current_ascension_difficulty",
-            "Requirements": [
-                30,
-                80,
-                160,
-                300,
-                450,
-                700,
-                1000
-            ]
         }
     },
     "Secret": {
