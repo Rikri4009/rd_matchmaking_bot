@@ -80,7 +80,7 @@
             "Window Dance"
         ],
         "modifier": [
-            "Extreme",
+            "Rainbow",
             "Hard Button + 2-Player"
         ]
     },
@@ -230,14 +230,14 @@
         "tags": [],
         "facets": {}
     },
-    "Extreme": {
+    "Rainbow": {
         "diff_override": [
             "Easy",
             "Medium",
             "Tough",
             "Very Tough"
         ],
-        "description": "This set is impossible.",
+        "description": "Good luck!",
         "tags": [],
         "facets": {}
     },
