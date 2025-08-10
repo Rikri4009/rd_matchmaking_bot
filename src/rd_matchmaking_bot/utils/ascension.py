@@ -12,6 +12,11 @@ class AscensionButtonsWelcome(discord.ui.View):
 
     @discord.ui.button(label="Continue", style=discord.ButtonStyle.success)
     async def continue_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         game_data = self.lobbycommands.bot.game_data
@@ -27,6 +32,11 @@ class AscensionButtonsWelcome(discord.ui.View):
 
     @discord.ui.button(label="New Game", style=discord.ButtonStyle.danger)
     async def newgame_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         begin(self.lobbycommands, interaction, self.runner_id, None, self.lobby_name)
@@ -43,6 +53,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Apple", style=discord.ButtonStyle.secondary)
     async def apple_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
@@ -62,6 +77,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Ivory Die", style=discord.ButtonStyle.secondary)
     async def die_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         game_data = self.lobbycommands.bot.game_data
@@ -82,6 +102,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Chronograph", style=discord.ButtonStyle.secondary)
     async def chronograph_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         game_data = self.lobbycommands.bot.game_data
@@ -102,6 +127,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Shield", style=discord.ButtonStyle.secondary)
     async def shield_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
@@ -118,6 +148,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Use SP", style=discord.ButtonStyle.primary)
     async def sp_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
@@ -135,6 +170,11 @@ class AscensionButtonsItem(discord.ui.View):
 
     @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
     async def proceed_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
         await proceed_helper(self, interaction)
 
@@ -245,6 +285,11 @@ class AscensionButtonsChoice(discord.ui.View):
 
     @discord.ui.button(label="Recover", style=discord.ButtonStyle.success)
     async def recover_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         await recover_helper(self, interaction)
@@ -252,6 +297,11 @@ class AscensionButtonsChoice(discord.ui.View):
 
     @discord.ui.button(label="Forage 1", style=discord.ButtonStyle.primary)
     async def forage1_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         game_data = self.lobbycommands.bot.game_data
@@ -276,6 +326,11 @@ class AscensionButtonsChoice(discord.ui.View):
 
     @discord.ui.button(label="Forage 2", style=discord.ButtonStyle.danger)
     async def forage2_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
 
         game_data = self.lobbycommands.bot.game_data
@@ -328,11 +383,21 @@ class AscensionButtonsGameOver(discord.ui.View):
 
     @discord.ui.button(label="New Game", style=discord.ButtonStyle.success)
     async def newgame_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
         await AscensionButtonsWelcome.newgame_pressed(self, button, interaction)
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
-    async def newgame_pressed(self, button, interaction):
+    async def delete_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         self.stop()
         await self.lobbycommands.delete(self.lobbycommands, interaction)
 
