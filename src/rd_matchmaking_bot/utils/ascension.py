@@ -125,11 +125,12 @@ class AscensionButtonsItem(discord.ui.View):
             await interaction.respond("You don't have enough SP!")
             return
 
-        ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + max(10, ascension_lobby["current_sp"]/2)
-        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - max(10, ascension_lobby["current_sp"]/2)
+        await interaction.respond(f"{max(10, ascension_lobby['current_sp'] // 2)} SP used!")
+
+        ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + max(10, ascension_lobby["current_sp"] // 2)
+        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - max(10, ascension_lobby["current_sp"] // 2)
         ascension_lobby["sp_times_used"] = ascension_lobby["sp_times_used"] + 1
         await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
-        await interaction.respond(f"{max(10, ascension_lobby['current_sp']/2)} SP used!")
         return
 
     @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
@@ -161,6 +162,7 @@ async def proceed_helper(self, interaction):
     ascension_lobby["die_used"] = False
     ascension_lobby["shields_used"] = 0
     ascension_lobby["sp_spent"] = 0
+    ascension_lobby["sp_times_used"] = 0
 
     # died: game over
     if ascension_lobby["current_hp"] <= 0:
