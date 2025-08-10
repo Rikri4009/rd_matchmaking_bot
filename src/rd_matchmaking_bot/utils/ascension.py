@@ -266,6 +266,7 @@ async def proceed_helper(self, interaction):
     # is the last set:
     player_stats = self.bot.users_stats[self.runner_id]
     player_stats["highest_set_beaten"] = 7
+    player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
     await interaction.respond(f"YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
