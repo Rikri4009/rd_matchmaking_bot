@@ -175,7 +175,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
         args = command.split()
 
         if (len(args) == 2) and ((args[0] == "ascension") or (args[0] == "a")) and ((args[1]).isdigit()):
-            await self.change_ascension_difficulty(self, ctx, uid, int(args[1]))
+            await self.change_ascension_difficulty(ctx, uid, int(args[1]))
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
@@ -194,7 +194,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
             await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
 
         user_stats["current_ascension_difficulty"] = difficulty
-
+        await ctx.respond(f"c", ephemeral=True)
 
 def setup(bot: MatchmakingBot):
     cog = UserCommands(bot)

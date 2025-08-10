@@ -563,6 +563,7 @@ Or, you can play an extra {forage_2_difficulty} to **forage 2** __{get_item_text
 
 
 def get_ascension_gameover_embed(lobby_name, runner_id, ascension_lobby):
+    set_number = str(ascension_lobby['current_set'])
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
 Press **New Game** to try again, or press **Delete** to delete this lobby.")
