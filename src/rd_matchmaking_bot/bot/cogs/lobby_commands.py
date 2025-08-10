@@ -235,6 +235,8 @@ class LobbyCommands(commands.Cog):
         if mode == "Free Play":
             current_lobby['status'] = 'Open'
         elif mode == "Ascension":
+            self.bot.game_data["ascension"][uid] = {}
+            self.bot.validate_game_data()
             current_lobby['status'] = 'Not Started'
 
         if mode == "Free Play":
