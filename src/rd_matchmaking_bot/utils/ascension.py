@@ -527,7 +527,7 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
 def get_ascension_item_embed(ctx, lobby_name, runner_id, ascension_lobby):
     items_text = get_current_items_text(ctx, ascension_lobby)
 
-    sp_cost = max(10, ascension_lobby["current_sp"]/2)
+    sp_cost = max(10, ascension_lobby["current_sp"] // 2)
 
     set_number = ascension_lobby["current_set"]
 
