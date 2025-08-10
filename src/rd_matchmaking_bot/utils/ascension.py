@@ -136,8 +136,6 @@ class AscensionButtonsItem(discord.ui.View):
     @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
     async def proceed_pressed(self, button, interaction):
         self.stop()
-
-        game_data = self.lobbycommands.bot.game_data
         await proceed_helper(self, interaction)
 
 
@@ -152,6 +150,7 @@ async def proceed_helper(self, interaction):
         ascension_lobby["items"]["Shields"] = ascension_lobby["items"]["Shields"] + ascension_lobby["shields_used"]
         ascension_lobby["current_sp"] = ascension_lobby["current_sp"] + ascension_lobby["sp_spent"]
         ascension_lobby["incoming_damage"] = 0
+        ascension_lobby["level_number"] = ascension_lobby["level_number"] - 1
     else:
         ascension_lobby["incoming_damage"] = calculate_item_applied_incoming_damage(ascension_lobby) #apply items to incoming damage
         if ascension_lobby["ascension_difficulty"] >= 1: #lose 2hp for each shield used
