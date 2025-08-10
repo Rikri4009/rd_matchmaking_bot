@@ -64,13 +64,17 @@ class LobbyCommands(commands.Cog):
         return level_embed
 
 
-    def get_lobby_playing_embed(self, lobby_name, host_id, player_id_dict):
+    def get_lobby_playing_embed(self, mode, lobby_name, host_id, player_id_dict):
         submitted_list = ''
 
         for id in player_id_dict:
             submitted_list = submitted_list + '<@' + id + '>: ' + player_id_dict[id]['ready_status'] + '\n'
 
-        return discord.Embed(colour = discord.Colour.red(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
+        host_title = "Host"
+        if mode == "Ascension":
+            host_title = "Runner"
+
+        return discord.Embed(colour = discord.Colour.red(), title = f"{mode} Lobby: \"{lobby_name}\"", description = f"{host_title}: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
 
 
     def get_current_lobby_embed(self, ctx, lobby_name):
@@ -87,7 +91,7 @@ class LobbyCommands(commands.Cog):
             elif status == 'Rolling':
                 return self.get_lobby_rolling_embed(lobby_name, host_id, player_id_dict, level_chosen)
             elif status == 'Playing':
-                return self.get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
+                return self.get_lobby_playing_embed(mode, lobby_name, host_id, player_id_dict)
         elif mode == 'Ascension':
             ascension_lobby = self.bot.game_data["ascension"][host_id]
             if status == 'Not Started':
@@ -97,7 +101,7 @@ class LobbyCommands(commands.Cog):
             elif status == 'Rolling':
                 return ascension.get_ascension_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen, ascension_lobby)
             elif status == 'Playing':
-                return self.get_lobby_playing_embed(lobby_name, host_id, player_id_dict)
+                return self.get_lobby_playing_embed(mode, lobby_name, host_id, player_id_dict)
             elif status == 'Item':
                 return ascension.get_ascension_item_embed(ctx, lobby_name, host_id, ascension_lobby)
             elif status == 'Choice':
