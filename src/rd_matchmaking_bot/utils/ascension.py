@@ -225,7 +225,7 @@ async def proceed_helper(self, interaction):
     # if last level
 
     player_stats = self.lobbycommands.bot.users_stats[self.runner_id]
-    gained_exp = (5 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["current_set"]
+    gained_exp = (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["current_set"]
     player_stats["exp"] = player_stats["exp"] + gained_exp
 
     if ascension_lobby["s_ranked_so_far"]:
@@ -615,7 +615,7 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
         forage_1_difficulty = "Tough"
         forage_2_difficulty = "Very Tough"
 
-    gained_exp = (5 + ascension_difficulty) * ascension_lobby["current_set"]
+    gained_exp = (3 + ascension_difficulty) * ascension_lobby["current_set"]
 
     set_number = ascension_lobby["current_set"]
 
