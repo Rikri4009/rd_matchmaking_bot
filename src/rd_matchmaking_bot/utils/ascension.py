@@ -156,14 +156,14 @@ class AscensionButtonsItem(discord.ui.View):
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
-        if ascension_lobby["current_sp"] < 10:
+        if ascension_lobby["current_sp"] < 5:
             await interaction.respond("You don't have enough SP!")
             return
 
-        await interaction.respond(f"{max(10, ascension_lobby['current_sp'] // 2)} SP used!")
+        await interaction.respond(f"{max(5, ascension_lobby['current_sp'] // 2)} SP used!")
 
-        ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + max(10, ascension_lobby["current_sp"] // 2)
-        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - max(10, ascension_lobby["current_sp"] // 2)
+        ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + max(5, ascension_lobby["current_sp"] // 2)
+        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - max(5, ascension_lobby["current_sp"] // 2)
         ascension_lobby["sp_times_used"] = ascension_lobby["sp_times_used"] + 1
         await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
         return
@@ -597,14 +597,14 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
 def get_ascension_item_embed(ctx, lobby_name, runner_id, ascension_lobby):
     items_text = get_current_items_text(ctx, ascension_lobby)
 
-    sp_cost = max(10, ascension_lobby["current_sp"] // 2)
+    sp_cost = max(5, ascension_lobby["current_sp"] // 2)
 
     set_number = ascension_lobby["current_set"]
 
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 You are about to take {calculate_item_applied_incoming_damage(ascension_lobby)} damage!\n\
 Press the corresponding button below to use an item.\n\n\
-{items_text}Press \"**Use SP**\" to spend {sp_cost} SP to reduce incoming damage by 5. (This is more expensive if you have a lot of SP!)")
+{items_text}Press \"**Use SP**\" to spend {sp_cost} SP to reduce incoming damage by 3. (This is more expensive if you have a lot of SP!)")
     return level_embed
 
 
@@ -629,8 +629,8 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional exp.\n\n\
 You can choose to **recover** {recover_fraction} of your missing HP now...\n\
-Or, you can first play an extra {forage_1_difficulty} this set to also **forage 1** __{get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}__ then recover...\n\
-Or, you can play an extra {forage_2_difficulty} to **forage 2** __{get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])}__ then recover.")
+Or, you can first play an extra {forage_1_difficulty} this set to also **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])} then recover...\n\
+Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])} then recover.")
     return level_embed
 
 
@@ -726,7 +726,7 @@ def calculate_item_applied_incoming_damage(ascension_lobby):
     # use shields
     applied_incoming_damage = applied_incoming_damage // (2 ** ascension_lobby["shields_used"])
     # use sp
-    applied_incoming_damage = applied_incoming_damage - (5 * ascension_lobby["sp_times_used"])
+    applied_incoming_damage = applied_incoming_damage - (3 * ascension_lobby["sp_times_used"])
 
     applied_incoming_damage = max(0, applied_incoming_damage)
 
