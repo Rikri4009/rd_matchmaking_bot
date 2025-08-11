@@ -269,7 +269,7 @@ async def proceed_helper(self, interaction):
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
     await interaction.respond(f"YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
-You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']}.\n\n\
+You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP.\n\n\
 -# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
     ascension_lobby["status"] = "Not Started"
     auxiliary_lobby["status"] = "Not Started"

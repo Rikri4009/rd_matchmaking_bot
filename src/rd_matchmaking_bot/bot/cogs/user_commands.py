@@ -184,7 +184,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
     async def change_ascension_difficulty(self, ctx, uid, difficulty):
         if (difficulty < 0) or (difficulty > 6):
-            await ctx.respond(f"Invalid difficulty!", ephemeral=True)
+            await ctx.respond(f"Invalid certificate!", ephemeral=True)
 
         user_stats = self.bot.users_stats[uid]
 
@@ -195,6 +195,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
             await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
 
         user_stats["current_ascension_difficulty"] = difficulty
+        await ctx.respond(f"Certificate updated!", ephemeral=True)
 
 def setup(bot: MatchmakingBot):
     cog = UserCommands(bot)
