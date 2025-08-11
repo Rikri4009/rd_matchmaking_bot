@@ -70,8 +70,8 @@ class AscensionButtonsItem(discord.ui.View):
 
         ascension_lobby["items"]["Apples"] = ascension_lobby["items"]["Apples"] - 1
         ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + get_apple_heal_amount(ascension_lobby)
-        if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
-            ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
+        #if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
+        #    ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
         await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
         await interaction.respond("Apple eaten!")
 
