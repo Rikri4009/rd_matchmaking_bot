@@ -264,7 +264,7 @@ async def proceed_helper(self, interaction):
             return
 
     # is the last set:
-    player_stats = self.bot.users_stats[self.runner_id]
+    player_stats = self.lobbycommands.bot.users_stats[self.runner_id]
     player_stats["highest_set_beaten"] = 7
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
@@ -583,8 +583,12 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
 
     set_number = ascension_lobby["current_set"]
 
+    level_image = None
+    if level_chosen != None:
+        level_image = level_chosen['image_url']
+
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
-{modifier_text}Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_chosen['image_url'])
+{modifier_text}Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
     return level_embed
 
