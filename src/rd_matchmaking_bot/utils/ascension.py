@@ -283,8 +283,8 @@ class AscensionButtonsChoice(discord.ui.View):
         self.lobby_name = lobby_name
         self.runner_id = runner_id
 
-    @discord.ui.button(label="Recover", style=discord.ButtonStyle.success)
-    async def recover_pressed(self, button, interaction):
+    @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
+    async def proceed_pressed(self, button, interaction):
         uid = str(interaction.user.id)
         if uid != self.runner_id:
             await interaction.respond("Not your button!", ephemeral=True)
@@ -628,9 +628,10 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional exp.\n\n\
-You can choose to **recover** {recover_fraction} of your missing HP now...\n\
-Or, you can first play an extra {forage_1_difficulty} this set to also **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])} then recover...\n\
-Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])} then recover.")
+You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n\
+You can choose to **proceed** to the next set now...\n\
+Or, you can first play an extra {forage_1_difficulty} this set to **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}...\n\
+Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])}.")
     return level_embed
 
 
