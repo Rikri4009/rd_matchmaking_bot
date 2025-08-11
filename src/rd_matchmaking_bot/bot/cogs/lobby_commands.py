@@ -700,9 +700,13 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         # if rolling
         if current_lobby['status'] == 'Rolling':
-            rerolled_artist = current_lobby['level']['artist']
-            rerolled_song = current_lobby['level']['song']
-            rerolled_authors = current_lobby['level']['authors']
+            rerolled_artist = ""
+            rerolled_song = ""
+            rerolled_authors = ""
+            if current_lobby['level'] != None:
+                rerolled_artist = current_lobby['level']['artist']
+                rerolled_song = current_lobby['level']['song']
+                rerolled_authors = current_lobby['level']['authors']
 
             # unready everyone
             for player in current_lobby['players']:
