@@ -770,17 +770,18 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         lobby_channel_id = current_lobby['channel_id']
         lobby_channel = await self.bot.fetch_channel(lobby_channel_id)
 
-        await lobby_channel.send(message + '\n**Beginning match in 10 seconds!**')
-        time.sleep(7)
+        if len(current_lobby['players']) > 1:
+            await lobby_channel.send(message + '\n**Beginning match in 10 seconds!**')
+            time.sleep(7)
 
-        await lobby_channel.send('**3**')
-        time.sleep(1)
-        await lobby_channel.send('**2**')
-        time.sleep(1)
-        await lobby_channel.send('**1**')
-        time.sleep(1)
-        await lobby_channel.send('**GO!**')
-        time.sleep(10)
+            await lobby_channel.send('**3**')
+            time.sleep(1)
+            await lobby_channel.send('**2**')
+            time.sleep(1)
+            await lobby_channel.send('**1**')
+            time.sleep(1)
+            await lobby_channel.send('**GO!**')
+            time.sleep(10)
 
         await self.send_current_lobby_message(lobby_name, ctx, False)
 
