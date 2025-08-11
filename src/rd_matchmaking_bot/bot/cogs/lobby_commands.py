@@ -616,9 +616,13 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         lobby_channel_id = current_lobby['channel_id']
         lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
-        unrolled_artist = current_lobby['level']['artist']
-        unrolled_song = current_lobby['level']['song']
-        unrolled_authors = current_lobby['level']['authors']
+        unrolled_artist = ""
+        unrolled_song = ""
+        unrolled_authors = ""
+        if current_lobby['level'] != None:
+            unrolled_artist = current_lobby['level']['artist']
+            unrolled_song = current_lobby['level']['song']
+            unrolled_authors = current_lobby['level']['authors']
 
         current_lobby['status'] = 'Open'
         current_lobby['roll_settings'] = {}
