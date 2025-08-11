@@ -424,7 +424,9 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby = self.bot.game_data["ascension"][runner_id]
     runner_stats = self.bot.users_stats[runner_id]
 
-    ascension_difficulty = runner_stats["current_ascension_difficulty"]
+    ascension_difficulty = 0
+    if "current_ascension_difficulty" in runner_stats:
+        ascension_difficulty = runner_stats["current_ascension_difficulty"]
     ascension_lobby["ascension_difficulty"] = ascension_difficulty
 
     achievement_count = (self.bot.get_user_achievements(ctx, runner_id))["total"]
@@ -548,7 +550,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
     support = ', '.join(support_list)
 
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
-{items_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}Do `/lobby roll` to proceed!\n\nSupport: {support}")
+{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Do `/lobby roll` to proceed!\n\nSupport: {support}")
 
 
 def set_roll_settings(lobbycommands, lobby_name, runner_id):
