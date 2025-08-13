@@ -678,11 +678,11 @@ def get_item_text(ctx, ascension_lobby, item):
 
 def get_apple_heal_amount(ascension_lobby):
     if ascension_lobby["ascension_difficulty"] < 2:
-        return 7
-    elif ascension_lobby["ascension_difficulty"] < 6:
         return 10
-    else:
+    elif ascension_lobby["ascension_difficulty"] < 6:
         return 12
+    else:
+        return 15
 
 
 def get_ascension_difficulty_text(ascension_difficulty):
@@ -694,7 +694,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 1:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Recovering only heals 1/2 of missing HP, and using an item costs 2 HP"
     if ascension_difficulty >= 2:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easy levels deal x2 damage and medium levels deal x1.5, but apples heal 10 HP"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easy levels deal x2 damage and medium levels deal x1.5, but apples heal 12 HP"
     if ascension_difficulty >= 3:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> All easy/medium levels must be played either on hard or 2P, and Set 3 is harder"
     if ascension_difficulty >= 4:
@@ -702,7 +702,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 5:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> All easy levels must be played either on chili speed or blindfolded, and Set 5 is harder"
     if ascension_difficulty >= 6:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> [Replaces <:silver:1399860110389542915>] Easy/medium levels deal x2 damage and tough/vt levels deal x1.5, but apples heal 12 HP"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> [Replaces <:silver:1399860110389542915>] Easy/medium levels deal x2 damage and tough/vt levels deal x1.5, but apples heal 15 HP"
     if ascension_difficulty >= 7:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd-numbered sets have harder modifiers"
 
