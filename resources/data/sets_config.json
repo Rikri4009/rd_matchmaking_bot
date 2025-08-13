@@ -6,7 +6,10 @@
             "Tough"
         ],
         "theme": [],
-        "modifier": []
+        "modifier": [],
+        "modifier_hard": [
+            "Rainbow"
+        ]
     },
     "2": {
         "difficulties": [
@@ -30,6 +33,9 @@
         "modifier": [
             "Hard Difficulty Button",
             "2-Player"
+        ],
+        "modifier_hard": [
+            "Hard Button + 2-Player"
         ]
     },
     "4": {
@@ -53,6 +59,10 @@
         "modifier": [
             "Blindfolded",
             "Nightcore"
+        ],
+        "modifier_hard": [
+            "Hard Button + Chili Speed",
+            "2-Player + Blindfolded"
         ]
     },
     "6": {
@@ -80,6 +90,9 @@
         "modifier": [
             "Rainbow",
             "Hard Button + 2-Player"
+        ],
+        "modifier_hard": [
+            "Extreme"
         ]
     },
     "None": {
@@ -246,6 +259,46 @@
             "Tough"
         ],
         "description": "You must use the hard difficulty button,\n**AND** you must play on 2-player mode!",
+        "tags": [],
+        "facets": {
+            "two_player": 1
+        }
+    },
+    "Hard Button + Chili Speed": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough",
+            "Very Tough"
+        ],
+        "description": "You know the drill.",
+        "tags": [],
+        "facets": {}
+    },
+    "2-Player + Blindfolded": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Medium",
+            "Tough"
+        ],
+        "description": "You know the drill.",
+        "tags": [],
+        "facets": {
+            "two_player": 1
+        }
+    },
+    "Extreme": {
+        "diff_override": [
+            "Easy",
+            "Medium",
+            "Tough",
+            "Very Tough",
+            "Tough",
+            "Very Tough",
+            "Very Tough"
+        ],
+        "description": "This set is impossible. GOOD LUCK!",
         "tags": [],
         "facets": {
             "two_player": 1

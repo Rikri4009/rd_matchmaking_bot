@@ -476,7 +476,7 @@ def begin_set(self, player_id, lobby_name):
     set_difficulties = sets_config[set_number]['difficulties']
 
     # make the set harder if ascension difficulty says to
-    if ((ascension_difficulty >= 3) and (set_number == 3)) or ((ascension_difficulty >= 5) and (set_number == 5)):
+    if (ascension_difficulty < 7) and (((ascension_difficulty >= 3) and (set_number == 3)) or ((ascension_difficulty >= 5) and (set_number == 5))):
         for i in range(len(set_difficulties)):
             if set_difficulties[i] == "Easy":
                 set_difficulties[i] = "Medium"
@@ -498,7 +498,10 @@ def begin_set(self, player_id, lobby_name):
 
     set_modifier = 'None'
     if len(sets_config[set_number]['modifier']) != 0:
-        set_modifier = random.choice(sets_config[set_number]['modifier'])
+        if (ascension_difficulty < 7) or (set_number % 2 == 0):
+            set_modifier = random.choice(sets_config[set_number]['modifier'])
+        else:
+            set_modifier = random.choice(sets_config[set_number]['modifier_hard'])
     ascension_lobby['set_modifier'] = set_modifier
 
     ascension_lobby['roll_tags'] = sets_config[set_theme]['tags'] + sets_config[set_modifier]['tags']
@@ -701,7 +704,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 6:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> [Replaces <:silver:1399860110389542915>] Easy/medium levels deal x2 damage and tough/vt levels deal x1.5, but apples heal 12 HP"
     if ascension_difficulty >= 7:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> You aren't supposed to see this yet"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd-numbered sets have harder modifiers"
 
     ascension_difficulty_text = ascension_difficulty_text + "\n\n"
 
