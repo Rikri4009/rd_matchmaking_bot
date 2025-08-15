@@ -665,13 +665,13 @@ def get_current_items_text(ctx, ascension_lobby):
 
 def get_item_text(ctx, ascension_lobby, item):
     if item == "Apples":
-        return f":apple: [Apples]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to recover {get_apple_heal_amount(ascension_lobby)} HP\")"
+        return f"<:Apple:1405858469726257153> [Apples]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to recover {get_apple_heal_amount(ascension_lobby)} HP\")"
     elif item == "Ivory Dice":
-        return f":game_die: [Ivory Dice]({ctx.channel.jump_url} \"After playing a level, INSTEAD OF taking damage, use this item to reroll it\")"
+        return f"<:IvoryDie:1405867029570916374> [Ivory Dice]({ctx.channel.jump_url} \"After playing a level, INSTEAD OF taking damage, use this item to reroll it\")"
     elif item == "Chronographs":
-        return f":stopwatch: [Chronographs]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to REPLAY the level for a better score\")"
+        return f"<:Chronograph:1405867070888873994> [Chronographs]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to REPLAY the level for a better score\")"
     elif item == "Shields":
-        return f":shield: [Shields]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to halve incoming damage\")"
+        return f"<:Shield:1405867148856791080> [Shields]({ctx.channel.jump_url} \"After playing a level, BEFORE taking damage, use this item to halve incoming damage\")"
     else:
         return "HUGE MISTAKE"
 
