@@ -42,6 +42,69 @@ class LeaderboardButtons(discord.ui.View):
         leaderboard_embed = misc.get_leaderboard_embed(interaction, self.bot, self.category, new_page)
         await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, self.uid, self.category, new_page))
 
+
+class SpecializeButtons(discord.ui.View):
+    def __init__(self, bot: MatchmakingBot, uid):
+        super().__init__()
+        self.bot = bot
+        self.uid = uid
+
+    @discord.ui.button(label="Apples", style=discord.ButtonStyle.primary)
+    async def prev_pressed(self, button, interaction):
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        user_stats = self.bot.users_stats[self.uid]
+        user_stats["specialization"] = "Apples"
+
+        await interaction.responsd("You now specialize in Apples!")
+
+    @discord.ui.button(label="Ivory Dice", style=discord.ButtonStyle.primary)
+    async def prev_pressed(self, button, interaction):
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        user_stats = self.bot.users_stats[self.uid]
+        user_stats["specialization"] = "Ivory Dice"
+
+        await interaction.responsd("You now specialize in Ivory Dice!")
+
+    @discord.ui.button(label="Chronographs", style=discord.ButtonStyle.primary)
+    async def prev_pressed(self, button, interaction):
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        user_stats = self.bot.users_stats[self.uid]
+        user_stats["specialization"] = "Chronographs"
+
+        await interaction.responsd("You now specialize in Chronographs!")
+
+    @discord.ui.button(label="Shields", style=discord.ButtonStyle.primary)
+    async def prev_pressed(self, button, interaction):
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        user_stats = self.bot.users_stats[self.uid]
+        user_stats["specialization"] = "Shields"
+
+        await interaction.responsd("You now specialize in Shields!")
+
+    @discord.ui.button(label="None", style=discord.ButtonStyle.secondary)
+    async def prev_pressed(self, button, interaction):
+        if self.uid != str(interaction.user.id):
+            await interaction.respond("This isn't your button!", ephemeral=True)
+            return
+
+        user_stats = self.bot.users_stats[self.uid]
+        user_stats["specialization"] = None
+
+        await interaction.responsd("You are no longer specializing!")
+
+
 class UserCommands(commands.Cog):
     def __init__(self, bot: MatchmakingBot):
         self.bot = bot
@@ -178,6 +241,10 @@ To begin a treatment session, do `/lobby create`!\n\n\
             await self.change_ascension_difficulty(ctx, uid, int(args[1]))
             return
 
+        if (len(args) == 1) and (args[0] == "specialize"):
+            await self.specializations(ctx, uid)
+            return
+
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
 
@@ -196,6 +263,21 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         user_stats["current_ascension_difficulty"] = difficulty
         await ctx.respond(f"Certificate updated!", ephemeral=True)
+
+
+    async def specializations(self, ctx, uid):
+        user_stats = self.bot.users_stats[uid]
+
+        if user_stats["specialization"] != None:
+            ctx.channel.send(user_stats["specialization"])
+
+        #if user_stats["highest_ascension_difficulty_beaten"] < 3:
+        #    await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
+
+        specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
+
+        await ctx.respond(embed=specializations_embed, view=SpecializeButtons(self.bot, uid))
+
 
 def setup(bot: MatchmakingBot):
     cog = UserCommands(bot)

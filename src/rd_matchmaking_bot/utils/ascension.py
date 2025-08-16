@@ -248,6 +248,11 @@ async def proceed_helper(self, interaction):
             for item in current_items_clone:
                 current_items_clone[item] = current_items_clone[item] + 1
 
+            if ascension_lobby["ascension_difficulty"] >= 4:
+                specialization = player_stats["specialization"]
+                if specialization != None:
+                    current_items_clone[specialization] = current_items_clone[specialization]/2
+
             # remove 2 "most likely" items
             del current_items_clone[weighted_choose_from_dict(current_items_clone)]
             del current_items_clone[weighted_choose_from_dict(current_items_clone)]
@@ -472,7 +477,9 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["items"]["Shields"] = 0
 
     if ascension_difficulty >= 4:
-        ascension_lobby["items"]["Ivory Dice"] = 2
+        specialization = runner_stats["specialization"]
+        if specialization != None:
+            ascension_lobby["items"][specialization] = ascension_lobby["items"][specialization] + 1
 
     ascension_lobby["extra"] = 0
 
@@ -716,7 +723,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 3:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> All easy/medium levels must be played either on hard or 2P, and Set 3 is harder"
     if ascension_difficulty >= 4:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> Foraging is more difficult, but start with an extra Ivory Die"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> Foraging is more difficult, but unlock `/admin_command specialize`"
     if ascension_difficulty >= 5:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> All easy levels must be played either on chili speed or blindfolded, and Set 5 is harder"
     if ascension_difficulty >= 6:

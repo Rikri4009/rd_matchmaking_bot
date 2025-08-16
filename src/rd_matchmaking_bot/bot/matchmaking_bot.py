@@ -48,6 +48,10 @@ class MatchmakingBot(Bot):
         for achievement in (achievement_list["Tiered"] | achievement_list["Secret"]).values():
             number_stats.append(achievement["Assoc_Stat"])
 
+        number_stats.append("current_ascension_difficulty")
+
+        string_stats = ["specialization"]
+
         list_stats = ["opponents_beaten_list", "tough_plus_opponents_beaten_list"]
 
         for user_stats in (self.users_stats).values():
@@ -55,6 +59,10 @@ class MatchmakingBot(Bot):
             for stat in number_stats:
                 if stat not in user_stats:
                     user_stats[stat] = 0
+
+            for stat in string_stats:
+                if stat not in user_stats:
+                    user_stats[stat] = None
 
             for stat in list_stats:
                 if stat not in user_stats:
