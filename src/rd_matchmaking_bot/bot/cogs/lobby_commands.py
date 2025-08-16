@@ -108,6 +108,8 @@ class LobbyCommands(commands.Cog):
                 return ascension.get_ascension_choice_embed(ctx, lobby_name, host_id, ascension_lobby)
             elif status == 'Game Over':
                 return ascension.get_ascension_gameover_embed(lobby_name, host_id, ascension_lobby)
+            elif status == 'Victory':
+                return ascension.get_ascension_victory_embed(lobby_name, host_id, ascension_lobby)
         print('Huge Mistake')
 
 
@@ -131,6 +133,8 @@ class LobbyCommands(commands.Cog):
         elif status == 'Choice':
             return ascension.AscensionButtonsChoice(self, lobby_name, host_id)
         elif status == 'Game Over':
+            return ascension.AscensionButtonsGameOver(self, lobby_name, host_id)
+        elif status == 'Victory':
             return ascension.AscensionButtonsGameOver(self, lobby_name, host_id)
         print('Huge Mistake')
 
@@ -481,7 +485,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         try:
             lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
             if lobby_curr_message != None:
-                if current_lobby["status"] != "Game Over":
+                if (current_lobby["status"] != "Game Over") and (current_lobby["status"] != "Victory"):
                     await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
                 else:
                     lobby_curr_message.edit(lobby_curr_message.content, embed=None, view=None)

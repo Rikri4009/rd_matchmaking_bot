@@ -286,12 +286,13 @@ async def proceed_helper(self, interaction):
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
-    await interaction.respond(f"YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
-You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP.\n\n\
--# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
-    ascension_lobby["status"] = "Not Started"
-    auxiliary_lobby["status"] = "Not Started"
-    self.bot.save_data()
+    ascension_lobby["status"] = "Victory"
+    auxiliary_lobby["status"] = "Victory"
+
+    await interaction.response.defer()
+    await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
+    self.lobbycommands.bot.save_data()
+    return
 
 
 def weighted_choose_from_dict(item_dict):
@@ -669,10 +670,18 @@ Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(c
 
 def get_ascension_gameover_embed(lobby_name, runner_id, ascension_lobby):
     set_number = str(ascension_lobby['current_set'])
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
 Press **New Game** to try again, or press **Delete** to delete this lobby.")
-    return level_embed
+    return gameover_embed
+
+
+def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
+    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
+You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP.\n\n\
+-# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
+    return victory_embed
 
 
 def get_current_items_text(ctx, ascension_lobby):
