@@ -252,14 +252,17 @@ To begin a treatment session, do `/lobby create`!\n\n\
     async def change_ascension_difficulty(self, ctx, uid, difficulty):
         if (difficulty < 0) or (difficulty > 6):
             await ctx.respond(f"Invalid certificate!", ephemeral=True)
+            return
 
         user_stats = self.bot.users_stats[uid]
 
         if user_stats["highest_set_beaten"] < 7:
             await ctx.respond(f"You need to beat Ascension mode as the runner first!", ephemeral=True)
+            return
 
         if user_stats["highest_ascension_difficulty_beaten"]+1 < difficulty:
             await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
+            return
 
         user_stats["current_ascension_difficulty"] = difficulty
         await ctx.respond(f"Certificate updated!", ephemeral=True)
@@ -270,6 +273,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         if user_stats["highest_ascension_difficulty_beaten"] < 3:
             await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
+            return
 
         specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
 
