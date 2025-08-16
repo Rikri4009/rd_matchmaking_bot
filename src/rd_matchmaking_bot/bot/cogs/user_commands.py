@@ -266,6 +266,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         user_stats["current_ascension_difficulty"] = difficulty
         await ctx.respond(f"Certificate updated!", ephemeral=True)
+        self.bot.save_data()
 
 
     async def specializations(self, ctx, uid):
