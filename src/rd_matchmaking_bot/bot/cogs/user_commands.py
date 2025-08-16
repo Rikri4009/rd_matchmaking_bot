@@ -50,7 +50,7 @@ class SpecializeButtons(discord.ui.View):
         self.uid = uid
 
     @discord.ui.button(label="Apples", style=discord.ButtonStyle.primary)
-    async def prev_pressed(self, button, interaction):
+    async def apples_pressed(self, button, interaction):
         if self.uid != str(interaction.user.id):
             await interaction.respond("This isn't your button!", ephemeral=True)
             return
@@ -58,10 +58,10 @@ class SpecializeButtons(discord.ui.View):
         user_stats = self.bot.users_stats[self.uid]
         user_stats["specialization"] = "Apples"
 
-        await interaction.responsd("You now specialize in Apples!")
+        await interaction.respond("You now specialize in Apples!")
 
     @discord.ui.button(label="Ivory Dice", style=discord.ButtonStyle.primary)
-    async def prev_pressed(self, button, interaction):
+    async def dice_pressed(self, button, interaction):
         if self.uid != str(interaction.user.id):
             await interaction.respond("This isn't your button!", ephemeral=True)
             return
@@ -69,10 +69,10 @@ class SpecializeButtons(discord.ui.View):
         user_stats = self.bot.users_stats[self.uid]
         user_stats["specialization"] = "Ivory Dice"
 
-        await interaction.responsd("You now specialize in Ivory Dice!")
+        await interaction.respond("You now specialize in Ivory Dice!")
 
     @discord.ui.button(label="Chronographs", style=discord.ButtonStyle.primary)
-    async def prev_pressed(self, button, interaction):
+    async def chronographs_pressed(self, button, interaction):
         if self.uid != str(interaction.user.id):
             await interaction.respond("This isn't your button!", ephemeral=True)
             return
@@ -80,10 +80,10 @@ class SpecializeButtons(discord.ui.View):
         user_stats = self.bot.users_stats[self.uid]
         user_stats["specialization"] = "Chronographs"
 
-        await interaction.responsd("You now specialize in Chronographs!")
+        await interaction.respond("You now specialize in Chronographs!")
 
     @discord.ui.button(label="Shields", style=discord.ButtonStyle.primary)
-    async def prev_pressed(self, button, interaction):
+    async def shields_pressed(self, button, interaction):
         if self.uid != str(interaction.user.id):
             await interaction.respond("This isn't your button!", ephemeral=True)
             return
@@ -91,7 +91,7 @@ class SpecializeButtons(discord.ui.View):
         user_stats = self.bot.users_stats[self.uid]
         user_stats["specialization"] = "Shields"
 
-        await interaction.responsd("You now specialize in Shields!")
+        await interaction.respond("You now specialize in Shields!")
 
     @discord.ui.button(label="None", style=discord.ButtonStyle.secondary)
     async def prev_pressed(self, button, interaction):
