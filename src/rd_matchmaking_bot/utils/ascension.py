@@ -617,7 +617,7 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
         level_image = level_chosen['image_url']
 
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
-{modifier_text}Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
+Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
 
     if set_modifier != "None":
