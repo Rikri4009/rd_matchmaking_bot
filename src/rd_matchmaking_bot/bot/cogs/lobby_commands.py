@@ -194,7 +194,7 @@ class LobbyCommands(commands.Cog):
     @lobby.command(description="Create a lobby")
     async def create(self, ctx,
         name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name'),
-        mode: discord.Option(choices = ['Free Play', 'Ascension', 'Archipelago'], default = 'Free Play', description = 'Default: Free Play')
+        mode: discord.Option(choices = ['Free Play', 'Ascension', 'Archipelago'], description = 'Free Play is the standard lobby mode, Ascension is the roguelike')
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
