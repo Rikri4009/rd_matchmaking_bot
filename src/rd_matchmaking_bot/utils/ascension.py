@@ -399,7 +399,7 @@ class AscensionButtonsGameOver(discord.ui.View):
             return
 
         self.stop()
-        await self.lobbycommands.delete(self.lobbycommands, interaction)
+        await self.lobbycommands.delete(interaction)
 
 
 def get_ascension_welcome_embed(self, name, runner_id):

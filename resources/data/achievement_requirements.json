@@ -156,7 +156,7 @@
                 1000
             ]
         },
-        "Divinity": {
+        "Medicinae Doctor": {
             "Description": "Certificates earned",
             "Assoc_Stat": "highest_ascension_difficulty_beaten",
             "Requirements": [

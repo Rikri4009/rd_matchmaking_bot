@@ -501,12 +501,14 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         roll_settings = current_lobby["roll_settings"]
 
-        # chronograph used: same level, played before, use up chronograph
+        # chronograph used: same level, played before
         if current_lobby["mode"] == "Ascension":
             runner_id = current_lobby["host"]
             ascension_lobby = self.bot.game_data["ascension"][runner_id]
             if ascension_lobby["chronograph_used"]:
                 roll_settings["played_before"] = True
+            else:
+                roll_settings["played_before"] = False
                 return
 
         peer_reviewed = roll_settings["peer_reviewed"]
