@@ -102,7 +102,7 @@ class SpecializeButtons(discord.ui.View):
         user_stats = self.bot.users_stats[self.uid]
         user_stats["specialization"] = None
 
-        await interaction.responsd("You are no longer specializing!")
+        await interaction.respond("You are no longer specializing!")
 
 
 class UserCommands(commands.Cog):
@@ -268,11 +268,8 @@ To begin a treatment session, do `/lobby create`!\n\n\
     async def specializations(self, ctx, uid):
         user_stats = self.bot.users_stats[uid]
 
-        if user_stats["specialization"] != None:
-            ctx.channel.send(user_stats["specialization"])
-
-        #if user_stats["highest_ascension_difficulty_beaten"] < 3:
-        #    await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
+        if user_stats["highest_ascension_difficulty_beaten"] < 3:
+            await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
 
         specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
 
