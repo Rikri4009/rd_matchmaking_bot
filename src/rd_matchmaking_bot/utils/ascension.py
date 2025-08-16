@@ -1,6 +1,7 @@
 import discord
 import random
 import math
+import copy
 import rd_matchmaking_bot.utils.levels as levels
 
 class AscensionButtonsWelcome(discord.ui.View):
@@ -241,12 +242,21 @@ async def proceed_helper(self, interaction):
             player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
             ascension_lobby["level_number"] = ascension_lobby["level_number"] + 1
-            item_list = ["Ivory Dice", "Apples", "Shields", "Chronographs"]
-            ascension_lobby["chosen_item_1"] = random.choice(item_list)
-            item_list.remove(ascension_lobby["chosen_item_1"])
-            ascension_lobby["chosen_item_2"] = random.choice(item_list)
-            ascension_lobby["status"] = "Choice"
-            auxiliary_lobby["status"] = "Choice"
+
+            current_items_clone = copy.deepcopy(ascension_lobby["items"])
+
+            for item in current_items_clone:
+                current_items_clone[item] = current_items_clone[item] + 1
+
+            # remove 2 "most likely" items
+            del current_items_clone[weighted_choose_from_dict(current_items_clone)]
+            del current_items_clone[weighted_choose_from_dict(current_items_clone)]
+
+            item_choice = weighted_choose_from_dict(current_items_clone)
+            ascension_lobby["chosen_item_1"] = item_choice
+            del current_items_clone[item_choice]
+
+            ascension_lobby["chosen_item_2"] = (list(current_items_clone.keys()))[0]
 
             await interaction.response.defer()
             await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
@@ -274,6 +284,12 @@ You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP.\n
     ascension_lobby["status"] = "Not Started"
     auxiliary_lobby["status"] = "Not Started"
     self.bot.save_data()
+
+
+def weighted_choose_from_dict(item_dict):
+    item_list = list(item_dict.keys())
+    item_weights = list(item_dict.values())
+    return random.choices(item_list, weights = item_weights)[0]
 
 
 class AscensionButtonsChoice(discord.ui.View):
