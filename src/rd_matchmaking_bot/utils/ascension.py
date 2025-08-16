@@ -263,6 +263,9 @@ async def proceed_helper(self, interaction):
 
             ascension_lobby["chosen_item_2"] = (list(current_items_clone.keys()))[0]
 
+            ascension_lobby["status"] = "Choice"
+            auxiliary_lobby["status"] = "Choice"
+
             await interaction.response.defer()
             await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
             self.lobbycommands.bot.save_data()
