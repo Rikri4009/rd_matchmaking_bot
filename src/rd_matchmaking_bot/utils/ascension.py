@@ -249,7 +249,7 @@ async def proceed_helper(self, interaction):
                 current_items_clone[item] = current_items_clone[item] + 1
 
             if ascension_lobby["ascension_difficulty"] >= 4:
-                specialization = player_stats["specialization"]
+                specialization = ascension_lobby["specialization"]
                 if specialization != None:
                     current_items_clone[specialization] = current_items_clone[specialization]/2
 
@@ -476,10 +476,11 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["items"]["Chronographs"] = 0
     ascension_lobby["items"]["Shields"] = 0
 
-    if ascension_difficulty >= 4:
-        specialization = runner_stats["specialization"]
-        if specialization != None:
-            ascension_lobby["items"][specialization] = ascension_lobby["items"][specialization] + 1
+    specialization = runner_stats["specialization"]
+    ascension_lobby["specialization"] = specialization
+
+    if (ascension_difficulty >= 4) and (specialization != None):
+        ascension_lobby["items"][specialization] = ascension_lobby["items"][specialization] + 1
 
     ascension_lobby["extra"] = 0
 
