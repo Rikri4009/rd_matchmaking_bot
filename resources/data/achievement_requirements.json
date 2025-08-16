@@ -83,12 +83,12 @@
             "Assoc_Stat": "tough_s_ranked",
             "Requirements": [
                 1,
+                2,
                 3,
                 5,
                 8,
                 13,
-                20,
-                30
+                20
             ]
         },
         "Winner Takes All": {
