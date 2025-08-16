@@ -119,7 +119,10 @@ class MatchmakingBot(Bot):
                 endless_lobby["roll_facets"] = {}
             if "set_difficulties" not in endless_lobby:
                 endless_lobby["set_difficulties"] = []
-            
+
+            if "no_levels_found_damage_multiplier" not in endless_lobby:
+                endless_lobby["no_levels_found_damage_multiplier"] = 1
+
             current_items = endless_lobby["items"]
             if "Ivory Dice" not in current_items:
                 current_items["Ivory Dice"] = 0
@@ -129,7 +132,6 @@ class MatchmakingBot(Bot):
                 current_items["Shields"] = 0
             if "Chronographs" not in current_items:
                 current_items["Chronographs"] = 0
-
 
     def lobby_name_user_is_hosting(self, uid):
         for lobby_name in self.game_data["lobbies"]:

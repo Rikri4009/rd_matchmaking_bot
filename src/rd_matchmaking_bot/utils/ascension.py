@@ -476,6 +476,8 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     ascension_lobby["extra"] = 0
 
+    ascension_lobby["no_levels_found_damage_multiplier"] = 1
+
     self.bot.save_data()
 
     begin_set(self, runner_id, lobby_name)
@@ -751,3 +753,50 @@ def calculate_item_applied_incoming_damage(ascension_lobby):
     applied_incoming_damage = max(0, applied_incoming_damage)
 
     return applied_incoming_damage
+
+
+async def no_levels_found(lobby_commands, ctx, ascension_lobby, auxiliary_lobby, lobby_name):
+    new_facets = {}
+    if ("two_player" in auxiliary_lobby["roll_settings"]["facets"]) and (auxiliary_lobby["roll_settings"]["facets"]["two_player"] == 1):
+        new_facets = {"two_player": 1}
+
+    await ctx.channel.send("No levels found! Rerolling without theme...")
+
+    auxiliary_lobby["roll_settings"]["tags"] = []
+    auxiliary_lobby["roll_settings"]["facets"] = new_facets
+
+    lobby_commands.roll_level_from_settings(lobby_name)
+    level_chosen = auxiliary_lobby["level"]
+
+    if level_chosen != None:
+        return
+
+    await ctx.channel.send("No levels found! Rerolling with lower difficulty (**2.5x damage multiplier**)...")
+
+    ascension_lobby["no_levels_found_damage_multiplier"] = 2.5
+
+    level_difficulty = auxiliary_lobby["roll_settings"]["difficulty"]
+
+    lower_level_difficulty = "Easy"
+    if level_difficulty == "Very Tough":
+        lower_level_difficulty = "Tough"
+    elif level_difficulty == "Tough":
+        lower_level_difficulty = "Medium"
+
+    auxiliary_lobby["roll_settings"]["difficulty"] = lower_level_difficulty
+
+    lobby_commands.roll_level_from_settings(lobby_name)
+    level_chosen = auxiliary_lobby["level"]
+
+    if level_chosen != None:
+        return
+
+    await ctx.channel.send("No levels found! Rerolling for Non-Refereed levels...")
+
+    ascension_lobby["no_levels_found_damage_multiplier"] = 1
+
+    auxiliary_lobby["roll_settings"]["difficulty"] = level_difficulty
+    auxiliary_lobby['roll_settings']['peer_reviewed'] = "Any"
+
+    lobby_commands.roll_level_from_settings(lobby_name)
+    return

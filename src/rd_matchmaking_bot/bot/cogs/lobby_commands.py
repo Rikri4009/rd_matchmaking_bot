@@ -584,23 +584,31 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             current_lobby['roll_settings']['require_gameplay'] = False
 
         elif current_lobby["mode"] == "Ascension":
-            ascension_lobby = self.bot.game_data["ascension"][uid]
-
             ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid)
+
         else:
-            print('todo')
+            await ctx.respond("<@1207345676141465622> What")
+            print("todo")
 
         self.roll_level_from_settings(lobby_name_user_is_hosting)
 
-        level_chosen = current_lobby['level']
+        level_chosen = current_lobby["level"]
 
         if level_chosen == None:
             if current_lobby["mode"] == "Free Play":
                 await ctx.respond("No levels found with those arguments!") #deliberately not ephemeral
+                return
+
+            elif current_lobby["mode"] == "Ascension":
+                await ascension.no_levels_found(self, ctx, self.bot.game_data["ascension"][uid], current_lobby, lobby_name_user_is_hosting)
+                if level_chosen == None:
+                    self.bot.save_data()
+                    await ctx.respond("<@1207345676141465622> HELP HELP HELP HELP HELP HELP HELP HELP HELP")
+                    return
+
             else:
-                self.bot.save_data()
-                await ctx.respond("<@1207345676141465622> HELP HELP HELP HELP HELP HELP HELP HELP HELP")
-            return
+                await ctx.respond("<@1207345676141465622> What")
+                print("todo")
 
         if current_lobby["mode"] == "Free Play":
             lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
@@ -940,6 +948,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             damage_factor = 1
             if ascension_lobby["set_modifier"] == "Double Damage":
                 damage_factor = damage_factor * 2
+
+            damage_factor = damage_factor * ascension_lobby["no_levels_found_damage_multiplier"]
+            ascension_lobby["no_levels_found_damage_multiplier"] = 1
 
             if ascension_difficulty >= 6:
                 if (level_difficulty == "Easy") or (level_difficulty == "Medium"):
