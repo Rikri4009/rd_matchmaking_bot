@@ -610,10 +610,6 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
     sets_config = lobbycommands.bot.get_sets_config()
     set_modifier = ascension_lobby["set_modifier"]
 
-    modifier_text = ''
-    if set_modifier != "None":
-        modifier_text = f"Set Modifier: **{set_modifier}**\n{sets_config[set_modifier]['description']}\n\n"
-
     set_number = ascension_lobby["current_set"]
 
     level_image = None
@@ -623,6 +619,10 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 {modifier_text}Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
+
+    if set_modifier != "None":
+        level_embed.add_field(name = f"Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
+
     return level_embed
 
 
