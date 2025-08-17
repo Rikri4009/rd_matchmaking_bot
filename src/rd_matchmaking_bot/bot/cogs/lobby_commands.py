@@ -585,7 +585,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             current_lobby['roll_settings']['difficulty'] = difficulty
             current_lobby['roll_settings']['tags'] = tags_array
             current_lobby['roll_settings']['facets'] = {}
-            current_lobby['roll_settings']['require_gameplay'] = False
+            current_lobby['roll_settings']['require_gameplay'] = True
 
         elif current_lobby["mode"] == "Ascension":
             ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid)
