@@ -286,6 +286,11 @@ async def proceed_helper(self, interaction):
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
+    bonus_exp = 0
+    for item in ascension_lobby["items"]:
+        bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
+    player_stats["exp"] = player_stats["exp"] + bonus_exp
+
     ascension_lobby["status"] = "Victory"
     auxiliary_lobby["status"] = "Victory"
 
@@ -677,9 +682,15 @@ Press **New Game** to try again, or press **Delete** to delete this lobby.")
 
 
 def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
+    gained_exp = (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["current_set"]
+    bonus_exp = 0
+    for item in ascension_lobby["items"]:
+        bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
+
     victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
-You ended with {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP.\n\n\
+You have gained {gained_exp} additional exp.\n\
+Your remaining items have been converted to {bonus_exp} total exp.\n\n\
 -# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
     return victory_embed
 
