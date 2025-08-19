@@ -697,8 +697,12 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     for item in ascension_lobby["items"]:
         bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
 
-    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
-YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
+    certification_text = ""
+    if ascension_lobby["ascension_difficulty"] > 0:
+        certification_text = "**{ CERTIFICATE " + ascension_lobby["ascension_difficulty"] + " OBTAINED }**\n\n"
+
+    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+{certification_text}YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
 You have gained {gained_exp} additional exp.\n\
 Your remaining items have been converted to {bonus_exp} total exp.\n\n\
 -# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
