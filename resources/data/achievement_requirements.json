@@ -104,6 +104,19 @@
                 20
             ]
         },
+        "Knight": {
+            "Description": "Quests completed",
+            "Assoc_Stat": "quests_completed",
+            "Requirements": [
+                3,
+                8,
+                16,
+                30,
+                45,
+                70,
+                100
+            ]
+        },
         "Eventful": {
             "Description": "Event levels played",
             "Assoc_Stat": "event_levels_played",
@@ -117,34 +130,21 @@
                 100
             ]
         },
-        "Another Team Tries": {
-            "Description": "Highest Ascension set beaten",
-            "Assoc_Stat": "highest_set_beaten",
-            "Requirements": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7
-            ]
-        },
-        "Sisyphus": {
-            "Description": "Total Ascension sets beaten",
+        "Tourist": {
+            "Description": "Total World Tour sets beaten",
             "Assoc_Stat": "total_sets_beaten",
             "Requirements": [
                 2,
-                4,
-                8,
-                13,
-                20,
+                5,
+                10,
+                18,
                 30,
-                50
+                45,
+                70
             ]
         },
         "Supporter": {
-            "Description": "SP earned in Ascension",
+            "Description": "SP earned in World Tour as a supporter",
             "Assoc_Stat": "total_sp_earned",
             "Requirements": [
                 30,
@@ -154,6 +154,19 @@
                 450,
                 700,
                 1000
+            ]
+        },
+        "Another Team Tries": {
+            "Description": "Highest World Tour set beaten",
+            "Assoc_Stat": "highest_set_beaten",
+            "Requirements": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
             ]
         },
         "Medicinae Doctor": {

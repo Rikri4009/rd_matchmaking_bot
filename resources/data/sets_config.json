@@ -264,25 +264,24 @@
             "two_player": 1
         }
     },
-    "Hard Button + Chili Speed": {
+    "Hard Button + Nightcore": {
         "diff_override": [
             "Easy",
             "Medium",
-            "Tough",
-            "Very Tough"
+            "Easy",
+            "Medium"
         ],
-        "description": "You know the drill.",
+        "description": "Scrappy work conditions, an impossible workload, and no time - can you survive?",
         "tags": [],
         "facets": {}
     },
     "2-Player + Blindfolded": {
         "diff_override": [
             "Easy",
-            "Medium",
-            "Medium",
-            "Tough"
+            "Easy",
+            "Medium"
         ],
-        "description": "You know the drill.",
+        "description": "Despite outdated, malfunctioning hardware, you're expected to fill in for another intern...",
         "tags": [],
         "facets": {
             "two_player": 1
@@ -298,7 +297,7 @@
             "Very Tough",
             "Very Tough"
         ],
-        "description": "This set is impossible. GOOD LUCK!",
+        "description": "In an attempt to prove yourself, you've gotten so many coworkers fired...",
         "tags": [],
         "facets": {
             "two_player": 1

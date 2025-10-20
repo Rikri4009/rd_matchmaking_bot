@@ -3,6 +3,7 @@ from discord.ext import commands
 import time
 import re
 import math
+import asyncio
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
@@ -19,6 +20,10 @@ class LobbyButtonsOpen(discord.ui.View):
     @discord.ui.button(label="Leave", style=discord.ButtonStyle.secondary)
     async def leave_pressed(self, button, interaction):
         await LobbyCommands.leave(interaction)
+
+    @discord.ui.button(label="Roll Level", style=discord.ButtonStyle.primary)
+    async def roll_pressed(self, button, interaction):
+        await LobbyCommands.roll(interaction, "Yes", "No", "Any", "")
 
 
 class LobbyButtonsRolling(discord.ui.View):
@@ -77,6 +82,7 @@ class LobbyCommands(commands.Cog):
         return discord.Embed(colour = discord.Colour.red(), title = f"{mode} Lobby: \"{lobby_name}\"", description = f"{host_title}: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
 
 
+    # pseudo-state machine my beloved
     def get_current_lobby_embed(self, ctx, lobby_name):
         current_lobby = self.bot.game_data["lobbies"][lobby_name]
         mode = current_lobby["mode"]
@@ -93,7 +99,13 @@ class LobbyCommands(commands.Cog):
             elif status == 'Playing':
                 return self.get_lobby_playing_embed(mode, lobby_name, host_id, player_id_dict)
         elif mode == 'Ascension':
+            if host_id not in self.bot.game_data["ascension"]:
+                self.bot.game_data["ascension"][host_id] = {}
+                self.bot.validate_game_data()
+                self.bot.save_data()
+            
             ascension_lobby = self.bot.game_data["ascension"][host_id]
+
             if status == 'Not Started':
                 return ascension.get_ascension_welcome_embed(self, lobby_name, host_id)
             elif status == 'Open':
@@ -140,6 +152,9 @@ class LobbyCommands(commands.Cog):
 
 
     async def send_current_lobby_message(self, lobby_name, ctx, is_response): #is_response currently unused
+        if lobby_name not in self.bot.game_data["lobbies"]:
+            return
+
         current_lobby = self.bot.game_data["lobbies"][lobby_name]
         lobby_embed = self.get_current_lobby_embed(ctx, lobby_name)
         lobby_view = self.get_current_lobby_view(lobby_name)
@@ -154,6 +169,26 @@ class LobbyCommands(commands.Cog):
 
         current_lobby["channel_id"] = message.channel.id
         current_lobby["message_id"] = message.id
+
+        for player_id in current_lobby["players"]:
+            dm_message = ""
+
+            new_achievements_message = self.bot.pop_user_achievement_changes(ctx, player_id)
+            if new_achievements_message != None:
+                dm_message = dm_message + new_achievements_message
+
+            completed_quests_message = self.bot.pop_user_completed_quests(player_id)
+            if completed_quests_message != None:
+                dm_message = dm_message + completed_quests_message
+
+            if dm_message != "":
+                player_user = await self.bot.fetch_user(player_id)
+                player_dm_channel = player_user.dm_channel
+
+                if player_dm_channel == None:
+                    player_dm_channel = await player_user.create_dm()
+
+                await player_dm_channel.send(dm_message)
 
 
     async def disable_current_message_view(self, current_lobby): #doesnt work???
@@ -198,7 +233,7 @@ class LobbyCommands(commands.Cog):
     @lobby.command(description="Create a lobby")
     async def create(self, ctx,
         name: discord.Option(discord.SlashCommandOptionType.string, description = 'Lobby name'),
-        mode: discord.Option(choices = ['Free Play', 'Ascension', 'Archipelago'], description = 'Free Play is the standard lobby mode, Ascension is the roguelike')
+        mode: discord.Option(choices = ['Free Play', 'World Tour', 'Archipelago'], description = 'Free Play is the standard lobby mode, World Tour is the roguelike')
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
@@ -227,6 +262,13 @@ class LobbyCommands(commands.Cog):
         if mode == "Archipelago":
             await ctx.respond("That mode is currently being implemented!", ephemeral=True)
             return
+
+        if mode == "World Tour":
+            user_achievements = self.bot.get_user_achievements(ctx, uid)
+            if user_achievements['total'] < 10:
+                await ctx.respond("You need at least 10★ in order to be the runner!", ephemeral=True)
+                return
+            mode = "Ascension"
 
         current_lobbies[name] = {}
         current_lobby = current_lobbies[name]
@@ -273,13 +315,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         if name == 'the light': #secret
             await ctx.respond(f'\"Whoa whoa hang on, you think I\'m gonna just let you do THAT?\"\n\
-\"If you really want to prove your worth, make an Ascension lobby!\"\n\
+\"If you really want to prove your worth, make a World Tour lobby!\"\n\
 \"...What, you want an achievement? Just for finding this place? But that one\'s MINE! And you barely did any work!\"\n\
 \"Fine, I\'ll give you something... if you can survive my level! Given its... PR status, this should be fun to watch...\"', ephemeral=True)
-            user_achievements = self.bot.get_user_achievements(ctx, uid)
-            if user_achievements['total'] >= 15:
-                await self.endless_welcome(ctx, uid)
-            return
 
         # if user is playing in a lobby
         lobby_name_user_is_playing_in = self.bot.lobby_name_user_is_playing_in(uid)
@@ -486,7 +524,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                 if (current_lobby["status"] != "Game Over") and (current_lobby["status"] != "Victory"):
                     await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
                 else:
-                    lobby_curr_message.edit(lobby_curr_message.content, embed=None, view=None)
+                    await lobby_curr_message.edit(lobby_curr_message.content, embed=None, view=None)
         except:
             #print(current_lobbies[lobby_name_user_is_hosting])
             print("Lobby message edit failed in delete")
@@ -784,16 +822,16 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         if len(current_lobby['players']) > 1:
             await lobby_channel.send(message + '\n**Beginning match in 10 seconds!**')
-            time.sleep(7)
+            await asyncio.sleep(7)
 
             await lobby_channel.send('**3**')
-            time.sleep(1)
+            await asyncio.sleep(1)
             await lobby_channel.send('**2**')
-            time.sleep(1)
+            await asyncio.sleep(1)
             await lobby_channel.send('**1**')
-            time.sleep(1)
+            await asyncio.sleep(1)
             await lobby_channel.send('**GO!**')
-            time.sleep(10)
+            await asyncio.sleep(10)
 
         await self.send_current_lobby_message(lobby_name, ctx, False)
 
@@ -860,15 +898,15 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             if player not in users_stats:
                 users_stats[player] = {}
-
-            self.bot.validate_users_stats()
+                self.bot.validate_users_stats()
 
             player_stats = users_stats[player]
 
             level_is_tough_plus = (current_lobby['level']['difficulty'] == 'Tough') or (current_lobby['level']['difficulty'] == 'Very Tough')
 
-            player_stats['exp'] = player_stats['exp'] + num_players*2 - player_rank + 4
-            player_stats['total_sp_earned'] = player_stats['total_sp_earned'] + sp_earned
+            self.bot.increment_user_stat(player, "exp", num_players*2 - player_rank + 4, True)
+            self.bot.increment_user_stat(player, "total_sp_earned", sp_earned, True)
+
             player_stats['matches_played'] = player_stats['matches_played'] + 1
             player_stats['opponents_beaten'] = player_stats['opponents_beaten'] + num_players - player_rank
             if (current_lobby['roll_settings']['played_before'] == 'No'):

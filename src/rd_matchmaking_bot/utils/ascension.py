@@ -22,7 +22,7 @@ class AscensionButtonsWelcome(discord.ui.View):
 
         game_data = self.lobbycommands.bot.game_data
         if game_data["ascension"][self.runner_id]["status"] == "Not Started":
-            await interaction.respond("You haven't started climbing yet!", ephemeral=True)
+            await interaction.respond("You haven't started a run yet!", ephemeral=True)
             return
 
         # note that the ascension data's status will never be rolling or playing, so no need to copy over level
@@ -31,14 +31,23 @@ class AscensionButtonsWelcome(discord.ui.View):
         await interaction.response.defer()
         await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
-    @discord.ui.button(label="New Game", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.danger)
     async def newgame_pressed(self, button, interaction):
         uid = str(interaction.user.id)
         if uid != self.runner_id:
             await interaction.respond("Not your button!", ephemeral=True)
             return
 
+        runner_stats = self.lobbycommands.bot.users_stats[uid]
+        runner_tickets = runner_stats["current_tickets"]
+
+        if runner_tickets < 1:
+            await interaction.respond("You don't have any tickets!", ephemeral=True)
+            return
+
         self.stop()
+
+        runner_stats["current_tickets"] = runner_stats["current_tickets"] - 1
 
         begin(self.lobbycommands, interaction, self.runner_id, None, self.lobby_name)
         await interaction.response.defer()
@@ -66,8 +75,8 @@ class AscensionButtonsItem(discord.ui.View):
             await interaction.respond("You don't have any Pineapples! I mean Apples!")
             return
 
-        if ascension_lobby["ascension_difficulty"] >= 1:
-            ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
+        #if ascension_lobby["ascension_difficulty"] >= 1:
+        #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
 
         ascension_lobby["items"]["Apples"] = ascension_lobby["items"]["Apples"] - 1
         ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + get_apple_heal_amount(ascension_lobby)
@@ -102,8 +111,8 @@ class AscensionButtonsItem(discord.ui.View):
             await interaction.respond("You don't have any Ivory Dice!") #not ephemeral on purpose
             return
 
-        if ascension_lobby["ascension_difficulty"] >= 1:
-            ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
+        #if ascension_lobby["ascension_difficulty"] >= 1:
+        #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
 
         ascension_lobby["items"]["Ivory Dice"] = ascension_lobby["items"]["Ivory Dice"] - 1
         ascension_lobby["die_used"] = True
@@ -127,8 +136,8 @@ class AscensionButtonsItem(discord.ui.View):
             await interaction.respond("You don't have any Chronographs!")
             return
 
-        if ascension_lobby["ascension_difficulty"] >= 1:
-            ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
+        #if ascension_lobby["ascension_difficulty"] >= 1:
+        #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
 
         ascension_lobby["items"]["Chronographs"] = ascension_lobby["items"]["Chronographs"] - 1
         ascension_lobby["chronograph_used"] = True #this gets checked in roll_level_from_settings, and is set off in finish_match
@@ -190,6 +199,19 @@ class AscensionButtonsItem(discord.ui.View):
         await proceed_helper(self, interaction)
 
 
+def is_last_set(ascension_lobby):
+    if (ascension_lobby["ascension_difficulty"] == 0) and (ascension_lobby["current_set"] >= 5):
+        return True
+    elif (ascension_lobby["ascension_difficulty"] == 1) and (ascension_lobby["current_set"] >= 6):
+        return True
+    elif (ascension_lobby["ascension_difficulty"] == 2) and (ascension_lobby["current_set"] >= 7):
+        return True
+    elif ascension_lobby["current_set"] >= 7: #replace with 8
+        return True
+    else:
+        return False
+
+
 async def proceed_helper(self, interaction):
     game_data = self.lobbycommands.bot.game_data
     ascension_lobby = game_data["ascension"][self.runner_id]
@@ -204,8 +226,8 @@ async def proceed_helper(self, interaction):
         ascension_lobby["level_number"] = ascension_lobby["level_number"] - 1
     else:
         ascension_lobby["incoming_damage"] = calculate_item_applied_incoming_damage(ascension_lobby) #apply items to incoming damage
-        if ascension_lobby["ascension_difficulty"] >= 1: #lose 2hp for each shield used
-            ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - (2 * ascension_lobby["shields_used"])
+        #if ascension_lobby["ascension_difficulty"] >= 1: #lose 2hp for each shield used
+        #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - (2 * ascension_lobby["shields_used"])
 
     ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - ascension_lobby["incoming_damage"]
 
@@ -236,14 +258,14 @@ async def proceed_helper(self, interaction):
     # if last level
 
     player_stats = self.lobbycommands.bot.users_stats[self.runner_id]
-    gained_exp = (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["current_set"]
+    gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
     player_stats["exp"] = player_stats["exp"] + gained_exp
 
     if ascension_lobby["s_ranked_so_far"]:
         player_stats["s_ranked_entire_set"] = player_stats["s_ranked_entire_set"] + 1
 
     # is the last level but not the last set:
-    if ascension_lobby["current_set"] < 7:
+    if not is_last_set(ascension_lobby):
 
         num_items_to_forage = ascension_lobby["extra"]
 
@@ -296,10 +318,12 @@ async def proceed_helper(self, interaction):
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
+    # gain exp for a second time since it's doubled on victory
+    gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
     bonus_exp = 0
     for item in ascension_lobby["items"]:
         bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
-    player_stats["exp"] = player_stats["exp"] + bonus_exp
+    player_stats["exp"] = player_stats["exp"] + gained_exp + bonus_exp
 
     ascension_lobby["status"] = "Victory"
     auxiliary_lobby["status"] = "Victory"
@@ -421,7 +445,7 @@ class AscensionButtonsGameOver(discord.ui.View):
         self.lobby_name = lobby_name
         self.runner_id = runner_id
 
-    @discord.ui.button(label="New Game", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.success)
     async def newgame_pressed(self, button, interaction):
         uid = str(interaction.user.id)
         if uid != self.runner_id:
@@ -451,13 +475,17 @@ def get_ascension_welcome_embed(self, name, runner_id):
         self.bot.validate_game_data()
         self.bot.save_data()
 
-    return discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
-    Welcome to Ascension!\n\
-Your goal is to play levels to reach `   ` `     ` at the end of Set 7.\n\
+    runner_stats = self.bot.users_stats[runner_id]
+    runner_tickets = runner_stats["current_tickets"]
+
+    return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
+    Welcome to World Tour!\n\
+Your goal is to treat patients across 5(?) cities spanning the globe.\n\
 You, the **runner**, start with ★ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
-Only when you reach 0 HP will you fall back to the beginning.")
+If you reach 0 HP, your tour will be cut short!\n\n\
+**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)")
 
 
 def begin(self, ctx, runner_id, max_hp, lobby_name):
@@ -487,7 +515,13 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["die_used"] = False
     ascension_lobby["chronograph_used"] = False
 
-    ascension_lobby["current_set"] = 1
+    ascension_lobby["current_set"] = 3
+
+    if (ascension_difficulty == 1) or (ascension_difficulty == 6):
+        ascension_lobby["current_set"] = 2
+    elif (ascension_difficulty == 0) or (ascension_difficulty == 7):
+        ascension_lobby["current_set"] = 1
+
     ascension_lobby["level_number"] = 0
 
     ascension_lobby["items"]["Apples"] = 0
@@ -514,21 +548,10 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby = self.bot.game_data["ascension"][player_id]
     auxiliary_lobby = self.bot.game_data["lobbies"][lobby_name]
     sets_config = self.bot.get_sets_config()
-    set_number = str(ascension_lobby['current_set'])
+    set_number = ascension_lobby['current_set']
+    set_number_str = str(set_number)
 
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
-
-    set_difficulties = sets_config[set_number]['difficulties']
-
-    # make the set harder if ascension difficulty says to
-    if (ascension_difficulty < 7) and (((ascension_difficulty >= 3) and (set_number == 3)) or ((ascension_difficulty >= 5) and (set_number == 5))):
-        for i in range(len(set_difficulties)):
-            if set_difficulties[i] == "Easy":
-                set_difficulties[i] = "Medium"
-            if set_difficulties[i] == "Medium":
-                set_difficulties[i] = "Tough"
-            if set_difficulties[i] == "Tough":
-                set_difficulties[i] = "Very Tough"
 
     ascension_lobby['status'] = 'Open'
     auxiliary_lobby['status'] = 'Open'
@@ -537,23 +560,45 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby["s_ranked_so_far"] = True
 
     set_theme = 'None'
-    if len(sets_config[set_number]['theme']) != 0:
-        set_theme = random.choice(sets_config[set_number]['theme'])
+    if len(sets_config[set_number_str]['theme']) != 0:
+        set_theme = random.choice(sets_config[set_number_str]['theme'])
     ascension_lobby['set_theme'] = set_theme
 
     set_modifier = 'None'
-    if len(sets_config[set_number]['modifier']) != 0:
-        if (ascension_difficulty < 7) or (set_number % 2 == 0):
-            set_modifier = random.choice(sets_config[set_number]['modifier'])
-        else:
-            set_modifier = random.choice(sets_config[set_number]['modifier_hard'])
+    if (ascension_difficulty < 7) or (set_number % 2 == 0):
+        if len(sets_config[set_number_str]['modifier']) != 0:
+            set_modifier = random.choice(sets_config[set_number_str]['modifier'])
+    else:
+        if len(sets_config[set_number_str]['modifier_hard']) != 0:
+            set_modifier = random.choice(sets_config[set_number_str]['modifier_hard'])
+
     ascension_lobby['set_modifier'] = set_modifier
 
     ascension_lobby['roll_tags'] = sets_config[set_theme]['tags'] + sets_config[set_modifier]['tags']
     ascension_lobby['roll_facets'] = sets_config[set_theme]['facets'] | sets_config[set_modifier]['facets']
 
+    set_difficulties = sets_config[set_number_str]['difficulties']
+
     if set_modifier != 'None':
         set_difficulties = sets_config[set_modifier]['diff_override']
+
+    # make the set harder if ascension difficulty says to
+    if ((ascension_difficulty >= 3) and (set_number == 3)) or ((ascension_difficulty >= 5) and (set_number == 5)):
+        for i in range(len(set_difficulties)):
+            if set_difficulties[i] == "Easy":
+                set_difficulties[i] = "Medium"
+            elif set_difficulties[i] == "Medium":
+                set_difficulties[i] = "Tough"
+            elif set_difficulties[i] == "Tough":
+                set_difficulties[i] = "Very Tough"
+
+    ascension_lobby['certificate_3_modifiers'] = []
+    for i in range(len(set_difficulties)+1):
+        ascension_lobby['certificate_3_modifiers'].append(random.choice(["Hard Difficulty Button", "2-Player"]))
+
+    ascension_lobby['certificate_5_modifiers'] = []
+    for i in range(len(set_difficulties)+1):
+        ascension_lobby['certificate_5_modifiers'].append(random.choice(["Blindfolded", "Nightcore"]))
 
     ascension_lobby['set_difficulties'] = set_difficulties
 
@@ -597,8 +642,8 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
-    return discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
-{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Do `/lobby roll` to proceed!\n\nSupport: {support}")
+    return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
 
 
 def set_roll_settings(lobbycommands, lobby_name, runner_id):
@@ -606,6 +651,7 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     auxiliary_lobby = lobbycommands.bot.game_data["lobbies"][lobby_name]
 
     level_number = ascension_lobby["level_number"]
+    ascension_difficulty = ascension_lobby["ascension_difficulty"]
 
     roll_settings = auxiliary_lobby["roll_settings"]
 
@@ -614,6 +660,13 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     roll_settings["difficulty"] = ascension_lobby["set_difficulties"][level_number]
     roll_settings["tags"] = ascension_lobby["roll_tags"]
     roll_settings["facets"] = ascension_lobby["roll_facets"]
+
+    set_number = ascension_lobby["current_set"]
+
+    if (ascension_difficulty >= 3) and (set_number != 3) and ((roll_settings["difficulty"] == "Easy") or (roll_settings["difficulty"] == "Medium")):
+        if ascension_lobby['certificate_3_modifiers'][level_number] == "2-Player":
+            roll_settings["facets"]["two_player"] = 1
+
     roll_settings["require_gameplay"] = True
 
 
@@ -632,12 +685,23 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
     if level_chosen != None:
         level_image = level_chosen['image_url']
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
 
     if set_modifier != "None":
         level_embed.add_field(name = f"Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
+
+    level_number = ascension_lobby["level_number"]
+    ascension_difficulty = ascension_lobby["ascension_difficulty"]
+
+    if (ascension_difficulty >= 3) and (set_number != 3) and ((level_chosen['difficulty'] == "Easy") or (level_chosen['difficulty'] == "Medium")):
+        c3_modifier = ascension_lobby['certificate_3_modifiers'][level_number]
+        level_embed.add_field(name = f"<:gold:1399860113883402270> Extra Modifier: **{c3_modifier}**", value = sets_config[c3_modifier]['description'], inline = False)
+
+    if (ascension_difficulty >= 5) and (set_number != 5) and (level_chosen['difficulty'] == "Easy"):
+        c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
+        level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **{c5_modifier}**", value = sets_config[c5_modifier]['description'], inline = False)
 
     return level_embed
 
@@ -649,7 +713,7 @@ def get_ascension_item_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     set_number = ascension_lobby["current_set"]
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 You are about to take {calculate_item_applied_incoming_damage(ascension_lobby)} damage!\n\
 Press the corresponding button below to use an item.\n\n\
 {items_text}Press \"**Use SP**\" to spend {sp_cost} SP to reduce incoming damage by 3. (This is more expensive if you have a lot of SP!)")
@@ -669,11 +733,11 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
         forage_1_difficulty = "Tough"
         forage_2_difficulty = "Very Tough"
 
-    gained_exp = (3 + ascension_difficulty) * ascension_lobby["current_set"]
+    gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
 
     set_number = ascension_lobby["current_set"]
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional exp.\n\n\
 You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n\
@@ -685,27 +749,31 @@ Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(c
 
 def get_ascension_gameover_embed(lobby_name, runner_id, ascension_lobby):
     set_number = str(ascension_lobby['current_set'])
-    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
 Press **New Game** to try again, or press **Delete** to delete this lobby.")
     return gameover_embed
 
 
 def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
-    gained_exp = (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["current_set"]
+    gained_exp = 2 * (6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"])
     bonus_exp = 0
     for item in ascension_lobby["items"]:
         bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
 
     certification_text = ""
     if ascension_lobby["ascension_difficulty"] > 0:
-        certification_text = "**{ CERTIFICATE " + ascension_lobby["ascension_difficulty"] + " OBTAINED }**\n\n"
+        certification_text = "**{ CERTIFICATE " + str(ascension_lobby["ascension_difficulty"]) + " OBTAINED }**\n\n"
 
-    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"Ascension Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
-{certification_text}YOU WIN! Congratulations!!!!! (technically this is still a beta test but it counts)\n\
+    spec_unlocked_text = ""
+    if ascension_lobby["ascension_difficulty"] == 3:
+        spec_unlocked_text = "**You can now do `/admin_command specialize`!**\n\n"
+
+    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+{certification_text}YOU WIN! Congratulations!!!!!\n\
 You have gained {gained_exp} additional exp.\n\
-Your remaining items have been converted to {bonus_exp} total exp.\n\n\
--# You can now do `/admin_command ascension {ascension_lobby['ascension_difficulty']+1}`...")
+Your remaining items have been converted to {bonus_exp} total exp.\n\n{spec_unlocked_text}\
+-# You can now do `/admin_command certify {ascension_lobby['ascension_difficulty']+1}`...")
     return victory_embed
 
 
@@ -755,19 +823,19 @@ def get_ascension_difficulty_text(ascension_difficulty):
     ascension_difficulty_text = "**Certifications:**"
 
     if ascension_difficulty >= 1:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Recovering only heals 1/2 of missing HP, and using an item costs 2 HP"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Recovering heals less HP **/** Clear sets 2-6"
     if ascension_difficulty >= 2:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easy levels deal x2 damage and medium levels deal x1.5, but apples heal 12 HP"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear sets 3-7 **/** Apples heal more"
     if ascension_difficulty >= 3:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> All easy/medium levels must be played either on hard or 2P, and Set 3 is harder"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> Set 3 invades easier levels **/** Set 3 is harder **/** The final boss appears"
     if ascension_difficulty >= 4:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> Foraging is more difficult, but unlock `/admin_command specialize`"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> Foraging is more difficult **/** Hard button final boss **/** You may `specialize`" # hard button
     if ascension_difficulty >= 5:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> All easy levels must be played either on chili speed or blindfolded, and Set 5 is harder"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> Set 5 invades easy levels **/** Set 5 is harder **/** No recovering after set 7"
     if ascension_difficulty >= 6:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> [Replaces <:silver:1399860110389542915>] Easy/medium levels deal x2 damage and tough/vt levels deal x1.5, but apples heal 15 HP"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** Clear sets 2-7 **/** Apples heal even more"
     if ascension_difficulty >= 7:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd-numbered sets have harder modifiers"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd sets are corrupted **/** Clear sets 1-7 **/** Double damage final boss" # double damage
 
     ascension_difficulty_text = ascension_difficulty_text + "\n\n"
 

@@ -1,5 +1,5 @@
 import re
-import random
+import datetime
 import math
 import json
 import discord
@@ -229,6 +229,35 @@ To begin a treatment session, do `/lobby create`!\n\n\
         await ctx.respond(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, uid, category, 1))
 
 
+    @discord.slash_command(description="View your quests")
+    async def quests(self, ctx
+    ):
+        uid = str(ctx.user.id)
+
+        self.bot.refresh_eligible_quests(uid)
+
+        est_time = datetime.timezone(-datetime.timedelta(hours=5))
+        now = datetime.datetime.now(est_time)
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow = midnight + datetime.timedelta(days=1)
+
+        quests_text = f"Completed quests will refresh <t:{math.floor(tomorrow.timestamp())}:R>!\n\n"
+
+        user_quests = self.bot.get_user_stat(uid, "quests")
+
+        for i in range(len(user_quests)):
+            if user_quests[i]["completion_time"] == None:
+                quests_text = quests_text + f"- **Quest {str(i+1)}**: {user_quests[i]['description']} ({user_quests[i]['completion']}/{user_quests[i]['requirement']})\n  - Reward: {user_quests[i]['reward_amount']} {user_quests[i]['reward_description']}"
+            else:
+                quests_text = quests_text + f"- ~~**Quest {str(i+1)}**: {user_quests[i]['description']} (Completed!)\n  - Reward: {user_quests[i]['reward_amount']} {user_quests[i]['reward_description']}~~"
+            
+            quests_text = quests_text + "\n"
+
+        quests_embed = discord.Embed(colour = discord.Colour.green(), title = "Daily Quests", description = quests_text)
+
+        await ctx.respond(embed=quests_embed)
+
+
     @discord.slash_command(description="(ADVANCED) Run an admin command.")
     async def admin_command(self, ctx,
         command: discord.Option(discord.SlashCommandOptionType.string)
@@ -237,7 +266,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         args = command.split()
 
-        if (len(args) == 2) and ((args[0] == "ascension") or (args[0] == "a")) and ((args[1]).isdigit()):
+        if (len(args) == 2) and ((args[0] == "certify") or (args[0] == "a")) and ((args[1]).isdigit()):
             await self.change_ascension_difficulty(ctx, uid, int(args[1]))
             return
 
@@ -245,19 +274,23 @@ To begin a treatment session, do `/lobby create`!\n\n\
             await self.specializations(ctx, uid)
             return
 
+        if (len(args) == 1) and (args[0] == "get_backups"):
+            await self.get_backups(ctx)
+            return
+
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
 
 
     async def change_ascension_difficulty(self, ctx, uid, difficulty):
-        if (difficulty < 0) or (difficulty > 6):
+        if (difficulty < 0) or (difficulty > 7):
             await ctx.respond(f"Invalid certificate!", ephemeral=True)
             return
 
         user_stats = self.bot.users_stats[uid]
 
-        if user_stats["highest_set_beaten"] < 7:
-            await ctx.respond(f"You need to beat Ascension mode as the runner first!", ephemeral=True)
+        if user_stats["highest_set_beaten"] < 5:
+            await ctx.respond(f"You need to beat World Tour as the runner first!", ephemeral=True)
             return
 
         if user_stats["highest_ascension_difficulty_beaten"]+1 < difficulty:
@@ -279,6 +312,10 @@ To begin a treatment session, do `/lobby create`!\n\n\
         specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
 
         await ctx.respond(embed=specializations_embed, view=SpecializeButtons(self.bot, uid))
+
+
+    async def get_backups(self, ctx):
+        await ctx.respond("Backups:", file=discord.File(fp="resources/data/users_stats_backups.json"))
 
 
 def setup(bot: MatchmakingBot):
