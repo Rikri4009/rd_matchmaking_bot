@@ -49,10 +49,12 @@ class MatchmakingBot(Bot):
         path = data.get_path("resources/data")
         users_stats_backups = data.read_file(path, "users_stats_backups.json")
 
+        users_stats_clone = (self.users_stats).copy()
+
         now = datetime.datetime.now()
 
         if (len(users_stats_backups) == 0) or (datetime.datetime.fromtimestamp(users_stats_backups[len(users_stats_backups)-1]["backup_timestamp"]) + datetime.timedelta(hours=12) < now):
-            users_stats_backups.append(self.users_stats)
+            users_stats_backups.append(users_stats_clone)
             users_stats_backups[len(users_stats_backups)-1]["backup_timestamp"] = now.timestamp()
 
         data.write_json(users_stats_backups, path, "users_stats_backups.json")

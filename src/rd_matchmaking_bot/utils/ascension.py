@@ -31,7 +31,7 @@ class AscensionButtonsWelcome(discord.ui.View):
         await interaction.response.defer()
         await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
-    @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="New Game", style=discord.ButtonStyle.danger)
     async def newgame_pressed(self, button, interaction):
         uid = str(interaction.user.id)
         if uid != self.runner_id:
@@ -39,15 +39,17 @@ class AscensionButtonsWelcome(discord.ui.View):
             return
 
         runner_stats = self.lobbycommands.bot.users_stats[uid]
+        ascension_difficulty = runner_stats["current_ascension_difficulty"]
         runner_tickets = runner_stats["current_tickets"]
 
-        if runner_tickets < 1:
+        if (ascension_difficulty >= 1) and (runner_tickets < 1):
             await interaction.respond("You don't have any tickets!", ephemeral=True)
             return
 
         self.stop()
 
-        runner_stats["current_tickets"] = runner_stats["current_tickets"] - 1
+        if ascension_difficulty >= 1:
+            runner_stats["current_tickets"] = runner_stats["current_tickets"] - 1
 
         begin(self.lobbycommands, interaction, self.runner_id, None, self.lobby_name)
         await interaction.response.defer()
@@ -445,7 +447,7 @@ class AscensionButtonsGameOver(discord.ui.View):
         self.lobby_name = lobby_name
         self.runner_id = runner_id
 
-    @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="New Game", style=discord.ButtonStyle.success)
     async def newgame_pressed(self, button, interaction):
         uid = str(interaction.user.id)
         if uid != self.runner_id:
@@ -476,7 +478,12 @@ def get_ascension_welcome_embed(self, name, runner_id):
         self.bot.save_data()
 
     runner_stats = self.bot.users_stats[runner_id]
+    ascension_difficulty = runner_stats["current_ascension_difficulty"]
     runner_tickets = runner_stats["current_tickets"]
+
+    ticket_cost_text = ""
+    if ascension_difficulty >= 1:
+        ticket_cost_text = f"\n\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
 
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
@@ -484,8 +491,7 @@ Your goal is to treat patients across 5(?) cities spanning the globe.\n\
 You, the **runner**, start with ★ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
-If you reach 0 HP, your tour will be cut short!\n\n\
-**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)")
+If you reach 0 HP, your tour will be cut short!{ticket_cost_text}")
 
 
 def begin(self, ctx, runner_id, max_hp, lobby_name):
@@ -747,11 +753,20 @@ Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(c
     return level_embed
 
 
-def get_ascension_gameover_embed(lobby_name, runner_id, ascension_lobby):
+def get_ascension_gameover_embed(lobbycommands, lobby_name, runner_id, ascension_lobby):
     set_number = str(ascension_lobby['current_set'])
+
+    runner_stats = lobbycommands.bot.users_stats[runner_id]
+    ascension_difficulty = runner_stats["current_ascension_difficulty"]
+    runner_tickets = runner_stats["current_tickets"]
+
+    ticket_cost_text = ""
+    if ascension_difficulty >= 1:
+        ticket_cost_text = f"\n\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
+
     gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
-Press **New Game** to try again, or press **Delete** to delete this lobby.")
+Press **New Game** to try again, or press **Delete** to delete this lobby.{ticket_cost_text}")
     return gameover_embed
 
 
@@ -823,7 +838,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     ascension_difficulty_text = "**Certifications:**"
 
     if ascension_difficulty >= 1:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Recovering heals less HP **/** Clear sets 2-6"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Starting runs costs 1 🎫 **/** Recovering heals less HP **/** Clear sets 2-6"
     if ascension_difficulty >= 2:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear sets 3-7 **/** Apples heal more"
     if ascension_difficulty >= 3:

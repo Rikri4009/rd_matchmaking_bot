@@ -2,6 +2,7 @@ import re
 import datetime
 import math
 import json
+import os
 import discord
 from discord import Attachment
 from discord.ext import commands
@@ -9,6 +10,7 @@ from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.ascension as ascension
 import rd_matchmaking_bot.utils.misc as misc
+import rd_matchmaking_bot.utils.data as data
 
 class LeaderboardButtons(discord.ui.View):
     def __init__(self, bot: MatchmakingBot, uid, category, page):
@@ -315,7 +317,9 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
 
     async def get_backups(self, ctx):
-        await ctx.respond("Backups:", file=discord.File(fp="resources/data/users_stats_backups.json"))
+        path = data.get_path("resources/data")
+
+        await ctx.respond("Backups:", file = discord.File(fp = (path + os.sep + "users_stats_backups.json")))
 
 
 def setup(bot: MatchmakingBot):

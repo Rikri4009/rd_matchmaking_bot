@@ -119,7 +119,7 @@ class LobbyCommands(commands.Cog):
             elif status == 'Choice':
                 return ascension.get_ascension_choice_embed(ctx, lobby_name, host_id, ascension_lobby)
             elif status == 'Game Over':
-                return ascension.get_ascension_gameover_embed(lobby_name, host_id, ascension_lobby)
+                return ascension.get_ascension_gameover_embed(self, lobby_name, host_id, ascension_lobby)
             elif status == 'Victory':
                 return ascension.get_ascension_victory_embed(lobby_name, host_id, ascension_lobby)
         print('Huge Mistake')
