@@ -664,8 +664,8 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     roll_settings["peer_reviewed"] = "Yes"
     roll_settings["played_before"] = "No"
     roll_settings["difficulty"] = ascension_lobby["set_difficulties"][level_number]
-    roll_settings["tags"] = ascension_lobby["roll_tags"]
-    roll_settings["facets"] = ascension_lobby["roll_facets"]
+    roll_settings["tags"] = (ascension_lobby["roll_tags"]).copy()
+    roll_settings["facets"] = (ascension_lobby["roll_facets"]).copy()
 
     set_number = ascension_lobby["current_set"]
 

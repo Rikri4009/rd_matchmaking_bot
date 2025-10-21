@@ -299,8 +299,6 @@
         ],
         "description": "In an attempt to prove yourself, you've gotten so many coworkers fired...",
         "tags": [],
-        "facets": {
-            "two_player": 1
-        }
+        "facets": {}
     }
 }

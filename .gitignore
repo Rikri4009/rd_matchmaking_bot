@@ -4,3 +4,4 @@ resources/data/game_data.json
 resources/data/users_rdsaves.json
 resources/data/users_stats.json
 resources/KEY
+/resources/data/users_stats_backups.json
