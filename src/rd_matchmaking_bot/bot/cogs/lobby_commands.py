@@ -4,6 +4,7 @@ import time
 import re
 import math
 import asyncio
+import copy
 from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
@@ -266,7 +267,7 @@ class LobbyCommands(commands.Cog):
         if mode == "World Tour":
             user_achievements = self.bot.get_user_achievements(ctx, uid)
             if user_achievements['total'] < 10:
-                await ctx.respond("You need at least 10★ in order to be the runner!", ephemeral=True)
+                await ctx.respond("You need at least 10\⭐ in order to be the runner!", ephemeral=True)
                 return
             mode = "Ascension"
 
@@ -622,6 +623,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             current_lobby['roll_settings']['tags'] = tags_array
             current_lobby['roll_settings']['facets'] = {}
             current_lobby['roll_settings']['require_gameplay'] = True
+            current_lobby['roll_settings']['difficulty_modifiers'] = []
 
         elif current_lobby["mode"] == "Ascension":
             ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid)
@@ -860,6 +862,8 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
     async def finish_match(self, ctx, lobby_name, host):
         current_lobby = self.bot.game_data["lobbies"][lobby_name]
 
+        self.bot.level_history.append(copy.deepcopy(current_lobby))
+
         unsorted_misses = {}
 
         for player in current_lobby['players']:
@@ -890,9 +894,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             total_sp_earned = total_sp_earned + sp_earned
 
-            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4} exp)\n"
+            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4}\🎵)\n"
             if sp_earned > 0:
-                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4} exp) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
+                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4}\🎵) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
 
             placement_message = placement_message + placement_message_line
 

@@ -115,9 +115,9 @@ class UserCommands(commands.Cog):
     @discord.slash_command(description="Primer to the bot")
     async def about(self, ctx
     ):
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the Rhythm Doctor Program for International Treatments (RD PITS)!\n\
-Treating patients from across the globe can require multiple interns at once.\n\
-To facilitate this, **Synchronized Operations** (Syncope), designed to synchronize interns with their patients, was created.\n\n\
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the **sync**hronized *ope*rations program!\n\
+Treating patients from across the globe can require multiple interns working at once.\n\
+To facilitate this, Syncope, designed to synchronize interns with their patients, was created.\n\n\
 To begin a treatment session, do `/lobby create`!\n\n\
 -# This bot is developed by <@1207345676141465622>, with support from <@758112945636376677> and <@340013796976492552>.\n\
 -# Character and artwork by <@201091631795929089>.")
@@ -205,6 +205,7 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
         ach_uid = str(ach_user.id)
 
+        user_stats = self.bot.users_stats[ach_uid]
         achievements_list = self.bot.get_user_achievements(ctx, ach_uid)
 
         if achievements_list == None:
@@ -214,7 +215,9 @@ To begin a treatment session, do `/lobby create`!\n\n\
                 await ctx.respond('This user has not played any matches!', ephemeral = True)
             return
 
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.global_name}\'s Achievements ({achievements_list['total']}★)", description = achievements_list['message'])
+        total_player_rating = '{:.2f}'.format(self.bot.get_user_ratings(ach_uid)["Total"])
+
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.global_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['exp']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
         tooltipEmbed.set_footer(text="Hover over text for info!")
 
         await ctx.respond(embed=tooltipEmbed)
@@ -222,13 +225,31 @@ To begin a treatment session, do `/lobby create`!\n\n\
 
     @discord.slash_command(description="See the rankings")
     async def leaderboard(self, ctx,
-        category: discord.Option(choices = ['exp', '★'], default = 'exp', description = 'Default: exp')
+        category: discord.Option(choices = ['🎵', '⭐'], default = '🎵', description = 'Default: 🎵')
     ):
         uid = str(ctx.user.id)
 
         leaderboard_embed = misc.get_leaderboard_embed(ctx, self.bot, category, 1)
 
         await ctx.respond(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, uid, category, 1))
+
+
+    @discord.slash_command(description="See your Player Rating")
+    async def player_rating(self, ctx,
+        user: discord.Option(discord.SlashCommandOptionType.user, required = False, description = '@user to view the Player Rating of. Default: Yourself')
+    ):
+        if user == None:
+            rating_user = ctx.user
+        else:
+            rating_user = user
+
+        rating_uid = str(rating_user.id)
+
+        player_ratings = self.bot.get_user_ratings(rating_uid)
+        player_ratings_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{rating_user.global_name}\'s Player Ratings", description = f"# `Total: {'{:.2f}'.format(player_ratings['Total'])}🩺`\n\n`      Easy: {'{:.2f}'.format(player_ratings['Easy'])}💚`\n`    Medium: {'{:.2f}'.format(player_ratings['Medium'])}💛`\n`     Tough: {'{:.2f}'.format(player_ratings['Tough'])}❤️`\n`Very Tough: {'{:.2f}'.format(player_ratings['Very Tough'])}💜`")
+        player_ratings_embed.set_footer(text="Your Player Rating is based on the last 16 levels of each difficulty you\'ve played.\nLevels played with difficulty modifiers (e.g. hard button) don't count.")
+
+        await ctx.respond(embed=player_ratings_embed)
 
 
     @discord.slash_command(description="View your quests")

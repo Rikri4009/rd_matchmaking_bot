@@ -12,6 +12,7 @@ class MatchmakingBot(Bot):
         self.users_rdsaves = {}
         self.users_stats = {}
         self.game_data = {}
+        self.level_history = {}
 
         self.users_achievements = {} # used to listen for changes to users' achievement levels
 
@@ -30,6 +31,7 @@ class MatchmakingBot(Bot):
         self.users_rdsaves = data.read_file(path, "users_rdsaves.json")
         self.users_stats = data.read_file(path, "users_stats.json")
         self.game_data = data.read_file(path, "game_data.json")
+        self.level_history = data.read_file(path, "level_history.json")
 
         self.validate_game_data()
         self.validate_users_stats()
@@ -41,6 +43,7 @@ class MatchmakingBot(Bot):
         data.write_json(self.users_rdsaves, path, "users_rdsaves.json")
         data.write_json(self.users_stats, path, "users_stats.json")
         data.write_json(self.game_data, path, "game_data.json")
+        data.write_json(self.level_history, path, "level_history.json")
 
         self.create_users_stats_backup()
 
@@ -266,6 +269,62 @@ class MatchmakingBot(Bot):
         return achievement_list
 
 
+    def get_play_history(self, uid):
+        play_history = []
+
+        for past_lobby in self.level_history:
+            if uid in past_lobby['players']:
+                play_history.append(past_lobby)
+
+        return play_history
+
+
+    def get_user_ratings(self, uid):
+        play_history = self.get_play_history(uid)
+
+        score_history = {}
+        score_history["Easy"] = []
+        score_history["Medium"] = []
+        score_history["Tough"] = []
+        score_history["Very Tough"] = []
+
+        for past_lobby in reversed(play_history):
+            level_misses = past_lobby['players'][uid]['miss_count']
+
+            no_difficulty_modifiers = ('difficulty_modifiers' not in past_lobby['roll_settings']) or (len(past_lobby['roll_settings']['difficulty_modifiers']) == 0)
+
+            if no_difficulty_modifiers and (past_lobby['roll_settings']['played_before'] == 'No') and (past_lobby['level']['peer review status'] == 'Peer Reviewed') and (level_misses >= 0):
+                level_difficulty = past_lobby['level']['difficulty']
+
+                if len(score_history[level_difficulty]) < 16:
+                    score_history[level_difficulty].append(level_misses)
+
+        user_ratings = {}
+
+        for difficulty, difficulty_score_history in score_history.items():
+            if len(difficulty_score_history) < 4:
+                user_ratings[difficulty] = 0
+            else:
+                difficulty_score_history.sort()
+
+                outlier_count = len(difficulty_score_history) // 4
+
+                print(difficulty_score_history)
+                #remove outlier_count best and worst scores
+                for _ in range(outlier_count):
+                    difficulty_score_history.pop(0)
+                    difficulty_score_history.pop()
+
+                print(difficulty_score_history)
+                average_misses = sum(difficulty_score_history) / len(difficulty_score_history)
+                print(average_misses)
+                user_ratings[difficulty] = 70 / (average_misses + 1)
+
+        user_ratings["Total"] = (0.25) * ( (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + (1.5*user_ratings["Tough"]) + user_ratings["Very Tough"] )
+
+        return user_ratings
+
+
     # not currently in use
     def get_user_stat(self, uid, stat):
         if uid not in self.users_stats:
@@ -326,14 +385,14 @@ class MatchmakingBot(Bot):
         user_quests = self.get_user_stat(uid, "quests")
 
         if i == 0:
-            user_quests[i]["description"] = "Earn exp from lobbies!"
+            user_quests[i]["description"] = "Earn \🎵 from lobbies!"
             user_quests[i]["assoc_stat"] = "exp"
             user_quests[i]["completion"] = 0
             user_quests[i]["requirement"] = 50
             user_quests[i]["completion_time"] = None
             user_quests[i]["reward_stat"] = "exp"
             user_quests[i]["reward_amount"] = 50
-            user_quests[i]["reward_description"] = "exp"
+            user_quests[i]["reward_description"] = "\🎵"
         elif i == 1:
             user_curr_tickets = self.get_user_stat(uid, "current_tickets")
 

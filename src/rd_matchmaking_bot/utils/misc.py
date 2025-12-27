@@ -46,8 +46,9 @@ def rank_players(unsorted_scores, reverse):
 def get_leaderboard_embed(ctx, bot, category, page):
     unsorted_scores = {}
 
-    if category == 'exp':
-        category = ' ' + category
+    category = "\\" + category
+
+    if category == '\🎵':
         for uid in bot.users_stats:
             if bot.users_stats[uid]['exp'] > 0: #remove people with 0 exp
                 unsorted_scores[uid] = bot.users_stats[uid]['exp']

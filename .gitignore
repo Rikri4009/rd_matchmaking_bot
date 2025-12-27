@@ -5,3 +5,5 @@ resources/data/users_rdsaves.json
 resources/data/users_stats.json
 resources/KEY
 /resources/data/users_stats_backups.json
+/resources/data/level_history.json
+/resources/KEY_main

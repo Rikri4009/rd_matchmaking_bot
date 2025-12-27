@@ -164,7 +164,8 @@
         ],
         "description": "You must use the hard difficulty button!",
         "tags": [],
-        "facets": {}
+        "facets": {},
+        "difficulty_modifiers": ["Hard Difficulty Button"]
     },
     "2-Player": {
         "diff_override": [
@@ -176,7 +177,8 @@
         "tags": [],
         "facets": {
             "two_player": 1
-        }
+        },
+        "difficulty_modifiers": ["2-Player"]
     },
     "Blindfolded": {
         "diff_override": [
@@ -186,7 +188,8 @@
         ],
         "description": "You must play with your eyes fully closed! (You may `/endless already_seen` any level with CPU rows.)",
         "tags": [],
-        "facets": {}
+        "facets": {},
+        "difficulty_modifiers": ["Blindfolded"]
     },
     "Nightcore": {
         "diff_override": [
@@ -197,7 +200,8 @@
         ],
         "description": "You must play on :hot_pepper: chili speed!",
         "tags": [],
-        "facets": {}
+        "facets": {},
+        "difficulty_modifiers": ["Nightcore"]
     },
     "Double Damage": {
         "diff_override": [
@@ -262,7 +266,8 @@
         "tags": [],
         "facets": {
             "two_player": 1
-        }
+        },
+        "difficulty_modifiers": ["Hard Difficulty Button", "2-Player"]
     },
     "Hard Button + Nightcore": {
         "diff_override": [
@@ -273,7 +278,8 @@
         ],
         "description": "Scrappy work conditions, an impossible workload, and no time - can you survive?",
         "tags": [],
-        "facets": {}
+        "facets": {},
+        "difficulty_modifiers": ["Hard Difficulty Button", "Nightcore"]
     },
     "2-Player + Blindfolded": {
         "diff_override": [
@@ -285,7 +291,8 @@
         "tags": [],
         "facets": {
             "two_player": 1
-        }
+        },
+        "difficulty_modifiers": ["2-Player", "Blindfolded"]
     },
     "Extreme": {
         "diff_override": [

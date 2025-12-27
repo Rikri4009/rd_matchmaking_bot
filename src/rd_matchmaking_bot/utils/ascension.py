@@ -488,7 +488,7 @@ def get_ascension_welcome_embed(self, name, runner_id):
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
 Your goal is to treat patients across 5(?) cities spanning the globe.\n\
-You, the **runner**, start with ★ HP, and will lose 1 for each miss.\n\
+You, the **runner**, start with \⭐ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
 If you reach 0 HP, your tour will be cut short!{ticket_cost_text}")
@@ -600,11 +600,25 @@ def begin_set(self, player_id, lobby_name):
 
     ascension_lobby['certificate_3_modifiers'] = []
     for i in range(len(set_difficulties)+1):
-        ascension_lobby['certificate_3_modifiers'].append(random.choice(["Hard Difficulty Button", "2-Player"]))
+        if ("Button" in set_modifier) and ("Player" not in set_modifier):
+            ascension_lobby['certificate_3_modifiers'].append("2-Player")
+        elif ("Button" not in set_modifier) and ("Player" in set_modifier):
+            ascension_lobby['certificate_3_modifiers'].append("Hard Difficulty Button")
+        elif ("Button" not in set_modifier) and ("Player" not in set_modifier):
+            ascension_lobby['certificate_3_modifiers'].append(random.choice(["Hard Difficulty Button", "2-Player"]))
+        else:
+            ascension_lobby['certificate_3_modifiers'].append("None")
 
     ascension_lobby['certificate_5_modifiers'] = []
     for i in range(len(set_difficulties)+1):
-        ascension_lobby['certificate_5_modifiers'].append(random.choice(["Blindfolded", "Nightcore"]))
+        if ("Blindfolded" in set_modifier) and ("Nightcore" not in set_modifier):
+            ascension_lobby['certificate_5_modifiers'].append("Nightcore")
+        elif ("Blindfolded" not in set_modifier) and ("Nightcore" in set_modifier):
+            ascension_lobby['certificate_5_modifiers'].append("Blindfolded")
+        elif ("Blindfolded" not in set_modifier) and ("Nightcore" not in set_modifier):
+            ascension_lobby['certificate_5_modifiers'].append(random.choice(["Blindfolded", "Nightcore"]))
+        else:
+            ascension_lobby['certificate_3_modifiers'].append("None")
 
     ascension_lobby['set_difficulties'] = set_difficulties
 
@@ -666,14 +680,26 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     roll_settings["difficulty"] = ascension_lobby["set_difficulties"][level_number]
     roll_settings["tags"] = (ascension_lobby["roll_tags"]).copy()
     roll_settings["facets"] = (ascension_lobby["roll_facets"]).copy()
+    roll_settings["require_gameplay"] = True
+    roll_settings["difficulty_modifiers"] = []
+
+    sets_config = lobbycommands.bot.get_sets_config()
+    set_modifier = ascension_lobby["set_modifier"]
+
+    if (set_modifier != "None") and ("difficulty_modifiers" in sets_config[set_modifier]):
+        roll_settings["difficulty_modifiers"] = sets_config[set_modifier]["difficulty_modifiers"]
 
     set_number = ascension_lobby["current_set"]
 
     if (ascension_difficulty >= 3) and (set_number != 3) and ((roll_settings["difficulty"] == "Easy") or (roll_settings["difficulty"] == "Medium")):
+        roll_settings["difficulty_modifiers"].append(ascension_lobby['certificate_3_modifiers'][level_number])
         if ascension_lobby['certificate_3_modifiers'][level_number] == "2-Player":
             roll_settings["facets"]["two_player"] = 1
 
-    roll_settings["require_gameplay"] = True
+    if (ascension_difficulty >= 5) and (set_number != 5) and (roll_settings["difficulty"] == "Easy"):
+        roll_settings["difficulty_modifiers"].append(ascension_lobby['certificate_5_modifiers'][level_number])
+    
+    roll_settings["difficulty_modifiers"] = list(set(roll_settings["difficulty_modifiers"]))
 
 
 def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_dict, level_chosen, ascension_lobby):
@@ -745,7 +771,7 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
-You have also gained {gained_exp} additional exp.\n\n\
+You have also gained {gained_exp} additional \🎵.\n\n\
 You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n\
 You can choose to **proceed** to the next set now...\n\
 Or, you can first play an extra {forage_1_difficulty} this set to **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}...\n\
@@ -786,8 +812,8 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
 
     victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
-You have gained {gained_exp} additional exp.\n\
-Your remaining items have been converted to {bonus_exp} total exp.\n\n{spec_unlocked_text}\
+You have gained {gained_exp} additional \🎵.\n\
+Your remaining items have been converted to {bonus_exp} total \🎵.\n\n{spec_unlocked_text}\
 -# You can now do `/admin_command certify {ascension_lobby['ascension_difficulty']+1}`...")
     return victory_embed
 
