@@ -68,3 +68,6 @@ def get_leaderboard_embed(ctx, bot, category, page):
         leaderboard_message = leaderboard_message + f"{users_places[user]['text']} ({unsorted_scores[user]}{category}): <@{user}>\n"
 
     return discord.Embed(colour = discord.Colour.yellow(), title = f"{category} Leaderboard (Page {page})", description = leaderboard_message)
+
+def get_upload_rdsave_message():
+    return f"You haven\'t uploaded your \"settings.rdsave\" file!\n\nTo find this file, first right-click Rhythm Doctor in Steam, and click the button [shown below](https://cdn.discordapp.com/attachments/1392061548549373972/1454561205157888144/image.png?ex=6951892f&is=695037af&hm=9634b8979bd8702491ef77fe4642b8aaa16acb5f37377a0b8795b336bdf9b21a&).\nThen, go to the \"User\" folder, and upload the file called \"settings.rdsave\" using `/upload_rdsave`."

@@ -165,7 +165,7 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
 
         # if user doesn't have an rdsettings
         if uid not in self.bot.users_rdsaves:
-            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use `/upload_rdsave` to do this.)', ephemeral=True)
+            await ctx.respond(misc.get_upload_rdsave_message(), ephemeral=True)
             return
 
         if players == None:

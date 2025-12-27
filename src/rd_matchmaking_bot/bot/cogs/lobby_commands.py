@@ -240,6 +240,10 @@ class LobbyCommands(commands.Cog):
 
         uid = str(ctx.user.id)
 
+        if uid not in self.bot.users_rdsaves:
+            await ctx.respond(misc.get_upload_rdsave_message(), ephemeral=True)
+            return
+
         if name.startswith('the light'): #secret
             await ctx.respond(f'That lobby name is already in use...!?', ephemeral=True)
             return
@@ -362,7 +366,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         # if user doesn't have an rdsettings
         if uid not in self.bot.users_rdsaves:
-            await ctx.respond(f'You haven\'t uploaded your \"settings.rdsave\" file! (Use `/upload_rdsave` to do this.)', ephemeral=True)
+            await ctx.respond(misc.get_upload_rdsave_message(), ephemeral=True)
             return
 
         current_lobby['players'][uid] = {}
