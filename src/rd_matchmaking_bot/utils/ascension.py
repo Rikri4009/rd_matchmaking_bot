@@ -487,7 +487,7 @@ def get_ascension_welcome_embed(self, name, runner_id):
 
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
-Your goal is to treat patients across 5(?) cities spanning the globe.\n\
+Your goal is to treat patients across 5 cities spanning the globe.\n\
 You, the **runner**, start with \⭐ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
@@ -641,10 +641,10 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
     set_modifier = ascension_lobby["set_modifier"]
 
     if set_theme != "None":
-        theme_and_modifier_desc = theme_and_modifier_desc + f"Set Theme: **{set_theme}**\n{sets_config[set_theme]['description']}\n\n"
+        theme_and_modifier_desc = theme_and_modifier_desc + f"City Theme: **{set_theme}**\n{sets_config[set_theme]['description']}\n\n"
 
     if set_modifier != "None":
-        theme_and_modifier_desc = theme_and_modifier_desc + f"Set Modifier: **{set_modifier}**\n{sets_config[set_modifier]['description']}\n\n"
+        theme_and_modifier_desc = theme_and_modifier_desc + f"City Modifier: **{set_modifier}**\n{sets_config[set_modifier]['description']}\n\n"
 
     set_difficulties_bold = (ascension_lobby["set_difficulties"]).copy()
     set_difficulties_bold[level_number] = "**" + set_difficulties_bold[level_number] + "**"
@@ -662,7 +662,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
-    return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
 
 
@@ -717,7 +717,7 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
     if level_chosen != None:
         level_image = level_chosen['image_url']
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
 
@@ -745,7 +745,7 @@ def get_ascension_item_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     set_number = ascension_lobby["current_set"]
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 You are about to take {calculate_item_applied_incoming_damage(ascension_lobby)} damage!\n\
 Press the corresponding button below to use an item.\n\n\
 {items_text}Press \"**Use SP**\" to spend {sp_cost} SP to reduce incoming damage by 3. (This is more expensive if you have a lot of SP!)")
@@ -769,7 +769,7 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     set_number = ascension_lobby["current_set"]
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional \🎵.\n\n\
 You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n\
@@ -790,7 +790,7 @@ def get_ascension_gameover_embed(lobbycommands, lobby_name, runner_id, ascension
     if ascension_difficulty >= 1:
         ticket_cost_text = f"\n\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
 
-    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | SET {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
 Press **New Game** to try again, or press **Delete** to delete this lobby.{ticket_cost_text}")
     return gameover_embed
@@ -864,19 +864,19 @@ def get_ascension_difficulty_text(ascension_difficulty):
     ascension_difficulty_text = "**Certifications:**"
 
     if ascension_difficulty >= 1:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Starting runs costs 1 🎫 **/** Recovering heals less HP **/** Clear sets 2-6"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Starting runs costs 1 🎫 **/** Recovering heals less HP **/** Clear cities 2-6"
     if ascension_difficulty >= 2:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear sets 3-7 **/** Apples heal more"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear cities 3-7 **/** Apples heal more"
     if ascension_difficulty >= 3:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> Set 3 invades easier levels **/** Set 3 is harder **/** The final boss appears"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> City 3 invades easier levels **/** City 3 is harder **/** The final boss appears"
     if ascension_difficulty >= 4:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> Foraging is more difficult **/** Hard button final boss **/** You may `specialize`" # hard button
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> More difficult foraging **/** Hard button final boss **/** You may `specialize`" # hard button
     if ascension_difficulty >= 5:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> Set 5 invades easy levels **/** Set 5 is harder **/** No recovering after set 7"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> City 5 invades easy levels **/** City 5 is harder **/** No recovering after city 7"
     if ascension_difficulty >= 6:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** Clear sets 2-7 **/** Apples heal even more"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** Clear cities 2-7 **/** Apples heal even more"
     if ascension_difficulty >= 7:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd sets are corrupted **/** Clear sets 1-7 **/** Double damage final boss" # double damage
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd cities are corrupted **/** Clear cities 1-7 **/** Double damage final boss" # double damage
 
     ascension_difficulty_text = ascension_difficulty_text + "\n\n"
 
