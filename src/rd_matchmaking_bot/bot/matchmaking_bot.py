@@ -309,15 +309,15 @@ class MatchmakingBot(Bot):
 
                 outlier_count = len(difficulty_score_history) // 4
 
-                print(difficulty_score_history)
+                #print(difficulty_score_history)
                 #remove outlier_count best and worst scores
                 for _ in range(outlier_count):
                     difficulty_score_history.pop(0)
                     difficulty_score_history.pop()
 
-                print(difficulty_score_history)
+                #print(difficulty_score_history)
                 average_misses = sum(difficulty_score_history) / len(difficulty_score_history)
-                print(average_misses)
+                #print(average_misses)
                 user_ratings[difficulty] = 70 / (average_misses + 1)
 
         user_ratings["Total"] = (0.25) * ( (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + (1.5*user_ratings["Tough"]) + user_ratings["Very Tough"] )

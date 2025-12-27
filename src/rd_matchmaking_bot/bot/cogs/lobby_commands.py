@@ -566,6 +566,11 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         roll_player_id_list = (current_lobby["players"]).keys()
         users_rdsaves = self.bot.users_rdsaves
 
+        if "level_override" in roll_settings:
+            current_lobby["level"] = roll_settings["level_override"]
+            played_before = True
+            return
+
         current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tags, facets, require_gameplay)
 
 
@@ -938,7 +943,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                     elif current_lobby['level']['difficulty'] == 'Very Tough':
                         player_stats['vt_s_ranked'] = player_stats['vt_s_ranked'] + 1
                 if current_lobby['mode'] == 'Ascension':
-                    if current_lobby['roll_settings']['played_before'] == 'Yes': #means chronograph was used
+                    if (current_lobby['roll_settings']['played_before'] == 'Yes') and ("level_override" not in current_lobby['roll_settings']): #means chronograph was used
                         player_stats["s_ranked_with_chronograph"] = player_stats["s_ranked_with_chronograph"] + 1
                     if (current_lobby['level']['difficulty'] == 'Tough') or (current_lobby['level']['difficulty'] == 'Very Tough'):
                         ascension_lobby = self.bot.game_data["ascension"][host]
