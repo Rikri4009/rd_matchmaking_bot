@@ -115,12 +115,12 @@ class UserCommands(commands.Cog):
     @discord.slash_command(description="Primer to the bot")
     async def about(self, ctx
     ):
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the **sync**hronized *ope*rations program!\n\
-Treating patients from across the globe can require multiple interns working at once.\n\
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the **sync**hronized **ope**rations program!\n\
+Treating patients from across the globe can require multiple interns at once.\n\
 To facilitate this, Syncope, designed to synchronize interns with their patients, was created.\n\n\
-To begin a treatment session, do `/lobby create`!\n\n\
--# This bot is developed by <@1207345676141465622>, with support from <@758112945636376677> and <@340013796976492552>.\n\
--# Character and artwork by <@201091631795929089>.")
+To begin a treatment session, do `/lobby create`!\nDetailed documentation can be found [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing).\n\n\
+-# This bot is developed by <@1207345676141465622>.\n\
+-# Character and artwork by <@201091631795929089>. Full credits are in the documentation.")
 
         await ctx.respond(embed=tooltipEmbed)
 
