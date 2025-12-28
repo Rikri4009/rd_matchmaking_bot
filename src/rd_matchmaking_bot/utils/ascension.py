@@ -925,6 +925,7 @@ async def no_levels_found(lobby_commands, ctx, ascension_lobby, auxiliary_lobby,
 
     auxiliary_lobby["roll_settings"]["tags"] = []
     auxiliary_lobby["roll_settings"]["facets"] = new_facets
+    auxiliary_lobby["roll_settings"]["special"] = []
 
     lobby_commands.roll_level_from_settings(lobby_name)
     level_chosen = auxiliary_lobby["level"]
