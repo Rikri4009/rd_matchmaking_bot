@@ -78,14 +78,7 @@
     "7": {
         "difficulties": [],
         "theme": [
-            "Holds",
-            "Skipshots",
-            "No Classics",
-            "Syncopation",
-            "No Oneshots",
-            "Freezeshots",
-            "8-Beat",
-            "Window Dance"
+            "Event"
         ],
         "modifier": [
             "Rainbow",
@@ -148,6 +141,18 @@
         "facets": {
             "has_freezeshots": 1
         }
+    },
+    "New": {
+        "description": "This set's levels are recent.",
+        "tags": [],
+        "facets": {},
+        "special": ["recent"]
+    },
+    "Event": {
+        "description": "This set's levels are from an event!",
+        "tags": [],
+        "facets": {},
+        "special": ["event"]
     },
     "Window Dance": {
         "description": "This set's levels contain window dance.",

@@ -571,7 +571,11 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             played_before = True
             return
 
-        current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tags, facets, require_gameplay)
+        special = []
+        if "special" in roll_settings:
+            special = roll_settings["special"]
+
+        current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tags, facets, require_gameplay, special)
 
 
     @lobby.command(description="Roll a random level for your lobby with specified settings")

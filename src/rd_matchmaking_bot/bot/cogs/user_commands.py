@@ -181,7 +181,7 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
         for i, tag in enumerate(tags_array):
             tags_array[i] = tag.lstrip()
 
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_array, None, False)
+        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_array, None, False, [])
 
         if level_chosen == None:
             await ctx.respond("No levels found with those arguments!") #intentionally not ephemeral

@@ -583,6 +583,12 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby['roll_tags'] = sets_config[set_theme]['tags'] + sets_config[set_modifier]['tags']
     ascension_lobby['roll_facets'] = sets_config[set_theme]['facets'] | sets_config[set_modifier]['facets']
 
+    ascension_lobby['roll_special'] = []
+    if "special" in sets_config[set_theme]:
+        ascension_lobby['roll_special'] = ascension_lobby['roll_special'] + sets_config[set_theme]['special']
+    if "special" in sets_config[set_modifier]:
+        ascension_lobby['roll_special'] = ascension_lobby['roll_special'] + sets_config[set_modifier]['special']
+
     set_difficulties = sets_config[set_number_str]['difficulties']
 
     if set_modifier != 'None':
@@ -681,6 +687,7 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     roll_settings["tags"] = (ascension_lobby["roll_tags"]).copy()
     roll_settings["facets"] = (ascension_lobby["roll_facets"]).copy()
     roll_settings["require_gameplay"] = True
+    roll_settings["special"] = (ascension_lobby["roll_special"]).copy()
     roll_settings["difficulty_modifiers"] = []
 
     sets_config = lobbycommands.bot.get_sets_config()

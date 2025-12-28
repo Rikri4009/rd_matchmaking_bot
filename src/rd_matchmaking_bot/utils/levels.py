@@ -4,7 +4,23 @@ import hashlib
 
 import rd_matchmaking_bot.utils.data as data
 
-def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets, require_gameplay):
+def tag_is_for_event(tag):
+    tag_lower = tag.lower()
+
+    event_tag_starts = ["compo", "competition", "rdrpg", "rdrts", "rdsrt", "rdvs", "ssc"]
+    event_tag_ends = ["compo", "jam"]
+
+    for s in event_tag_starts:
+        if tag_lower.startswith(s):
+            return True
+    
+    for s in event_tag_ends:
+        if tag_lower.endswith(s):
+            return True
+    
+    return False
+
+def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets, require_gameplay, special_requirements):
 
     if difficulty == "Polarity":
         difficulty = random.choice(["Easy", "Easy", "Very Tough"])
@@ -68,7 +84,22 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         elif (str(line["has_classics"]) == "1") or (str(line["has_oneshots"]) == "1"):
             has_gameplay_check = True
 
-        if pr_check and diff_check and facets_check and tags_check and has_gameplay_check:
+        # special check
+        special_check = True
+        for requirement in special_requirements:
+            if (requirement == "recent"):
+                print("TODO") #TODO
+            
+            if (requirement == "event"):
+                level_has_event_tag = False
+                for tag in level_tags:
+                    if tag_is_for_event(tag):
+                        level_has_event_tag = True
+                
+                if not level_has_event_tag:
+                    special_check = False
+
+        if pr_check and diff_check and facets_check and tags_check and has_gameplay_check and special_check:
             authors_list = json.loads(line['authors'])
             authors = ', '.join(authors_list)
 
