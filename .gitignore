@@ -1,5 +1,4 @@
 __pycache__/
-resources/data/cafe_query.csv
 resources/data/game_data.json
 resources/data/users_rdsaves.json
 resources/data/users_stats.json
