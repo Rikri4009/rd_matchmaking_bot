@@ -127,9 +127,9 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
             hash = hashlib.md5((authors + artist + song).encode())
             hash_hex = hash.hexdigest()
 
-            zip = line['url2']
+            zip = line['rdzip_url']
 
-            image_url = line['image']
+            image_url = line['image_url']
 
             cafe_hashed[hash_hex] = {
                 'hash': hash_hex,
