@@ -56,7 +56,9 @@ class LobbyCommands(commands.Cog):
 
         players = ', '.join(player_list)
 
-        return discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
+        embed = discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
+        embed.set_footer(text="Buttons broke? Use /lobby resend")
+        return embed
 
 
     def get_lobby_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen):
@@ -567,7 +569,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         if "level_override" in roll_settings:
             current_lobby["level"] = roll_settings["level_override"]
-            played_before = True
+            roll_settings["played_before"] = "Yes"
             return
 
         special = []
@@ -1024,6 +1026,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                     damage_factor = damage_factor * 2
                 elif level_difficulty == "Medium":
                     damage_factor = damage_factor * 1.5
+
+            if (ascension_difficulty >= 7) and (level_difficulty == "???"):
+                damage_factor = damage_factor * 2
 
             ascension_lobby["incoming_damage"] = math.floor(runner_misses * damage_factor)
 

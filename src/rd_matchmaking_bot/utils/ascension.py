@@ -249,9 +249,34 @@ async def proceed_helper(self, interaction):
 
     # not the last level: advance to next level in set
     if ascension_lobby["level_number"] < len(ascension_lobby["set_difficulties"]) - 1:
+
         ascension_lobby["level_number"] = ascension_lobby["level_number"] + 1
         ascension_lobby["status"] = "Open"
         auxiliary_lobby["status"] = "Open"
+
+        # this upcoming level is the final boss
+        if ascension_lobby["set_difficulties"][ascension_lobby["level_number"]] == "???":
+
+            if ascension_lobby["ascension_difficulty"] < 5: #no recovering after city 7 at certificate 5
+                ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 2))
+
+                await interaction.channel.send("You've made it to the end of City 7!\nThankfully, you're given a bit of reprieve, and heal 1/2 of your remaining HP.")
+            
+            final_boss_level = {}
+            final_boss_level["hash"] = "temp"
+            final_boss_level["authors"] = "temp"
+            final_boss_level["artist"] = "temp"
+            final_boss_level["song"] = "rrr5 lmao"
+            final_boss_level["description"] = "temp"
+            final_boss_level["difficulty"] = "???"
+            final_boss_level["peer review status"] = "Peer Reviewed"
+            final_boss_level["zip"] = "https://codex.rhythm.cafe/rodney-s-HGfkpCv3PS3.rdzip"
+            final_boss_level["image_url"] = "https://cdn.discordapp.com/emojis/1393723419031244832.webp?size=128"
+            final_boss_level["tags"] = []
+            final_boss_level["possibilities"] = 1
+
+            auxiliary_lobby["roll_settings"]["level_override"] = final_boss_level
+
         await interaction.response.defer()
         await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
         self.lobbycommands.bot.save_data()
@@ -630,6 +655,9 @@ def begin_set(self, player_id, lobby_name):
 
     ascension_lobby['set_difficulties'] = set_difficulties
 
+    if (ascension_difficulty >= 3) and (set_number == 7):
+        ascension_lobby['set_difficulties'].append("???")
+
     ascension_lobby["chosen_item_1"] = None
     ascension_lobby["chosen_item_2"] = None
 
@@ -670,8 +698,10 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
-    return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
+    embed.set_footer(text="Buttons broke? Use /lobby resend")
+    return embed
 
 
 def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
@@ -749,7 +779,9 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
 Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
 
-    if set_modifier != "None":
+    if level_chosen['difficulty'] == "???":
+        level_embed.add_field(name = f"Modifier: None!", value = "City 7's usual modifier does **NOT** apply to this level!", inline = False)
+    elif (set_modifier != "None"):
         level_embed.add_field(name = f"Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
 
     level_number = ascension_lobby["level_number"]
@@ -762,6 +794,10 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
     if (ascension_difficulty >= 5) and (set_number != 5) and (level_chosen['difficulty'] == "Easy"):
         c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
         level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **{c5_modifier}**", value = sets_config[c5_modifier]['description'], inline = False)
+
+    if (ascension_difficulty >= 4) and (level_chosen['difficulty'] == "???"):
+        c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
+        level_embed.add_field(name = f"<:distinguished:1399860116119093529> Extra Modifier: **Hard Difficulty Button**", value = "You must use the hard difficulty button!", inline = False)
 
     return level_embed
 
