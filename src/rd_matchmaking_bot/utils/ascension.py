@@ -580,8 +580,10 @@ def begin_set(self, player_id, lobby_name):
 
     ascension_lobby['set_modifier'] = set_modifier
 
-    ascension_lobby['roll_tags'] = sets_config[set_theme]['tags'] + sets_config[set_modifier]['tags']
-    ascension_lobby['roll_facets'] = sets_config[set_theme]['facets'] | sets_config[set_modifier]['facets']
+    ascension_lobby['roll_theme_tags'] = sets_config[set_theme]['tags']
+    ascension_lobby['roll_theme_facets'] = sets_config[set_theme]['facets']
+    ascension_lobby['roll_modifier_tags'] = sets_config[set_modifier]['tags']
+    ascension_lobby['roll_modifier_facets'] = sets_config[set_modifier]['facets']
 
     ascension_lobby['roll_special'] = []
     if "special" in sets_config[set_theme]:
@@ -672,7 +674,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 {ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
 
 
-def set_roll_settings(lobbycommands, lobby_name, runner_id):
+def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
     ascension_lobby = lobbycommands.bot.game_data["ascension"][runner_id]
     auxiliary_lobby = lobbycommands.bot.game_data["lobbies"][lobby_name]
 
@@ -684,10 +686,29 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id):
     roll_settings["peer_reviewed"] = "Yes"
     roll_settings["played_before"] = "No"
     roll_settings["difficulty"] = ascension_lobby["set_difficulties"][level_number]
-    roll_settings["tags"] = (ascension_lobby["roll_tags"]).copy()
+    roll_settings["special"] = []
+
+    tag_facet_array = []
+
+    if use_theme:
+        if (ascension_lobby["roll_theme_tags"] != []) or (ascension_lobby["roll_theme_facets"] != {}):
+            theme_tags_facets = {}
+            theme_tags_facets["tags"] = (ascension_lobby["roll_theme_tags"]).copy()
+            theme_tags_facets["facets"] = (ascension_lobby["roll_theme_facets"]).copy()
+            tag_facet_array.append(theme_tags_facets)
+        
+        roll_settings["special"] = (ascension_lobby["roll_special"]).copy()
+
+    if (ascension_lobby["roll_modifier_tags"] != []) or (ascension_lobby["roll_modifier_facets"] != {}):
+        modifier_tags_facets = {}
+        modifier_tags_facets["tags"] = (ascension_lobby["roll_modifier_tags"]).copy()
+        modifier_tags_facets["facets"] = (ascension_lobby["roll_modifier_facets"]).copy()
+        tag_facet_array.append(modifier_tags_facets)
+
+    roll_settings["tag_facet_array"] = tag_facet_array
+
     roll_settings["facets"] = (ascension_lobby["roll_facets"]).copy()
     roll_settings["require_gameplay"] = True
-    roll_settings["special"] = (ascension_lobby["roll_special"]).copy()
     roll_settings["difficulty_modifiers"] = []
 
     sets_config = lobbycommands.bot.get_sets_config()
@@ -916,16 +937,10 @@ def calculate_item_applied_incoming_damage(ascension_lobby):
     return applied_incoming_damage
 
 
-async def no_levels_found(lobby_commands, ctx, ascension_lobby, auxiliary_lobby, lobby_name):
-    new_facets = {}
-    if ("two_player" in auxiliary_lobby["roll_settings"]["facets"]) and (auxiliary_lobby["roll_settings"]["facets"]["two_player"] == 1):
-        new_facets = {"two_player": 1}
-
+async def no_levels_found(lobby_commands, ctx, runner_id, ascension_lobby, auxiliary_lobby, lobby_name):
     await ctx.channel.send("No levels found! Rerolling without theme...")
 
-    auxiliary_lobby["roll_settings"]["tags"] = []
-    auxiliary_lobby["roll_settings"]["facets"] = new_facets
-    auxiliary_lobby["roll_settings"]["special"] = []
+    set_roll_settings(lobby_commands, lobby_name, runner_id, False)
 
     lobby_commands.roll_level_from_settings(lobby_name)
     level_chosen = auxiliary_lobby["level"]

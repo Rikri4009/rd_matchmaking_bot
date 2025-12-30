@@ -298,7 +298,7 @@
             "Easy",
             "Medium"
         ],
-        "description": "Despite outdated, malfunctioning hardware, you're expected to fill in for another intern...\n(NOTE: Levels with CPU rows may appear!)",
+        "description": "Despite outdated, malfunctioning hardware, you're expected to fill in for another intern... (**NOTE:** Levels with CPU rows may appear!)",
         "tags": [],
         "facets": {
             "two_player": 1

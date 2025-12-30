@@ -646,7 +646,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             current_lobby['roll_settings']['difficulty_modifiers'] = []
 
         elif current_lobby["mode"] == "Ascension":
-            ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid)
+            ascension.set_roll_settings(self, lobby_name_user_is_hosting, uid, True)
 
         else:
             await ctx.respond("<@1207345676141465622> What")
@@ -654,16 +654,14 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         self.roll_level_from_settings(lobby_name_user_is_hosting)
 
-        level_chosen = current_lobby["level"]
-
-        if level_chosen == None:
+        if current_lobby["level"] == None:
             if current_lobby["mode"] == "Free Play":
                 await ctx.respond("No levels found with those arguments!") #deliberately not ephemeral
                 return
 
             elif current_lobby["mode"] == "Ascension":
-                await ascension.no_levels_found(self, ctx, self.bot.game_data["ascension"][uid], current_lobby, lobby_name_user_is_hosting)
-                if level_chosen == None:
+                await ascension.no_levels_found(self, ctx, uid, self.bot.game_data["ascension"][uid], current_lobby, lobby_name_user_is_hosting)
+                if current_lobby["level"] == None:
                     self.bot.save_data()
                     await ctx.respond("<@1207345676141465622> HELP HELP HELP HELP HELP HELP HELP HELP HELP")
                     return
