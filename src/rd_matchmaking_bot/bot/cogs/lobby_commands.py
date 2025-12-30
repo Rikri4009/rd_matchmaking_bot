@@ -559,8 +559,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         peer_reviewed = roll_settings["peer_reviewed"]
         played_before = roll_settings["played_before"]
         difficulty = roll_settings["difficulty"]
-        tags = roll_settings["tags"]
-        facets = roll_settings["facets"]
+        tag_facet_array = roll_settings["tag_facet_array"]
         require_gameplay = roll_settings["require_gameplay"]
 
         roll_player_id_list = (current_lobby["players"]).keys()
@@ -575,7 +574,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         if "special" in roll_settings:
             special = roll_settings["special"]
 
-        current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tags, facets, require_gameplay, special)
+        current_lobby["level"] = levels.roll_random_level(peer_reviewed, played_before, difficulty, roll_player_id_list, users_rdsaves, tag_facet_array, require_gameplay, special)
 
 
     @lobby.command(description="Roll a random level for your lobby with specified settings")
@@ -623,18 +622,26 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         current_lobby["status"] = "Rolling"
 
         if current_lobby["mode"] == "Free Play":
-            tags_array = tags.split(',')
+            tags_list = tags.split(',')
             if tags == '':
-                tags_array = []
+                tags_list = []
 
-            for i, tag in enumerate(tags_array):
-                tags_array[i] = tag.lstrip()
+            for i, tag in enumerate(tags_list):
+                tags_list[i] = tag.lstrip()
+
+            tag_facet_array = []
+
+            for tag in tags_list:
+                new_sub_list = {}
+                new_sub_list["tags"] = []
+                new_sub_list["tags"].append(tag)
+
+                tag_facet_array.append(new_sub_list)
 
             current_lobby['roll_settings']['peer_reviewed'] = peer_reviewed
             current_lobby['roll_settings']['played_before'] = played_before
             current_lobby['roll_settings']['difficulty'] = difficulty
-            current_lobby['roll_settings']['tags'] = tags_array
-            current_lobby['roll_settings']['facets'] = {}
+            current_lobby['roll_settings']['tag_facet_array'] = tag_facet_array
             current_lobby['roll_settings']['require_gameplay'] = True
             current_lobby['roll_settings']['difficulty_modifiers'] = []
 

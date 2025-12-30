@@ -220,7 +220,7 @@
             "Medium",
             "Tough"
         ],
-        "description": "Damage taken is doubled!",
+        "description": "Patients' hearts are extra brittle: damage taken is doubled!",
         "tags": [],
         "facets": {}
     },
