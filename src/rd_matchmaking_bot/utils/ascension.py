@@ -698,7 +698,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
-    embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
@@ -775,7 +775,7 @@ def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_
     if level_chosen != None:
         level_image = level_chosen['image_url']
 
-    level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    level_embed = discord.Embed(colour = discord.Colour.green(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, press \"**Ready**\" when you\'re at the button screen.\nOnce everyone readies, the countdown will begin!\n\n{ready_list}", image = level_image)
     levels.add_level_to_embed(level_embed, level_chosen)
 
@@ -854,7 +854,7 @@ def get_ascension_gameover_embed(lobbycommands, lobby_name, runner_id, ascension
     if ascension_difficulty >= 1:
         ticket_cost_text = f"\n\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
 
-    gameover_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
+    gameover_embed = discord.Embed(colour = discord.Colour.red(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have run out of HP! GAME OVER!\n\n\
 Press **New Game** to try again, or press **Delete** to delete this lobby.{ticket_cost_text}")
     return gameover_embed
@@ -874,7 +874,7 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     if ascension_lobby["ascension_difficulty"] == 3:
         spec_unlocked_text = "**You can now do `/admin_command specialize`!**\n\n"
 
-    victory_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
+    victory_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
 You have gained {gained_exp} additional \🎵.\n\
 Your remaining items have been converted to {bonus_exp} total \🎵.\n\n{spec_unlocked_text}\
