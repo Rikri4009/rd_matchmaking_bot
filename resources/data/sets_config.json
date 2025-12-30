@@ -19,7 +19,7 @@
         ],
         "theme": [
             "Holds",
-            "Skipshots"
+            "Three-Sided"
         ],
         "modifier": []
     },
@@ -46,7 +46,7 @@
         ],
         "theme": [
             "No Oneshots",
-            "Freezeshots"
+            "Thermal"
         ],
         "modifier": [
             "Double Boss",
@@ -78,7 +78,8 @@
     "7": {
         "difficulties": [],
         "theme": [
-            "Event"
+            "Event",
+            "Window Dance"
         ],
         "modifier": [
             "Rainbow",
@@ -100,13 +101,6 @@
             "has_holds": 1
         }
     },
-    "Skipshots": {
-        "description": "This set's levels contain skipshots.",
-        "tags": [],
-        "facets": {
-            "has_skipshots": 1
-        }
-    },
     "No Classics": {
         "description": "This set's levels don't contain classic rows.",
         "tags": [],
@@ -119,7 +113,9 @@
         "tags": [
             "syncopation"
         ],
-        "facets": {}
+        "facets": {
+            "has_synco": 1
+        }
     },
     "8-Beat": {
         "description": "This set's levels contain 8-beat.",
@@ -135,11 +131,26 @@
             "has_oneshots": 0
         }
     },
-    "Freezeshots": {
-        "description": "This set's levels contain freezeshots.",
+    "Thermal": {
+        "description": "This set's levels contain freezeshots or burnshots.",
         "tags": [],
         "facets": {
-            "has_freezeshots": 1
+            "has_freezeshots": 1,
+            "has_burnshots": 1
+        }
+    },
+    "Three-Sided": {
+        "description": "This set's levels contain triangleshots.",
+        "tags": [],
+        "facets": {
+            "has_subdivs": 1
+        }
+    },
+    "Window Dance": {
+        "description": "This set's levels contain window dance.",
+        "tags": [],
+        "facets": {
+            "has_window_dance": 1
         }
     },
     "New": {
@@ -153,13 +164,6 @@
         "tags": [],
         "facets": {},
         "special": ["event"]
-    },
-    "Window Dance": {
-        "description": "This set's levels contain window dance.",
-        "tags": [],
-        "facets": {
-            "has_window_dance": 1
-        }
     },
     "Hard Difficulty Button": {
         "diff_override": [
@@ -191,9 +195,11 @@
             "Easy",
             "Medium"
         ],
-        "description": "You must play with your eyes fully closed! (You may `/endless already_seen` any level with CPU rows.)",
+        "description": "You must play with your eyes fully closed!",
         "tags": [],
-        "facets": {},
+        "facets": {
+            "has_cpu_rows": 0
+        },
         "difficulty_modifiers": ["Blindfolded"]
     },
     "Nightcore": {
@@ -292,7 +298,7 @@
             "Easy",
             "Medium"
         ],
-        "description": "Despite outdated, malfunctioning hardware, you're expected to fill in for another intern...",
+        "description": "Despite outdated, malfunctioning hardware, you're expected to fill in for another intern...\n(NOTE: Levels with CPU rows may appear!)",
         "tags": [],
         "facets": {
             "two_player": 1
