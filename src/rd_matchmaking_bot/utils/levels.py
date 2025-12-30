@@ -98,7 +98,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         has_gameplay_check = False
         if require_gameplay == False:
             has_gameplay_check = True # boolean zen blah blah shut up
-        elif (str(line["has_classics"]) == "1") or (str(line["has_oneshots"]) == "1"):
+        elif int(line["total_hits_approx"]) >= 10:
             has_gameplay_check = True
 
         # special check
