@@ -124,8 +124,9 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
             song = line['song']
             description = line['description']
 
-            hash = hashlib.md5((authors + artist + song).encode())
-            hash_hex = hash.hexdigest()
+            #hash = hashlib.md5((authors + artist + song).encode())
+            #hash_hex = hash.hexdigest()
+            hash_hex = line['rd_md5']
 
             zip = line['rdzip_url']
 
