@@ -20,15 +20,13 @@ def tag_is_for_event(tag):
     
     return False
 
-def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tags, facets, require_gameplay, special_requirements):
+def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tag_facet_array, require_gameplay, special_requirements):
 
     if difficulty == "Polarity":
         difficulty = random.choice(["Easy", "Easy", "Very Tough"])
 
-    if tags == None:
-        tags = []
-    if facets == None:
-        facets = {}
+    if tag_facet_array == None:
+        tag_facet_array = []
 
     cafe_hashed = {}
 
@@ -61,21 +59,40 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
         # does difficulty match
         diff_check = (difficulty == 'Any') or (difficulty == level_diff) or ((difficulty == 'Not Easy') and (level_diff != 'Easy')) or ((difficulty == 'Not Very Tough') and (level_diff != 'Very Tough')) or ((difficulty == 'Polarity') and ((level_diff == 'Easy') or (level_diff == 'Very Tough')))
 
-        # does level have all tags
+        # make sure the level has at least one tag or facet from each element of tag_facet_array
         level_tags = json.loads(line['tags'])
+        level_tags_lowercase = []
 
-        tags_check = True
-        for tag in tags:
-            if tag not in level_tags:
-                tags_check = False
+        for tag in level_tags:
+            level_tags_lowercase.append(tag.lower())
 
-        # datasette facet check
-        facets_check = True
-        for facet in facets:
-            if facet not in line:
-                print("HUGE MISTAKE")
-            elif str(facets[facet]) != str(line[facet]):
-                facets_check = False
+        tags_facets_check = True
+
+        # this is hard to explain, but basically tag_facet_array has a bunch of "requirement" sub-lists
+        # at least one condition from each sub-list must be met to pass the check
+        # (i.e. the level must have at least one tag or facet from each sub-list)
+        for sub_list in tag_facet_array:
+            tags = []
+            facets = {}
+            if "tags" in sub_list:
+                tags = sub_list["tags"]
+            if "facets" in sub_list:
+                facets = sub_list["facets"]
+            
+            sub_list_one_condition_met = False
+
+            for tag in tags:
+                if tag.lower() in level_tags_lowercase:
+                    sub_list_one_condition_met = True
+            
+            for facet in facets:
+                if facet not in line:
+                    print("FACET NOT IN LINE")
+                elif str(facets[facet]) == str(line[facet]):
+                    sub_list_one_condition_met = True
+            
+            if not sub_list_one_condition_met:
+                tags_facets_check = False
 
         # require_gameplay check
         has_gameplay_check = False
@@ -99,7 +116,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
                 if not level_has_event_tag:
                     special_check = False
 
-        if pr_check and diff_check and facets_check and tags_check and has_gameplay_check and special_check:
+        if pr_check and diff_check and tags_facets_check and has_gameplay_check and special_check:
             authors_list = json.loads(line['authors'])
             authors = ', '.join(authors_list)
 

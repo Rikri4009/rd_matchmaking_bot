@@ -158,7 +158,7 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
         peer_reviewed: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'Yes', description = 'Default: Yes'),
         played_before: discord.Option(choices = ['Yes', 'No', 'Any'], default = 'No', description = 'Default: No'),
         difficulty: discord.Option(choices = ['Easy', 'Medium', 'Tough', 'Very Tough', 'Any', 'Not Easy', 'Not Very Tough', 'Polarity'], default = 'Any', description = 'Default: Any'),
-        tags: discord.Option(discord.SlashCommandOptionType.string, default = '', description = 'List of tags the level must have. Default: None'),
+        tags: discord.Option(discord.SlashCommandOptionType.string, default = '', description = 'List of tags the level must have, comma-separated. Default: None'),
         players: discord.Option(discord.SlashCommandOptionType.string, required = False, description = 'List of @users. Default: Yourself')
     ):
         uid = str(ctx.user.id)
@@ -174,14 +174,23 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
         players_id_list = re.findall(r"\<\@(.*?)\>", players) #extract user ids
         players_id_list = list(set(players_id_list)) #remove duplicates
 
-        tags_array = tags.split(',')
+        tags_list = tags.split(',')
         if tags == '':
-            tags_array = []
+            tags_list = []
 
-        for i, tag in enumerate(tags_array):
-            tags_array[i] = tag.lstrip()
+        for i, tag in enumerate(tags_list):
+            tags_list[i] = tag.lstrip()
 
-        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_array, None, False, [])
+        tags_facets_array = []
+
+        for tag in tags_list:
+            new_sub_list = {}
+            new_sub_list["tags"] = []
+            new_sub_list["tags"].append(tag)
+
+            tags_facets_array.append(new_sub_list)
+
+        level_chosen = levels.roll_random_level(peer_reviewed, played_before, difficulty, players_id_list, self.bot.users_rdsaves, tags_facets_array, False, [])
 
         if level_chosen == None:
             await ctx.respond("No levels found with those arguments!") #intentionally not ephemeral
