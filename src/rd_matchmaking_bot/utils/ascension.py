@@ -341,7 +341,7 @@ async def proceed_helper(self, interaction):
             return
 
     # is the last set:
-    player_stats["highest_set_beaten"] = 7
+    player_stats["highest_set_beaten"] = max(player_stats["highest_set_beaten"], ascension_lobby["current_set"])
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
