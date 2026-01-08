@@ -510,13 +510,15 @@ def get_ascension_welcome_embed(self, name, runner_id):
     if ascension_difficulty >= 1:
         ticket_cost_text = f"\n\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
 
+    ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
+
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
 Your goal is to treat patients across 5 cities spanning the globe.\n\
 You, the **runner**, start with \⭐ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
-If you reach 0 HP, your tour will be cut short!{ticket_cost_text}")
+If you reach 0 HP, your tour will be cut short!{ascension_difficulty_text}{ticket_cost_text}")
 
 
 def begin(self, ctx, runner_id, max_hp, lobby_name):
