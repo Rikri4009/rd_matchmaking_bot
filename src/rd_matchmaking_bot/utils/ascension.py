@@ -704,8 +704,8 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
-    embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
-{ascension_difficulty_text}\n# This lobby is open!\nPress \"**Join**\" to join.\n\nLevels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
+    embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\
+# This lobby is open!\nPress \"**Join**\" to join.\n\n{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
 

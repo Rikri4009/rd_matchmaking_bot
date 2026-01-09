@@ -920,9 +920,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             total_sp_earned = total_sp_earned + sp_earned
 
-            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4}\🎵)\n"
+            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4}\🎵)\n"
             if sp_earned > 0:
-                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {unsorted_misses[player]} misses (+{num_players*2 - player_rank + 4}\🎵) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
+                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4}\🎵) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
 
             placement_message = placement_message + placement_message_line
 
@@ -1162,7 +1162,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
     @lobby.command(description="Submit your miss count")
     async def submit_misses(self, ctx,
-        miss_count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many misses you got')
+        miss_count: discord.Option(discord.SlashCommandOptionType.number, description = 'How many misses you got')
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
