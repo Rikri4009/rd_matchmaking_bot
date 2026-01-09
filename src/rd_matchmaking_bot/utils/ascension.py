@@ -612,6 +612,10 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby['roll_modifier_tags'] = sets_config[set_modifier]['tags']
     ascension_lobby['roll_modifier_facets'] = sets_config[set_modifier]['facets']
 
+    # unless 2-player modifier is active, make sure the level has a 1p
+    if "two_player" not in ascension_lobby['roll_modifier_facets']:
+        ascension_lobby['roll_modifier_facets']['single_player'] = 1
+
     ascension_lobby['roll_special'] = []
     if "special" in sets_config[set_theme]:
         ascension_lobby['roll_special'] = ascension_lobby['roll_special'] + sets_config[set_theme]['special']
