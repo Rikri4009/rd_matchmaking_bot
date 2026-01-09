@@ -12,6 +12,9 @@ import rd_matchmaking_bot.utils.ascension as ascension
 
 
 class LobbyButtonsOpen(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
     @discord.ui.button(label="Join", style=discord.ButtonStyle.success)
     async def join_pressed(self, button, interaction):
         lobby_title = interaction.message.embeds[0].title
@@ -28,6 +31,9 @@ class LobbyButtonsOpen(discord.ui.View):
 
 
 class LobbyButtonsRolling(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
     @discord.ui.button(label="Ready", style=discord.ButtonStyle.success)
     async def ready_pressed(self, button, interaction):
         await LobbyCommands.ready(interaction)

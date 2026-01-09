@@ -14,7 +14,7 @@ import rd_matchmaking_bot.utils.data as data
 
 class LeaderboardButtons(discord.ui.View):
     def __init__(self, bot: MatchmakingBot, uid, category, page):
-        super().__init__()
+        super().__init__(timeout=2000)
         self.bot = bot
         self.uid = uid
         self.category = category
@@ -47,7 +47,7 @@ class LeaderboardButtons(discord.ui.View):
 
 class SpecializeButtons(discord.ui.View):
     def __init__(self, bot: MatchmakingBot, uid):
-        super().__init__()
+        super().__init__(timeout=2000)
         self.bot = bot
         self.uid = uid
 
@@ -115,12 +115,32 @@ class UserCommands(commands.Cog):
     @discord.slash_command(description="Primer to the bot")
     async def about(self, ctx
     ):
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"About This Bot", description = "Welcome to the **sync**hronized **ope**rations program!\n\
-Treating patients from across the globe can require multiple interns at once.\n\
-To facilitate this, Syncope, designed to synchronize interns with their patients, was created.\n\n\
-To begin a treatment session, do `/lobby create`!\nDetailed documentation can be found [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing).\n\n\
--# This bot is developed by <@1207345676141465622>.\n\
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"\⭐ About This Bot \🎵", description = "Welcome to the __sync__hronized __ope__rations program!\n\
+Treating patients from across the globe can require multiple interns working at once, which Syncope is designed to streamline.\n\n\
+Be warned: You will only be assigned to **all-new treatments** (levels you've never played), so be prepared for anything!\n\n\
+To begin a treatment session, do `/lobby create`!\nFor an overview of commands, do `/help`.\n\
+Detailed documentation can be found [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing).\n\n\
+-# Direct feedback/bug reports to <@1207345676141465622>.\n\
 -# Character and artwork by <@201091631795929089>. Full credits are in the documentation.")
+
+        await ctx.respond(embed=tooltipEmbed)
+
+
+    @discord.slash_command(description="List of commands")
+    async def help(self, ctx
+    ):
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"Commands List",
+description = "`/about`: Get an overview of the bot.\n\n\
+`/lobby create`: Create a new lobby to start playing levels!\n\
+`/lobby resend`: If the bot's buttons stop working, use this command.\n\
+`/lobby list_all`: View all current lobbies, and the channels they're located in.\n\
+Other lobby commands are explained after you create a lobby.\n\n\
+`/quests`: View your daily quests.\n\
+`/achievements`: View your overall statistics.\n\
+`/player_rating`: Get an estimate of your overall performance.\n\
+`/leaderboard`: View the \🎵 or \⭐ leaderboards.\n\n\
+`/out_of_lobby_roll`: Find a level for a set of players outside of a lobby.\n\
+`/upload_rdsave`: Upload your save data. (See [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing) for details.)")
 
         await ctx.respond(embed=tooltipEmbed)
 
@@ -226,7 +246,7 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
 
         total_player_rating = '{:.2f}'.format(self.bot.get_user_ratings(ach_uid)["Total"])
 
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.global_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['exp']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.display_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['exp']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
         tooltipEmbed.set_footer(text="Hover over text for info!")
 
         await ctx.respond(embed=tooltipEmbed)
@@ -255,7 +275,7 @@ To begin a treatment session, do `/lobby create`!\nDetailed documentation can be
         rating_uid = str(rating_user.id)
 
         player_ratings = self.bot.get_user_ratings(rating_uid)
-        player_ratings_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{rating_user.global_name}\'s Player Ratings", description = f"# `Total: {'{:.2f}'.format(player_ratings['Total'])}🩺`\n\n`      Easy: {'{:.2f}'.format(player_ratings['Easy'])}💚`\n`    Medium: {'{:.2f}'.format(player_ratings['Medium'])}💛`\n`     Tough: {'{:.2f}'.format(player_ratings['Tough'])}❤️`\n`Very Tough: {'{:.2f}'.format(player_ratings['Very Tough'])}💜`")
+        player_ratings_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"{rating_user.display_name}\'s Player Ratings", description = f"# `Total: {'{:.2f}'.format(player_ratings['Total'])}🩺`\n\n`      Easy: {'{:.2f}'.format(player_ratings['Easy'])}💚`\n`    Medium: {'{:.2f}'.format(player_ratings['Medium'])}💛`\n`     Tough: {'{:.2f}'.format(player_ratings['Tough'])}❤️`\n`Very Tough: {'{:.2f}'.format(player_ratings['Very Tough'])}💜`")
         player_ratings_embed.set_footer(text="Your Player Rating is based on the last 16 levels of each difficulty you\'ve played.\nLevels played with difficulty modifiers (e.g. hard button) don't count.")
 
         await ctx.respond(embed=player_ratings_embed)

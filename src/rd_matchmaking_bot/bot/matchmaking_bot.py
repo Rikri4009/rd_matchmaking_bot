@@ -1,11 +1,13 @@
 import datetime
 from discord import Bot
+from discord import Activity
+from discord import ActivityType
 import rd_matchmaking_bot.utils.data as data
 
 
 class MatchmakingBot(Bot):
     def __init__(self, *cogs: str):
-        super().__init__()
+        super().__init__(activity=Activity(type=ActivityType.competing, name="Do /about for an overview!"))
 
         self.load_cogs(*cogs)
 

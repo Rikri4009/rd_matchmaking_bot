@@ -6,7 +6,7 @@ import rd_matchmaking_bot.utils.levels as levels
 
 class AscensionButtonsWelcome(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__()
+        super().__init__(timeout=None)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -58,7 +58,7 @@ class AscensionButtonsWelcome(discord.ui.View):
 
 class AscensionButtonsItem(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__()
+        super().__init__(timeout=None)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -369,7 +369,7 @@ def weighted_choose_from_dict(item_dict):
 
 class AscensionButtonsChoice(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__()
+        super().__init__(timeout=None)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -467,7 +467,7 @@ async def recover_helper(self, interaction):
 
 class AscensionButtonsGameOver(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__()
+        super().__init__(timeout=None)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -701,7 +701,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
     support = ', '.join(support_list)
 
     embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
-{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}Support: {support}")
+{ascension_difficulty_text}\n# This lobby is open!\nPress \"**Join**\" to join.\n\nLevels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
 
