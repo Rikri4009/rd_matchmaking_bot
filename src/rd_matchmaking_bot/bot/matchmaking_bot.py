@@ -328,7 +328,7 @@ class MatchmakingBot(Bot):
                 #print(average_misses)
                 user_ratings[difficulty] = 70 * difficulty_multiplier[difficulty] / (average_misses + 1)
 
-        user_ratings["Total"] =  (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + user_ratings["Tough"] + (0.5*user_ratings["Very Tough"])
+        user_ratings["Total"] = ( (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + user_ratings["Tough"] + (0.5*user_ratings["Very Tough"]) ) / 3
 
         return user_ratings
 
