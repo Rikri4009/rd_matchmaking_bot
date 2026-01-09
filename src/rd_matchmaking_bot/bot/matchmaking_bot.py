@@ -303,6 +303,12 @@ class MatchmakingBot(Bot):
 
         user_ratings = {}
 
+        difficulty_multiplier = {}
+        difficulty_multiplier["Easy"] = 7/60
+        difficulty_multiplier["Medium"] = 7/20
+        difficulty_multiplier["Tough"] = 7/10
+        difficulty_multiplier["Very Tough"] = 7/5
+
         for difficulty, difficulty_score_history in score_history.items():
             if len(difficulty_score_history) < 4:
                 user_ratings[difficulty] = 0
@@ -320,9 +326,9 @@ class MatchmakingBot(Bot):
                 #print(difficulty_score_history)
                 average_misses = sum(difficulty_score_history) / len(difficulty_score_history)
                 #print(average_misses)
-                user_ratings[difficulty] = 70 / (average_misses + 1)
+                user_ratings[difficulty] = 70 * difficulty_multiplier[difficulty] / (average_misses + 1)
 
-        user_ratings["Total"] = (0.25) * ( (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + (1.5*user_ratings["Tough"]) + user_ratings["Very Tough"] )
+        user_ratings["Total"] =  (0.5*user_ratings["Easy"]) + user_ratings["Medium"] + user_ratings["Tough"] + (0.5*user_ratings["Very Tough"])
 
         return user_ratings
 
