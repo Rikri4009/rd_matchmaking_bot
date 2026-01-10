@@ -612,10 +612,6 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby['roll_modifier_tags'] = sets_config[set_modifier]['tags']
     ascension_lobby['roll_modifier_facets'] = sets_config[set_modifier]['facets']
 
-    # unless 2-player modifier is active, make sure the level has a 1p
-    if "two_player" not in ascension_lobby['roll_modifier_facets']:
-        ascension_lobby['roll_modifier_facets']['single_player'] = 1
-
     ascension_lobby['roll_special'] = []
     if "special" in sets_config[set_theme]:
         ascension_lobby['roll_special'] = ascension_lobby['roll_special'] + sets_config[set_theme]['special']
@@ -730,24 +726,21 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
 
     tag_facet_array = []
 
+    def append_tag_facet_options_to_array(tags, facets):
+        if (tags != []) or (facets != {}):
+            tag_facet_options = {}
+            tag_facet_options["tags"] = tags.copy()
+            tag_facet_options["facets"] = facets.copy()
+            tag_facet_array.append(tag_facet_options)
+
     if use_theme:
-        if (ascension_lobby["roll_theme_tags"] != []) or (ascension_lobby["roll_theme_facets"] != {}):
-            theme_tags_facets = {}
-            theme_tags_facets["tags"] = (ascension_lobby["roll_theme_tags"]).copy()
-            theme_tags_facets["facets"] = (ascension_lobby["roll_theme_facets"]).copy()
-            tag_facet_array.append(theme_tags_facets)
-        
+        append_tag_facet_options_to_array(ascension_lobby["roll_theme_tags"], ascension_lobby["roll_theme_facets"])
         roll_settings["special"] = (ascension_lobby["roll_special"]).copy()
 
-    if (ascension_lobby["roll_modifier_tags"] != []) or (ascension_lobby["roll_modifier_facets"] != {}):
-        modifier_tags_facets = {}
-        modifier_tags_facets["tags"] = (ascension_lobby["roll_modifier_tags"]).copy()
-        modifier_tags_facets["facets"] = (ascension_lobby["roll_modifier_facets"]).copy()
-        tag_facet_array.append(modifier_tags_facets)
+    append_tag_facet_options_to_array(ascension_lobby["roll_modifier_tags"], ascension_lobby["roll_modifier_facets"])
 
     roll_settings["tag_facet_array"] = tag_facet_array
 
-    roll_settings["facets"] = (ascension_lobby["roll_facets"]).copy()
     roll_settings["require_gameplay"] = True
     roll_settings["difficulty_modifiers"] = []
 
@@ -760,14 +753,26 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
     set_number = ascension_lobby["current_set"]
 
     if (ascension_difficulty >= 3) and (set_number != 3) and ((roll_settings["difficulty"] == "Easy") or (roll_settings["difficulty"] == "Medium")):
-        roll_settings["difficulty_modifiers"].append(ascension_lobby['certificate_3_modifiers'][level_number])
-        if ascension_lobby['certificate_3_modifiers'][level_number] == "2-Player":
-            roll_settings["facets"]["two_player"] = 1
+        c3_modifier_name = ascension_lobby["certificate_3_modifiers"][level_number]
+
+        roll_settings["difficulty_modifiers"].append(c3_modifier_name)
+
+        append_tag_facet_options_to_array(sets_config[c3_modifier_name]["tags"], sets_config[c3_modifier_name]["facets"])
 
     if (ascension_difficulty >= 5) and (set_number != 5) and (roll_settings["difficulty"] == "Easy"):
-        roll_settings["difficulty_modifiers"].append(ascension_lobby['certificate_5_modifiers'][level_number])
+        c5_modifier_name = ascension_lobby["certificate_5_modifiers"][level_number]
+
+        roll_settings["difficulty_modifiers"].append(c5_modifier_name)
+
+        append_tag_facet_options_to_array(sets_config[c5_modifier_name]["tags"], sets_config[c5_modifier_name]["facets"])
     
     roll_settings["difficulty_modifiers"] = list(set(roll_settings["difficulty_modifiers"]))
+
+    # unless 2-player modifier is active, make sure the level has a 1p
+    if "2-Player" not in roll_settings["difficulty_modifiers"]:
+        single_player_facet = {}
+        single_player_facet["single_player"] = 1
+        append_tag_facet_options_to_array([], single_player_facet)
 
 
 def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_dict, level_chosen, ascension_lobby):
