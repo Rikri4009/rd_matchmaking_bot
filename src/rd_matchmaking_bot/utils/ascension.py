@@ -6,7 +6,7 @@ import rd_matchmaking_bot.utils.levels as levels
 
 class AscensionButtonsWelcome(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=20000)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -58,7 +58,7 @@ class AscensionButtonsWelcome(discord.ui.View):
 
 class AscensionButtonsItem(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=20000)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -369,7 +369,7 @@ def weighted_choose_from_dict(item_dict):
 
 class AscensionButtonsChoice(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=20000)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
@@ -467,7 +467,7 @@ async def recover_helper(self, interaction):
 
 class AscensionButtonsGameOver(discord.ui.View):
     def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=20000)
         self.lobbycommands = lobbycommands
         self.lobby_name = lobby_name
         self.runner_id = runner_id
