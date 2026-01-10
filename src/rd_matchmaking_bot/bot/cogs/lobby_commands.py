@@ -118,7 +118,7 @@ class LobbyCommands(commands.Cog):
             if status == 'Not Started':
                 return ascension.get_ascension_welcome_embed(self, lobby_name, host_id)
             elif status == 'Open':
-                return ascension.get_ascension_open_embed(self, ctx, lobby_name, host_id, player_id_dict)
+                return ascension.get_ascension_open_embed(self, ctx, lobby_name, host_id, player_id_dict, True)
             elif status == 'Rolling':
                 return ascension.get_ascension_rolling_embed(self, lobby_name, host_id, player_id_dict, level_chosen, ascension_lobby)
             elif status == 'Playing':
@@ -200,9 +200,13 @@ class LobbyCommands(commands.Cog):
                 await player_dm_channel.send(dm_message)
 
 
+    async def get_lobby_curr_message(self, lobby):
+        return await (await self.bot.fetch_channel(lobby["channel_id"])).fetch_message(lobby["message_id"])
+
+
     async def disable_current_message_view(self, current_lobby): #doesnt work???
         if "message_id" in current_lobby:
-            lobby_curr_message = await (await self.bot.fetch_channel(current_lobby["channel_id"])).fetch_message(current_lobby["message_id"])
+            lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
             for component in lobby_curr_message.components:
                 if isinstance(component, discord.ActionRow):
                     for child in component.children:
@@ -212,12 +216,10 @@ class LobbyCommands(commands.Cog):
     async def edit_current_lobby_message(self, lobby_name, ctx):
         current_lobby = self.bot.game_data["lobbies"][lobby_name]
 
-        lobby_channel_id = current_lobby["channel_id"]
-
         lobby_embed = self.get_current_lobby_embed(ctx, lobby_name)
         lobby_view = self.get_current_lobby_view(lobby_name)
 
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby["message_id"])
+        lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
 
         await lobby_curr_message.edit(embed=lobby_embed, view=lobby_view)
 
@@ -530,9 +532,8 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         # edit lobby message
-        lobby_channel_id = current_lobby['channel_id']
         try:
-            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+            lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
             if lobby_curr_message != None:
                 if (current_lobby["status"] != "Game Over") and (current_lobby["status"] != "Victory"):
                     await lobby_curr_message.edit(f"This lobby \"{lobby_name_user_is_hosting}\" has been deleted!", embed=None, view=None)
@@ -678,9 +679,14 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                 await ctx.respond("<@1207345676141465622> What")
                 print("todo")
 
+        lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
+
         if current_lobby["mode"] == "Free Play":
-            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
             await lobby_curr_message.edit(f'The lobby \"{lobby_name_user_is_hosting}\" has rolled a level!', embed=None, view=None)
+        elif current_lobby["mode"] == "Ascension":
+            lobby_open_embed = ascension.get_ascension_open_embed(self, ctx, lobby_name_user_is_hosting, uid, current_lobby["players"], False)
+            await lobby_curr_message.edit(embed=lobby_open_embed, view=None)
+
 
         await self.send_current_lobby_message(lobby_name_user_is_hosting, ctx, False)
 
@@ -692,8 +698,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
     async def unroll_level(self, ctx, lobby_name, host_id):
         current_lobby = self.bot.game_data['lobbies'][lobby_name]
 
-        lobby_channel_id = current_lobby['channel_id']
-        lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+        lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
         unrolled_artist = ""
         unrolled_song = ""
         unrolled_authors = ""
@@ -805,7 +810,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             # choose a new level, SHOULD be impossible for this to return None
             self.roll_level_from_settings(lobby_name_user_is_playing_in)
 
-            lobby_curr_message = await (await self.bot.fetch_channel(lobby_channel_id)).fetch_message(current_lobby['message_id'])
+            lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
             await lobby_curr_message.edit(f"The level \"{rerolled_artist} - {rerolled_song}\" (by {rerolled_authors}) was rerolled!", embed=None, view=None)
 
             await self.send_current_lobby_message(lobby_name_user_is_playing_in, ctx, False)
@@ -1221,6 +1226,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         await ctx.respond(f'Resent in the lobby\'s channel!', ephemeral=True)
 
         await self.send_current_lobby_message(name, ctx, False)
+
+        lobby_host = current_lobbies[name]['host']
+        await self.has_everyone_submitted(ctx, name, lobby_host)
 
 
 def setup(bot: MatchmakingBot):

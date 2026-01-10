@@ -670,7 +670,7 @@ def begin_set(self, player_id, lobby_name):
     self.bot.save_data()
 
 
-def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_id_dict):
+def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_id_dict, is_open):
     ascension_lobby = lobbycommands.bot.game_data["ascension"][runner_id]
     sets_config = lobbycommands.bot.get_sets_config()
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
@@ -704,8 +704,12 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     support = ', '.join(support_list)
 
+    is_open_text = "\n"
+    if is_open:
+        is_open_text = "# This lobby is open!\nPress \"**Join**\" to join.\n\n"
+
     embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\
-# This lobby is open!\nPress \"**Join**\" to join.\n\n{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
+{is_open_text}{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
 
