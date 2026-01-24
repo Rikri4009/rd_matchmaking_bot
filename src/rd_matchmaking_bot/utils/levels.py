@@ -132,6 +132,8 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
 
             image_url = line['image_url']
 
+            total_hits_approx = line['total_hits_approx']
+
             cafe_hashed[hash_hex] = {
                 'hash': hash_hex,
                 'authors': authors,
@@ -140,6 +142,7 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
                 'description': description,
                 'difficulty': level_diff,
                 'peer review status': level_pr_status,
+                'total_hits_approx': total_hits_approx,
                 'zip': zip,
                 'image_url': image_url,
                 'tags': level_tags

@@ -1041,6 +1041,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             if (ascension_difficulty >= 7) and (level_difficulty == "???"):
                 damage_factor = damage_factor * 2
 
+            if current_lobby['level']['total_hits_approx'] >= 300:
+                damage_factor = damage_factor * 300 / current_lobby['level']['total_hits_approx']
+
             ascension_lobby["incoming_damage"] = math.floor(runner_misses * damage_factor)
 
             if runner_misses == -1:
