@@ -270,6 +270,7 @@ async def proceed_helper(self, interaction):
             final_boss_level["description"] = "temp"
             final_boss_level["difficulty"] = "???"
             final_boss_level["peer review status"] = "Peer Reviewed"
+            final_boss_level["total_hits_approx"] = 300
             final_boss_level["zip"] = "https://codex.rhythm.cafe/rodney-s-HGfkpCv3PS3.rdzip"
             final_boss_level["image_url"] = "https://cdn.discordapp.com/emojis/1393723419031244832.webp?size=128"
             final_boss_level["tags"] = []
