@@ -377,6 +377,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
     
     async def clear_rdsave(self, ctx, uid):
         self.bot.users_rdsaves[uid] = []
+        self.bot.save_data()
 
         await ctx.respond("Done!")
 
