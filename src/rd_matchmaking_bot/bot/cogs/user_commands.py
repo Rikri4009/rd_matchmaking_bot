@@ -329,6 +329,10 @@ Other lobby commands are explained after you create a lobby.\n\n\
         if (len(args) == 1) and (args[0] == "get_backups"):
             await self.get_backups(ctx)
             return
+        
+        if (len(args) == 2) and (args[0] == "clear_rdsave"):
+            await self.clear_rdsave(ctx, int(args[1]))
+            return
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
@@ -370,6 +374,11 @@ Other lobby commands are explained after you create a lobby.\n\n\
         path = data.get_path("resources/data")
 
         await ctx.respond("Backups:", file = discord.File(fp = (path + os.sep + "users_stats_backups.json")))
+    
+    async def clear_rdsave(self, ctx, uid):
+        self.bot.users_rdsaves[uid] = []
+
+        await ctx.respond("Done!")
 
 
 def setup(bot: MatchmakingBot):
