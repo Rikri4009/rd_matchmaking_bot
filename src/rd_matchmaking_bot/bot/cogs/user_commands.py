@@ -331,7 +331,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
             return
         
         if (len(args) == 2) and (args[0] == "clear_rdsave"):
-            await self.clear_rdsave(ctx, int(args[1]))
+            await self.clear_rdsave(ctx, args[1])
             return
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
