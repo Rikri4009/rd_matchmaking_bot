@@ -142,7 +142,7 @@ class LobbyCommands(commands.Cog):
         player_id_dict = current_lobby["players"]
         level_chosen = current_lobby["level"]
         if status == 'Not Started':
-            return ascension.AscensionButtonsWelcome(self, lobby_name, host_id)
+            return ascension.get_ascension_buttons_welcome(self, lobby_name, host_id)
         elif status == 'Open':
             return LobbyButtonsOpen()
         elif status == 'Rolling':

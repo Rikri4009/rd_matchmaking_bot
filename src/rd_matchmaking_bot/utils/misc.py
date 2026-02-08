@@ -71,3 +71,22 @@ def get_leaderboard_embed(ctx, bot, category, page):
 
 def get_upload_rdsave_message():
     return f"You haven\'t uploaded your \"settings.rdsave\" file!\n\nTo find this file, first right-click Rhythm Doctor in Steam, and click the button [shown below](https://cdn.discordapp.com/attachments/1392061548549373972/1454561205157888144/image.png?ex=6951892f&is=695037af&hm=9634b8979bd8702491ef77fe4642b8aaa16acb5f37377a0b8795b336bdf9b21a&).\nThen, go to the \"User\" folder, and upload the file called \"settings.rdsave\" using `/upload_rdsave`."
+
+def get_number_emoji(number):
+    match number:
+        case 0:
+            return ''
+        case 1:
+            return '<:bronze:1399860108665557043>'
+        case 2:
+            return '<:silver:1399860110389542915>'
+        case 3:
+            return '<:gold:1399860113883402270>'
+        case 4:
+            return '<:distinguished:1399860116119093529>'
+        case 5:
+            return '<:illustrious:1399860117700087888>'
+        case 6:
+            return '<:stellar:1399860119092854936>'
+        case 7:
+            return '<:medical_grade:1399860122288783390>'

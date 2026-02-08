@@ -3,57 +3,189 @@ import random
 import math
 import copy
 import rd_matchmaking_bot.utils.levels as levels
+import rd_matchmaking_bot.utils.misc as misc
 
-class AscensionButtonsWelcome(discord.ui.View):
-    def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=20000)
-        self.lobbycommands = lobbycommands
-        self.lobby_name = lobby_name
-        self.runner_id = runner_id
+async def newgame_button_pressed(self, button, interaction):
+    uid = str(interaction.user.id)
+    if uid != self.runner_id:
+        await interaction.respond("Not your button!", ephemeral=True)
+        return
 
-    @discord.ui.button(label="Continue", style=discord.ButtonStyle.success)
-    async def continue_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
+    runner_stats = self.lobbycommands.bot.users_stats[uid]
+    ascension_difficulty = runner_stats["current_ascension_difficulty"]
+    runner_tickets = runner_stats["current_tickets"]
 
-        self.stop()
+    if (ascension_difficulty >= 1) and (runner_tickets < 1):
+        await interaction.respond("You don't have any tickets!", ephemeral=True)
+        return
 
-        game_data = self.lobbycommands.bot.game_data
-        if game_data["ascension"][self.runner_id]["status"] == "Not Started":
-            await interaction.respond("You haven't started a run yet!", ephemeral=True)
-            return
+    self.stop()
 
-        # note that the ascension data's status will never be rolling or playing, so no need to copy over level
-        game_data["lobbies"][self.lobby_name]["status"] = game_data["ascension"][self.runner_id]["status"]
+    if ascension_difficulty >= 1:
+        runner_stats["current_tickets"] = runner_stats["current_tickets"] - 1
 
+    begin(self.lobbycommands, interaction, self.runner_id, None, self.lobby_name)
+    await interaction.response.defer()
+    await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+
+
+def get_certify_buttons(lobbycommands, lobby_name, uid):
+    user_stats = lobbycommands.bot.users_stats[uid]
+    max_available_certification = user_stats["highest_ascension_difficulty_beaten"] + 1
+
+    class CertifyButtons(discord.ui.View):
+        def __init__(self, lobbycommands, lobby_name, uid):
+            super().__init__(timeout=2000)
+            self.lobbycommands = lobbycommands
+            self.lobby_name = lobby_name
+            self.uid = uid
+
+            self.user_stats = self.lobbycommands.bot.users_stats[self.uid]
+
+        async def update_certification(self, interaction, number):
+            self.user_stats["current_ascension_difficulty"] = number
+            await interaction.response.defer()
+            await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
+            self.lobbycommands.bot.save_data()
+
+        @discord.ui.button(label="None", row=0, style=discord.ButtonStyle.secondary)
+        async def c0_pressed(self, button, interaction):
+            await self.update_certification(interaction, 0)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(1), row=0, style=discord.ButtonStyle.secondary)
+        async def c1_pressed(self, button, interaction):
+            await self.update_certification(interaction, 1)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(2), row=0, style=discord.ButtonStyle.secondary)
+        async def c2_pressed(self, button, interaction):
+            await self.update_certification(interaction, 2)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(3), row=0, style=discord.ButtonStyle.secondary)
+        async def c3_pressed(self, button, interaction):
+            await self.update_certification(interaction, 3)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(4), row=1, style=discord.ButtonStyle.secondary)
+        async def c4_pressed(self, button, interaction):
+            await self.update_certification(interaction, 4)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(5), row=1, style=discord.ButtonStyle.secondary)
+        async def c5_pressed(self, button, interaction):
+            await self.update_certification(interaction, 5)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(6), row=1, style=discord.ButtonStyle.secondary)
+        async def c6_pressed(self, button, interaction):
+            await self.update_certification(interaction, 6)
+
+        @discord.ui.button(emoji=misc.get_number_emoji(7), row=1, style=discord.ButtonStyle.secondary)
+        async def c7_pressed(self, button, interaction):
+            await self.update_certification(interaction, 7)
+
+
+    return CertifyButtons(lobbycommands, lobby_name, uid)
+
+class SpecializeButtons(discord.ui.View):
+    def __init__(self, bot, uid):
+        super().__init__(timeout=2000)
+        self.bot = bot
+        self.uid = uid
+
+        self.user_stats = self.bot.users_stats[self.uid]
+
+    @discord.ui.button(label="Apples", style=discord.ButtonStyle.primary)
+    async def apples_pressed(self, button, interaction):
+        self.user_stats["specialization"] = "Apples"
         await interaction.response.defer()
-        await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
-    @discord.ui.button(label="New Game", style=discord.ButtonStyle.danger)
-    async def newgame_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
-
-        runner_stats = self.lobbycommands.bot.users_stats[uid]
-        ascension_difficulty = runner_stats["current_ascension_difficulty"]
-        runner_tickets = runner_stats["current_tickets"]
-
-        if (ascension_difficulty >= 1) and (runner_tickets < 1):
-            await interaction.respond("You don't have any tickets!", ephemeral=True)
-            return
-
-        self.stop()
-
-        if ascension_difficulty >= 1:
-            runner_stats["current_tickets"] = runner_stats["current_tickets"] - 1
-
-        begin(self.lobbycommands, interaction, self.runner_id, None, self.lobby_name)
+    @discord.ui.button(label="Ivory Dice", style=discord.ButtonStyle.primary)
+    async def dice_pressed(self, button, interaction):
+        self.user_stats["specialization"] = "Ivory Dice"
         await interaction.response.defer()
-        await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+
+    @discord.ui.button(label="Chronographs", style=discord.ButtonStyle.primary)
+    async def chronographs_pressed(self, button, interaction):
+        self.user_stats["specialization"] = "Chronographs"
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Shields", style=discord.ButtonStyle.primary)
+    async def shields_pressed(self, button, interaction):
+        self.user_stats["specialization"] = "Shields"
+        await interaction.response.defer()
+
+    @discord.ui.button(label="None", style=discord.ButtonStyle.secondary)
+    async def prev_pressed(self, button, interaction):
+        self.user_stats["specialization"] = None
+        await interaction.response.defer()
+
+
+def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
+    user_stats = lobbycommands.bot.users_stats[runner_id]
+
+    require_ticket = (user_stats["current_ascension_difficulty"] >= 1)
+    show_certify = (user_stats["highest_set_beaten"] >= 5)
+    show_specialize = (user_stats["current_ascension_difficulty"] >= 4)
+
+    class AscensionButtonsWelcome(discord.ui.View):
+        def __init__(self, lobbycommands, lobby_name, runner_id):
+            super().__init__(timeout=20000)
+            self.lobbycommands = lobbycommands
+            self.lobby_name = lobby_name
+            self.runner_id = runner_id
+
+        @discord.ui.button(label="Continue", style=discord.ButtonStyle.success)
+        async def continue_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
+
+            self.stop()
+
+            game_data = self.lobbycommands.bot.game_data
+            if game_data["ascension"][self.runner_id]["status"] == "Not Started":
+                await interaction.respond("You haven't started a run yet!", ephemeral=True)
+                return
+
+            # note that the ascension data's status will never be rolling or playing, so no need to copy over level
+            game_data["lobbies"][self.lobby_name]["status"] = game_data["ascension"][self.runner_id]["status"]
+
+            await interaction.response.defer()
+            await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+
+        if require_ticket:
+            @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.danger)
+            async def newgame_pressed(self, button, interaction):
+                await newgame_button_pressed(self, button, interaction)
+        else:
+            @discord.ui.button(label="New Game", style=discord.ButtonStyle.danger)
+            async def newgame_pressed(self, button, interaction):
+                await newgame_button_pressed(self, button, interaction)
+
+        if show_certify:
+            @discord.ui.button(label="Certify", style=discord.ButtonStyle.secondary)
+            async def certify_pressed(self, button, interaction):
+                uid = str(interaction.user.id)
+                if uid != self.runner_id:
+                    await interaction.respond("Not your button!", ephemeral=True)
+                    return
+
+                certify_embed = discord.Embed(colour = discord.Colour.purple(), title = "Certify?", description = f"Challenge yourself by attempting a certification!\nHigher certifications make runs **harder**, but yield **greater rewards**:\n- More bonus exp when completing cities\n- Leftover items on victory are converted to more essence\n- Random special reward on victory\n- Ascend...?\nThe journey to true rhythm mastery awaits you!")
+
+                await interaction.respond(embed=certify_embed, view=get_certify_buttons(self.lobbycommands, self.lobby_name, uid), ephemeral=True)
+
+        if show_specialize:
+            @discord.ui.button(label="Specialize", style=discord.ButtonStyle.primary)
+            async def specialize_pressed(self, button, interaction):
+                uid = str(interaction.user.id)
+                if uid != self.runner_id:
+                    await interaction.respond("Not your button!", ephemeral=True)
+                    return
+
+                specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
+
+                await interaction.respond(embed=specializations_embed, view=SpecializeButtons(self.lobbycommands.bot, uid), ephemeral=True)
+
+    return AscensionButtonsWelcome(lobbycommands, lobby_name, runner_id)
+
 
 
 class AscensionButtonsItem(discord.ui.View):
@@ -477,13 +609,7 @@ class AscensionButtonsGameOver(discord.ui.View):
 
     @discord.ui.button(label="New Game", style=discord.ButtonStyle.success)
     async def newgame_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
-
-        self.stop()
-        await AscensionButtonsWelcome.newgame_pressed(self, button, interaction)
+        await newgame_button_pressed(self, button, interaction)
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
     async def delete_pressed(self, button, interaction):
@@ -515,13 +641,20 @@ def get_ascension_welcome_embed(self, name, runner_id):
 
     ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
 
+    specialization_text = ""
+    if ascension_difficulty >= 4:
+        if runner_stats['specialization'] == None:
+            specialization_text = "You are not specializing in anything.\n\n"
+        else:
+            specialization_text = f"You are specializing in {runner_stats['specialization']}.\n\n"
+
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
 Your goal is to treat patients across 5 cities spanning the globe.\n\
 You, the **runner**, start with \⭐ HP, and will lose 1 for each miss.\n\
 Other players are **support**, and will earn SP for you through good performance.\n\
 \nYour progress will save, even if you delete the lobby.\n\
-If you reach 0 HP, your tour will be cut short!\n\n{ascension_difficulty_text}{ticket_cost_text}")
+If you reach 0 HP, your tour will be cut short!\n\n{ascension_difficulty_text}{specialization_text}{ticket_cost_text}")
 
 
 def begin(self, ctx, runner_id, max_hp, lobby_name):
@@ -890,13 +1023,13 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
 
     spec_unlocked_text = ""
     if ascension_lobby["ascension_difficulty"] == 3:
-        spec_unlocked_text = "**You can now do `/admin_command specialize`!**\n\n"
+        spec_unlocked_text = "**You can now specialize!**\n\n"
 
     victory_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
 You have gained {gained_exp} additional \🎵.\n\
 Your remaining items have been converted to {bonus_exp} total \🎵.\n\n{spec_unlocked_text}\
--# You can now do `/admin_command certify {ascension_lobby['ascension_difficulty']+1}`...")
+-# You can now attempt Certification {ascension_lobby['ascension_difficulty']+1}...")
     return victory_embed
 
 
@@ -952,7 +1085,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 3:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> City 3 invades easier levels **/** City 3 is harder **/** The final boss appears"
     if ascension_difficulty >= 4:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> More difficult foraging **/** Hard button final boss **/** You may `specialize`" # hard button
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> More difficult foraging **/** Hard button final boss **/** You may specialize" # hard button
     if ascension_difficulty >= 5:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> City 5 invades easy levels **/** City 5 is harder **/** No recovering after city 7"
     if ascension_difficulty >= 6:

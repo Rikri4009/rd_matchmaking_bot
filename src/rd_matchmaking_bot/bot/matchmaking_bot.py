@@ -3,6 +3,7 @@ from discord import Bot
 from discord import Activity
 from discord import ActivityType
 import rd_matchmaking_bot.utils.data as data
+import rd_matchmaking_bot.utils.misc as misc
 
 
 class MatchmakingBot(Bot):
@@ -97,6 +98,13 @@ class MatchmakingBot(Bot):
             
             while len(user_stats["quests"]) < 2:
                 user_stats["quests"].append({})
+
+            if "essences" not in user_stats:
+                user_stats["essences"] = {}
+                user_stats["essences"]["Apples"] = 0
+                user_stats["essences"]["Ivory Dice"] = 0
+                user_stats["essences"]["Chronographs"] = 0
+                user_stats["essences"]["Shields"] = 0
 
             for i in range(len(user_stats["quests"])):
                 if len(user_stats["quests"][i]) < 8:
@@ -216,23 +224,7 @@ class MatchmakingBot(Bot):
                 if ach_user_current_stat >= tier_requirement:
                     ach_tier = ach_tier + 1
 
-            ach_emoji = ''
-
-            match ach_tier:
-                case 1:
-                    ach_emoji = '<:bronze:1399860108665557043>'
-                case 2:
-                    ach_emoji = '<:silver:1399860110389542915>'
-                case 3:
-                    ach_emoji = '<:gold:1399860113883402270>'
-                case 4:
-                    ach_emoji = '<:distinguished:1399860116119093529>'
-                case 5:
-                    ach_emoji = '<:illustrious:1399860117700087888>'
-                case 6:
-                    ach_emoji = '<:stellar:1399860119092854936>'
-                case 7:
-                    ach_emoji = '<:medical_grade:1399860122288783390>'
+            ach_emoji = misc.get_number_emoji(ach_tier)
 
             ach_next_tier = ach_tier + 1
             if ach_tier == 7:

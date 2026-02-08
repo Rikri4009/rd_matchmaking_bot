@@ -45,68 +45,6 @@ class LeaderboardButtons(discord.ui.View):
         await interaction.response.edit_message(embed=leaderboard_embed, view=LeaderboardButtons(self.bot, self.uid, self.category, new_page))
 
 
-class SpecializeButtons(discord.ui.View):
-    def __init__(self, bot: MatchmakingBot, uid):
-        super().__init__(timeout=2000)
-        self.bot = bot
-        self.uid = uid
-
-    @discord.ui.button(label="Apples", style=discord.ButtonStyle.primary)
-    async def apples_pressed(self, button, interaction):
-        if self.uid != str(interaction.user.id):
-            await interaction.respond("This isn't your button!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[self.uid]
-        user_stats["specialization"] = "Apples"
-
-        await interaction.respond("You now specialize in Apples!")
-
-    @discord.ui.button(label="Ivory Dice", style=discord.ButtonStyle.primary)
-    async def dice_pressed(self, button, interaction):
-        if self.uid != str(interaction.user.id):
-            await interaction.respond("This isn't your button!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[self.uid]
-        user_stats["specialization"] = "Ivory Dice"
-
-        await interaction.respond("You now specialize in Ivory Dice!")
-
-    @discord.ui.button(label="Chronographs", style=discord.ButtonStyle.primary)
-    async def chronographs_pressed(self, button, interaction):
-        if self.uid != str(interaction.user.id):
-            await interaction.respond("This isn't your button!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[self.uid]
-        user_stats["specialization"] = "Chronographs"
-
-        await interaction.respond("You now specialize in Chronographs!")
-
-    @discord.ui.button(label="Shields", style=discord.ButtonStyle.primary)
-    async def shields_pressed(self, button, interaction):
-        if self.uid != str(interaction.user.id):
-            await interaction.respond("This isn't your button!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[self.uid]
-        user_stats["specialization"] = "Shields"
-
-        await interaction.respond("You now specialize in Shields!")
-
-    @discord.ui.button(label="None", style=discord.ButtonStyle.secondary)
-    async def prev_pressed(self, button, interaction):
-        if self.uid != str(interaction.user.id):
-            await interaction.respond("This isn't your button!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[self.uid]
-        user_stats["specialization"] = None
-
-        await interaction.respond("You are no longer specializing!")
-
-
 class UserCommands(commands.Cog):
     def __init__(self, bot: MatchmakingBot):
         self.bot = bot
@@ -318,13 +256,13 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         args = command.split()
 
-        if (len(args) == 2) and ((args[0] == "certify") or (args[0] == "a")) and ((args[1]).isdigit()):
-            await self.change_ascension_difficulty(ctx, uid, int(args[1]))
-            return
+        #if (len(args) == 2) and ((args[0] == "certify") or (args[0] == "a")) and ((args[1]).isdigit()):
+        #    await self.change_ascension_difficulty(ctx, uid, int(args[1]))
+        #    return
 
-        if (len(args) == 1) and (args[0] == "specialize"):
-            await self.specializations(ctx, uid)
-            return
+        #if (len(args) == 1) and (args[0] == "specialize"):
+        #    await self.specializations(ctx, uid)
+        #    return
 
         if uid == "1207345676141465622":
             if (len(args) == 1) and (args[0] == "get_backups"):
@@ -337,38 +275,6 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
-
-
-    async def change_ascension_difficulty(self, ctx, uid, difficulty):
-        if (difficulty < 0) or (difficulty > 7):
-            await ctx.respond(f"Invalid certificate!", ephemeral=True)
-            return
-
-        user_stats = self.bot.users_stats[uid]
-
-        if user_stats["highest_set_beaten"] < 5:
-            await ctx.respond(f"You need to beat World Tour as the runner first!", ephemeral=True)
-            return
-
-        if user_stats["highest_ascension_difficulty_beaten"]+1 < difficulty:
-            await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
-            return
-
-        user_stats["current_ascension_difficulty"] = difficulty
-        await ctx.respond(f"Certificate updated!", ephemeral=True)
-        self.bot.save_data()
-
-
-    async def specializations(self, ctx, uid):
-        user_stats = self.bot.users_stats[uid]
-
-        if user_stats["highest_ascension_difficulty_beaten"] < 3:
-            await ctx.respond(f"You haven't unlocked that yet!", ephemeral=True)
-            return
-
-        specializations_embed = discord.Embed(colour = discord.Colour.purple(), title = "Specializations", description = f"Press a button to **specialize** in an item!\nYou are more likely to be offered the item you specialize in.\nAdditionally, you will begin runs with +1 of this item.\n__Specializations only work on Certification 4 or above.__")
-
-        await ctx.respond(embed=specializations_embed, view=SpecializeButtons(self.bot, uid))
 
 
     async def get_backups(self, ctx):
