@@ -286,8 +286,9 @@ async def proceed_helper(self, interaction):
     # if last level
 
     player_stats = self.lobbycommands.bot.users_stats[self.runner_id]
+    
     gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
-    player_stats["exp"] = player_stats["exp"] + gained_exp
+    self.lobbycommands.bot.increment_user_stat(self.runner_id, "exp", gained_exp, True)
 
     if ascension_lobby["s_ranked_so_far"]:
         player_stats["s_ranked_entire_set"] = player_stats["s_ranked_entire_set"] + 1
@@ -347,7 +348,8 @@ async def proceed_helper(self, interaction):
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
 
     # gain exp for a second time since it's doubled on victory
-    gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
+    self.lobbycommands.bot.increment_user_stat(self.runner_id, "exp", gained_exp, True)
+    
     bonus_exp = 0
     for item in ascension_lobby["items"]:
         bonus_exp = bonus_exp + (3 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]

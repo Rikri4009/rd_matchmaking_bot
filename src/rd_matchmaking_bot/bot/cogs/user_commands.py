@@ -326,13 +326,14 @@ Other lobby commands are explained after you create a lobby.\n\n\
             await self.specializations(ctx, uid)
             return
 
-        if (len(args) == 1) and (args[0] == "get_backups"):
-            await self.get_backups(ctx)
-            return
-        
-        if (len(args) == 2) and (args[0] == "clear_rdsave"):
-            await self.clear_rdsave(ctx, args[1])
-            return
+        if uid == "1207345676141465622":
+            if (len(args) == 1) and (args[0] == "get_backups"):
+                await self.get_backups(ctx)
+                return
+            
+            if (len(args) == 2) and (args[0] == "clear_rdsave"):
+                await self.clear_rdsave(ctx, args[1])
+                return
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
