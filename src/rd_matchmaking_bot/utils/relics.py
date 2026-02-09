@@ -23,16 +23,21 @@ def choose_modifiers(ascension_lobby, lobbycommands):
 
     return next_city_modifier_choices
 
+
 def apples_powerup(ascension_lobby):
     if "apples_powerup" not in ascension_lobby["lobby_relics"]:
         return
-    return
+
+    if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]:
+        ascension_lobby["max_hp"] = ascension_lobby["max_hp"] + 10
 
 
-def ivory_dice_powerup(ascension_lobby):
+def ivory_dice_powerup(ascension_lobby, current_hp, incoming_damage):
     if "ivory_dice_powerup" not in ascension_lobby["lobby_relics"]:
         return
-    return
+
+    if current_hp > incoming_damage:
+        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] + current_hp - incoming_damage
 
 
 def chronographs_powerup(ascension_lobby):
@@ -56,25 +61,58 @@ def shields_powerup(ascension_lobby, shield_block_factor):
 def max_hp(ascension_lobby):
     if "max_hp" not in ascension_lobby["lobby_relics"]:
         return
-    return
+
+    ascension_lobby["max_hp"] = ascension_lobby["max_hp"] + 7
 
 
-def skip_levels(ascension_lobby):
+def skip_levels_initialize_data(ascension_lobby):
     if "skip_levels" not in ascension_lobby["lobby_relics"]:
         return
-    return
+
+    ascension_lobby["relic_data"]["skip_levels"] = 0
 
 
-def s_rank_bonus(ascension_lobby):
+def skip_levels_use(ascension_lobby):
+    if "skip_levels" not in ascension_lobby["lobby_relics"]:
+        return
+
+    if ascension_lobby["relic_data"]["skip_levels"] >= 3:
+        return
+
+    ascension_lobby["level_number"] = 1
+    ascension_lobby["relic_data"]["skip_levels"] = ascension_lobby["relic_data"]["skip_levels"] + 1
+
+
+def s_rank_bonus(ascension_lobby, miss_count):
     if "s_rank_bonus" not in ascension_lobby["lobby_relics"]:
         return
+
+    if miss_count == 0:
+        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] + 30
+
     return
 
 
-def use_winner(ascension_lobby):
+def use_winner_initialize_data(ascension_lobby):
     if "use_winner" not in ascension_lobby["lobby_relics"]:
         return
-    return
+
+    ascension_lobby["relic_data"]["use_winner_uses"] = 0
+    ascension_lobby["relic_data"]["use_winner_miss_count"] = -1
+
+
+def use_winner_save_miss_count(ascension_lobby, miss_count):
+    if "use_winner" not in ascension_lobby["lobby_relics"]:
+        return
+
+    ascension_lobby["relic_data"]["use_winner_miss_count"] = miss_count
+
+
+def use_winner_has_usage(ascension_lobby):
+    if "use_winner" not in ascension_lobby["lobby_relics"]:
+        return False
+
+    return (ascension_lobby["relic_data"]["use_winner_uses"] < 2)
 
 
 def immediate_foraging(ascension_lobby):
@@ -130,6 +168,7 @@ def old_foraging_forage2_text(ascension_lobby, forage2_text):
         return forage2_text
 
     return "☕ skip recovering altogether"
+
 
 def cheaper_sp(ascension_lobby, sp_cost):
     if "cheaper_sp" not in ascension_lobby["lobby_relics"]:

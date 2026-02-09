@@ -924,6 +924,9 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                 if (runner_misses != -1) and (support_misses != -1) and (host != player):
                     sp_earned = ascension.calculate_sp(runner_misses, support_misses)
 
+                if player_rank == 1:
+                    relics.use_winner_save_miss_count(ascension_lobby, support_misses)
+
             total_sp_earned = total_sp_earned + sp_earned
 
             placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4}\🎵)\n"
@@ -1018,6 +1021,8 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             level_difficulty = current_lobby['level']['difficulty']
 
             runner_misses = current_lobby["players"][host]["miss_count"]
+
+            relics.s_rank_bonus(ascension_lobby, runner_misses)
 
             ascension_lobby['current_sp'] = ascension_lobby['current_sp'] + total_sp_earned
 

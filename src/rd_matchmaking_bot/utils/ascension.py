@@ -439,6 +439,8 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
         proceed_color = discord.ButtonStyle.danger
         proceed_emoji = "☠️"
 
+    has_use_winner_usage = relics.use_winner_has_usage(ascension_lobby)
+
     class AscensionButtonsItem(discord.ui.View):
         def __init__(self, lobbycommands, lobby_name, runner_id):
             super().__init__(timeout=20000)
@@ -460,13 +462,12 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
                 await interaction.respond("You don't have any Pineapples! I mean Apples!")
                 return
 
-            #if ascension_lobby["ascension_difficulty"] >= 1:
-            #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
-
             ascension_lobby["items"]["Apples"] = ascension_lobby["items"]["Apples"] - 1
             ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + get_apple_heal_amount(ascension_lobby)
             #if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
             #    ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
+
+            relics.apples_powerup(ascension_lobby)
 
             if self.runner_id == "539019682968240128":
                 ascension_lobby["current_hp"] = 0
@@ -496,11 +497,11 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
 
             self.stop()
 
-            #if ascension_lobby["ascension_difficulty"] >= 1:
-            #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
-
             ascension_lobby["items"]["Ivory Dice"] = ascension_lobby["items"]["Ivory Dice"] - 1
             ascension_lobby["die_used"] = True
+
+            relics.ivory_dice_powerup(ascension_lobby, ascension_lobby["current_hp"], calculate_item_applied_incoming_damage(ascension_lobby))
+
             await interaction.channel.send("Ivory Die used!")
 
             await proceed_helper(self, interaction)
@@ -520,9 +521,6 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
                 return
 
             self.stop()
-
-            #if ascension_lobby["ascension_difficulty"] >= 1:
-            #    ascension_lobby["current_hp"] = ascension_lobby["current_hp"] - 2
 
             ascension_lobby["items"]["Chronographs"] = ascension_lobby["items"]["Chronographs"] - 1
             ascension_lobby["chronograph_used"] = True #this gets checked in roll_level_from_settings, and is set off in finish_match
@@ -604,6 +602,24 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
             self.stop()
             await proceed_helper(self, interaction)
 
+        if has_use_winner_usage:
+            @discord.ui.button(label="Use Winner's Score", emoji='💾', style=discord.ButtonStyle.primary)
+            async def view_essences_pressed(self, button, interaction):
+                uid = str(interaction.user.id)
+                if uid != self.runner_id:
+                    await interaction.respond("Not your button!", ephemeral=True)
+                    return
+
+                game_data = self.lobbycommands.bot.game_data
+                ascension_lobby = game_data["ascension"][self.runner_id]
+
+                ascension_lobby["incoming_damage"] = ascension_lobby["relic_data"]["use_winner_miss_count"]
+                ascension_lobby["relic_data"]["use_winner_uses"] = ascension_lobby["relic_data"]["use_winner_uses"] + 1
+
+                await interaction.response.defer()
+                await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
+                return
+
     return AscensionButtonsItem(lobbycommands, lobby_name, runner_id)
 
 
@@ -638,6 +654,8 @@ class AscensionButtonsEssences(discord.ui.View):
         #if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
         #    ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
 
+        relics.apples_powerup(ascension_lobby)
+
         await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
         await interaction.respond("Apples' Essence used!")
 
@@ -662,6 +680,9 @@ class AscensionButtonsEssences(discord.ui.View):
         self.runner_essences["Ivory Dice"] = self.runner_essences["Ivory Dice"] - essence_cost
         ascension_lobby["essence_uses"] = ascension_lobby["essence_uses"] + 1
         ascension_lobby["die_used"] = True
+
+        relics.ivory_dice_powerup(ascension_lobby, ascension_lobby["current_hp"], calculate_item_applied_incoming_damage(ascension_lobby))
+
         await interaction.channel.send("Ivory Die's Essence used!")
 
         await proceed_helper(self, interaction)
@@ -1034,6 +1055,8 @@ async def recover_helper(self, interaction):
     ascension_lobby["current_set"] = ascension_lobby["current_set"] + 1
     ascension_lobby["level_number"] = 0
 
+    relics.skip_levels_use(ascension_lobby)
+
     begin_set(self.lobbycommands, self.runner_id, self.lobby_name)
     await interaction.response.defer()
     await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
@@ -1132,6 +1155,8 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
         ascension_lobby["max_hp"] = max_hp
         ascension_lobby["current_hp"] = max_hp
 
+    relics.max_hp(ascension_lobby)
+
     ascension_lobby["current_sp"] = 0
     ascension_lobby["sp_times_used"] = 0
     ascension_lobby["sp_spent"] = 0
@@ -1149,6 +1174,8 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
         ascension_lobby["current_set"] = 1
 
     ascension_lobby["level_number"] = 0
+
+    relics.skip_levels_use(ascension_lobby)
 
     ascension_lobby["items"]["Apples"] = 0
     ascension_lobby["items"]["Ivory Dice"] = 1
@@ -1170,6 +1197,10 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["no_levels_found_damage_multiplier"] = 1
 
     ascension_lobby["set_modifiers_override"] = []
+
+    ascension_lobby["relic_data"] = {}
+    relics.skip_levels_initialize_data(ascension_lobby)
+    relics.use_winner_initialize_data(ascension_lobby)
 
     self.bot.save_data()
 
@@ -1486,13 +1517,16 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
     if (ascension_difficulty >= 6) and (ascension_lobby["current_set"] == 2):
         recover_text = ""
 
+    forage2_text = f"play an extra {forage_2_difficulty}"
+    forage2_text = relics.old_foraging_forage2_text(ascension_lobby, forage2_text)
+
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional \🎵.\n\n\
 {recover_text}\
 You can choose to **proceed** to the next set now...\n\
 Or, you can first play an extra {forage_1_difficulty} this set to **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}...\n\
-Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])}.")
+Or, you can {forage2_text} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])}.")
     return level_embed
 
 

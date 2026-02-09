@@ -41,7 +41,7 @@
         "skip_levels": {
             "name": "Self-Running Shoes",
             "emoji": "👟",
-            "description": "Skip the first level of the first 2 cities you encounter"
+            "description": "Skip the first level of the first 3 cities you encounter"
         },
         "s_rank_bonus": {
             "name": "Celebratory Piñata",

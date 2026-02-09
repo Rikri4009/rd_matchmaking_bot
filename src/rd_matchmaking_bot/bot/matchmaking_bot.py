@@ -179,6 +179,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["relic_damage_multipliers"] = []
             if "set_modifiers_override" not in endless_lobby:
                 endless_lobby["set_modifiers_override"] = []
+            if "relic_data" not in endless_lobby:
+                endless_lobby["relic_data"] = {}
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None
