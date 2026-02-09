@@ -781,7 +781,7 @@ async def proceed_helper(self, interaction):
         # this upcoming level is the final boss
         if ascension_lobby["set_difficulties"][ascension_lobby["level_number"]] == "???":
 
-            if ascension_lobby["ascension_difficulty"] < 5: #no recovering after city 7 at certificate 5
+            if ascension_lobby["ascension_difficulty"] < 4: #no recovering after city 7 at certificate 4
                 ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 2))
 
                 await interaction.channel.send("You've made it to the end of City 7!\nThankfully, you're given a bit of reprieve, and heal 1/2 of your remaining HP.")
@@ -1024,7 +1024,7 @@ async def recover_helper(self, interaction):
     ascension_lobby = game_data["ascension"][self.runner_id]
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
 
-    if not relics.old_foraging_skip_level(ascension_lobby):
+    if (not relics.old_foraging_skip_level(ascension_lobby)) and (not ((ascension_difficulty >= 6) and (ascension_lobby["current_set"] == 2))):
         if ascension_difficulty < 1: # recover 2/3rds of missing hp
             ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((2*ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 3))
         else: #recover 1/2
@@ -1427,9 +1427,8 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
         c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
         level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **{c5_modifier}**", value = sets_config[c5_modifier]['description'], inline = False)
 
-    if (ascension_difficulty >= 4) and (level_chosen['difficulty'] == "???"):
-        c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
-        level_embed.add_field(name = f"<:distinguished:1399860116119093529> Extra Modifier: **Hard Difficulty Button**", value = "You must use the hard difficulty button!", inline = False)
+    if (ascension_difficulty >= 5) and (level_chosen['difficulty'] == "???"):
+        level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **Hard Difficulty Button**", value = "You must use the hard difficulty button!", inline = False)
 
     return level_embed
 
@@ -1483,10 +1482,14 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     set_number = ascension_lobby["current_set"]
 
+    recover_text = f"You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n"
+    if (ascension_difficulty >= 6) and (ascension_lobby["current_set"] == 2):
+        recover_text = ""
+
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
 You have also gained {gained_exp} additional \🎵.\n\n\
-You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n\
+{recover_text}\
 You can choose to **proceed** to the next set now...\n\
 Or, you can first play an extra {forage_1_difficulty} this set to **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}...\n\
 Or, you can play an extra {forage_2_difficulty} to **forage 2** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_2'])}.")
@@ -1608,15 +1611,15 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 1:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:bronze:1399860108665557043> Starting runs costs 1 🎫 **/** Recovering heals less HP **/** Clear cities 2-6"
     if ascension_difficulty >= 2:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear cities 3-7 **/** Apples heal more"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:silver:1399860110389542915> Easier levels deal more damage **/** Clear cities 2-7 **/** Apples heal more"
     if ascension_difficulty >= 3:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:gold:1399860113883402270> City 3 invades easier levels **/** City 3 is harder **/** The final boss appears"
     if ascension_difficulty >= 4:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> More difficult foraging **/** Hard button final boss **/** Unlock specialization" # hard button
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:distinguished:1399860116119093529> More difficult foraging **/** No recovery in City 7 **/** Unlock specialization" # hard button
     if ascension_difficulty >= 5:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> City 5 invades easy levels **/** City 5 is harder **/** No recovering after city 7"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> City 5 invades easy levels **/** City 5 is harder **/** Hard button final boss"
     if ascension_difficulty >= 6:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** Clear cities 2-7 **/** Apples heal even more"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** No recovery after City 2 **/** Apples heal even more"
     if ascension_difficulty >= 7:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd cities are corrupted **/** Clear cities 1-7 **/** Double damage final boss" # double damage
 

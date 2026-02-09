@@ -125,6 +125,11 @@ def old_foraging_skip_level(ascension_lobby):
 
     return True
 
+def old_foraging_forage2_text(ascension_lobby, forage2_text):
+    if "old_foraging" not in ascension_lobby["lobby_relics"]:
+        return forage2_text
+
+    return "☕ skip recovering altogether"
 
 def cheaper_sp(ascension_lobby, sp_cost):
     if "cheaper_sp" not in ascension_lobby["lobby_relics"]:

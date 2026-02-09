@@ -41,7 +41,7 @@
         "skip_levels": {
             "name": "Self-Running Shoes",
             "emoji": "👟",
-            "description": "Skip the first level of the first 2 cities"
+            "description": "Skip the first level of the first 2 cities you encounter"
         },
         "s_rank_bonus": {
             "name": "Celebratory Piñata",
@@ -51,7 +51,7 @@
         "use_winner": {
             "name": "Backup Disk",
             "emoji": "💾",
-            "description": "Once per run, use the match winner's miss count instead of yours"
+            "description": "Twice per run, use the match winner's miss count instead of yours"
         },
         "immediate_foraging": {
             "name": "Omni-Magnet",
