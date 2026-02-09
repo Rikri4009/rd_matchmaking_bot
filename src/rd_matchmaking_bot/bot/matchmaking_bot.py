@@ -110,6 +110,9 @@ class MatchmakingBot(Bot):
                 user_stats["owned_relics"] = {}
                 user_stats["owned_relics"]["easy_button"] = 1
 
+            if ("choose_modifiers" not in user_stats["owned_relics"]) and (user_stats["highest_set_beaten"] >= 5):
+                user_stats["owned_relics"]["choose_modifiers"] = 1
+
             if "equipped_relics" not in user_stats:
                 user_stats["equipped_relics"] = []
 
@@ -172,6 +175,10 @@ class MatchmakingBot(Bot):
                 endless_lobby["essence_uses"] = 0
             if "lobby_relics" not in endless_lobby:
                 endless_lobby["lobby_relics"] = []
+            if "relic_damage_multipliers" not in endless_lobby:
+                endless_lobby["relic_damage_multipliers"] = []
+            if "set_modifiers_override" not in endless_lobby:
+                endless_lobby["set_modifiers_override"] = []
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None

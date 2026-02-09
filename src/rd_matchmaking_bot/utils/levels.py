@@ -1,6 +1,6 @@
 import json
 import random
-import hashlib
+import statistics
 
 import rd_matchmaking_bot.utils.data as data
 
@@ -20,6 +20,26 @@ def tag_is_for_event(tag):
     
     return False
 
+
+def get_difficulty_median_hits(cafe_levels):
+    difficulty_hit_lists = {} #dont take this out of context
+    difficulty_hit_lists['0'] = []
+    difficulty_hit_lists['1'] = []
+    difficulty_hit_lists['2'] = []
+    difficulty_hit_lists['3'] = []
+
+    for line in cafe_levels:
+        if line['approval'] == '10':
+            difficulty_hit_lists[line['difficulty']].append(int(line['total_hits_approx']))
+
+    difficulty_median_hits = {}
+
+    for difficulty in difficulty_hit_lists:
+        difficulty_median_hits[difficulty] = statistics.median(difficulty_hit_lists[difficulty])
+
+    return difficulty_median_hits
+
+
 def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, users_rdsaves, tag_facet_array, require_gameplay, special_requirements):
 
     if difficulty == "Polarity":
@@ -34,6 +54,8 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
     path = data.get_path("resources/data")
 
     cafe_levels = data.read_file(path, "cafe_query.csv")
+
+    difficulty_median_hits = get_difficulty_median_hits(cafe_levels)
 
     for line in cafe_levels:
         level_prd = (line['approval'] == '10')
@@ -114,6 +136,14 @@ def roll_random_level(peer_reviewed, played_before, difficulty, user_id_list, us
                         level_has_event_tag = True
                 
                 if not level_has_event_tag:
+                    special_check = False
+
+            if (requirement == "short"):
+                if int(line["total_hits_approx"]) > difficulty_median_hits[line['difficulty']]:
+                    special_check = False
+
+            if (requirement == "long"):
+                if int(line["total_hits_approx"]) < difficulty_median_hits[line['difficulty']]:
                     special_check = False
 
         if pr_check and diff_check and tags_facets_check and has_gameplay_check and special_check:

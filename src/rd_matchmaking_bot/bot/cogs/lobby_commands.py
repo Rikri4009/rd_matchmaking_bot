@@ -9,6 +9,7 @@ from rd_matchmaking_bot.bot.matchmaking_bot import MatchmakingBot
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
 import rd_matchmaking_bot.utils.ascension as ascension
+import rd_matchmaking_bot.utils.relics as relics
 
 
 class LobbyButtonsOpen(discord.ui.View):
@@ -152,7 +153,7 @@ class LobbyCommands(commands.Cog):
         elif status == 'Item':
             return ascension.get_ascension_buttons_item(self, lobby_name, host_id)
         elif status == 'Choice':
-            return ascension.AscensionButtonsChoice(self, lobby_name, host_id)
+            return ascension.get_ascension_buttons_choice(self, lobby_name, host_id)
         elif status == 'Game Over':
             return ascension.AscensionButtonsGameOver(self, lobby_name, host_id)
         elif status == 'Victory':
@@ -1043,6 +1044,15 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             if int(current_lobby['level']['total_hits_approx']) >= 300:
                 damage_factor = damage_factor * 300 / int(current_lobby['level']['total_hits_approx'])
+
+            relics.easy_button_damage(ascension_lobby)
+            relics.double_foraging_damage(ascension_lobby)
+            relics.short_levels_damage(ascension_lobby)
+            relics.long_levels_damage(ascension_lobby)
+
+            for multiplier in ascension_lobby["relic_damage_multipliers"]:
+                damage_factor = damage_factor * multiplier
+            ascension_lobby["relic_damage_multipliers"] = []
 
             ascension_lobby["incoming_damage"] = math.floor(runner_misses * damage_factor)
 

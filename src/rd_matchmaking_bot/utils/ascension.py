@@ -4,6 +4,7 @@ import math
 import copy
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
+import rd_matchmaking_bot.utils.relics as relics
 
 async def newgame_button_pressed(self, button, interaction):
     uid = str(interaction.user.id)
@@ -221,7 +222,7 @@ def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
     return AscensionButtonsWelcome(lobbycommands, lobby_name, runner_id)
 
 
-def get_equipped_relics(ctx, lobbycommands, runner_id):
+def get_equipped_relics_text(ctx, lobbycommands, runner_id):
     relic_information = lobbycommands.bot.get_relic_information()
     runner_stats = lobbycommands.bot.users_stats[runner_id]
     runner_owned_relics = runner_stats["owned_relics"]
@@ -254,7 +255,7 @@ def get_relics_embed(ctx, lobbycommands, runner_id):
     relics_text = "Relics are permanent items that give you special bonuses during runs. You can select your relic loadout here. (You can only equip 1 of each relic.)\n\n"
     relics_text = relics_text + "You can purchase a random relic if you have 40 💎.\n\n"
 
-    equipped_relics_text = get_equipped_relics(ctx, lobbycommands, runner_id)
+    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id)
 
     relics_text = relics_text + equipped_relics_text
 
@@ -464,8 +465,8 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
 
             ascension_lobby["items"]["Apples"] = ascension_lobby["items"]["Apples"] - 1
             ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + get_apple_heal_amount(ascension_lobby)
-            if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
-                ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
+            #if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
+            #    ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
 
             if self.runner_id == "539019682968240128":
                 ascension_lobby["current_hp"] = 0
@@ -564,10 +565,12 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
                 await interaction.respond("You don't have enough SP!")
                 return
 
-            await interaction.respond(f"{max(5, ascension_lobby['current_sp'] // 2)} SP used!")
+            sp_cost = get_sp_cost(ascension_lobby)
 
-            ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + max(5, ascension_lobby["current_sp"] // 2)
-            ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - max(5, ascension_lobby["current_sp"] // 2)
+            await interaction.respond(f"{sp_cost} SP used!")
+
+            ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + sp_cost
+            ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - sp_cost
             ascension_lobby["sp_times_used"] = ascension_lobby["sp_times_used"] + 1
             await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
             return
@@ -623,7 +626,7 @@ class AscensionButtonsEssences(discord.ui.View):
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
-        essence_cost = 5 * (2 ** ascension_lobby["essence_uses"])
+        essence_cost = get_essence_cost(ascension_lobby)
 
         if self.runner_essences["Apples"] < essence_cost:
             await interaction.respond("You don't have enough Apples' Essence!")
@@ -632,8 +635,8 @@ class AscensionButtonsEssences(discord.ui.View):
         self.runner_essences["Apples"] = self.runner_essences["Apples"] - essence_cost
         ascension_lobby["essence_uses"] = ascension_lobby["essence_uses"] + 1
         ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + get_apple_heal_amount(ascension_lobby)
-        if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
-            ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
+        #if ascension_lobby["current_hp"] > ascension_lobby["max_hp"]: #clamp to max
+        #    ascension_lobby["current_hp"] = ascension_lobby["max_hp"]
 
         await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
         await interaction.respond("Apples' Essence used!")
@@ -648,7 +651,7 @@ class AscensionButtonsEssences(discord.ui.View):
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
-        essence_cost = 5 * (2 ** ascension_lobby["essence_uses"])
+        essence_cost = get_essence_cost(ascension_lobby)
 
         if self.runner_essences["Ivory Dice"] < essence_cost:
             await interaction.respond("You don't have enough Ivory Dice's Essence!")
@@ -673,7 +676,7 @@ class AscensionButtonsEssences(discord.ui.View):
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
-        essence_cost = 5 * (2 ** ascension_lobby["essence_uses"])
+        essence_cost = get_essence_cost(ascension_lobby)
 
         if self.runner_essences["Chronographs"] < essence_cost:
             await interaction.respond("You don't have enough Chronographs' Essence!")
@@ -698,7 +701,7 @@ class AscensionButtonsEssences(discord.ui.View):
         game_data = self.lobbycommands.bot.game_data
         ascension_lobby = game_data["ascension"][self.runner_id]
 
-        essence_cost = 5 * (2 ** ascension_lobby["essence_uses"])
+        essence_cost = get_essence_cost(ascension_lobby)
 
         if self.runner_essences["Shields"] < essence_cost:
             await interaction.respond("You don't have enough Shields' Essence!")
@@ -807,18 +810,18 @@ async def proceed_helper(self, interaction):
     # if last level
 
     player_stats = self.lobbycommands.bot.users_stats[self.runner_id]
-    
-    gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
-    self.lobbycommands.bot.increment_user_stat(self.runner_id, "exp", gained_exp, True)
 
-    if ascension_lobby["s_ranked_so_far"]:
-        player_stats["s_ranked_entire_set"] = player_stats["s_ranked_entire_set"] + 1
+    num_items_to_forage = ascension_lobby["extra"]
+
+    if num_items_to_forage == 0: #the level just played was not a forage level
+        gained_exp = 6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"]
+        self.lobbycommands.bot.increment_user_stat(self.runner_id, "exp", gained_exp, True)
+
+        if ascension_lobby["s_ranked_so_far"]:
+            player_stats["s_ranked_entire_set"] = player_stats["s_ranked_entire_set"] + 1
 
     # is the last level but not the last set:
     if not is_last_set(ascension_lobby):
-
-        num_items_to_forage = ascension_lobby["extra"]
-
         if num_items_to_forage == 0: #offer item
             player_stats["highest_set_beaten"] = max(player_stats["highest_set_beaten"], ascension_lobby["current_set"])
             player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
@@ -856,10 +859,10 @@ async def proceed_helper(self, interaction):
         else: #don't offer
             ascension_lobby["status"] = "Open"
             auxiliary_lobby["status"] = "Open"
-            chosen_item = ascension_lobby["chosen_item_1"]
-            if num_items_to_forage == 2:
-                chosen_item = ascension_lobby["chosen_item_2"]
-            ascension_lobby["items"][chosen_item] = ascension_lobby["items"][chosen_item] + num_items_to_forage
+
+            if not relics.immediate_foraging(ascension_lobby):
+                gain_foraging_items(ascension_lobby, num_items_to_forage)
+
             await recover_helper(self, interaction)
             return
 
@@ -867,6 +870,9 @@ async def proceed_helper(self, interaction):
     player_stats["highest_set_beaten"] = max(player_stats["highest_set_beaten"], ascension_lobby["current_set"])
     player_stats["highest_ascension_difficulty_beaten"] = max(player_stats["highest_ascension_difficulty_beaten"], ascension_lobby['ascension_difficulty'])
     player_stats["total_sets_beaten"] = player_stats["total_sets_beaten"] + 1
+
+    if "choose_modifiers" not in player_stats["owned_relics"]:
+        player_stats["owned_relics"]["choose_modifiers"] = 1
 
     # gain exp for a second time since it's doubled on victory
     self.lobbycommands.bot.increment_user_stat(self.runner_id, "exp", gained_exp, True)
@@ -889,82 +895,128 @@ def weighted_choose_from_dict(item_dict):
     return random.choices(item_list, weights = item_weights)[0]
 
 
-class AscensionButtonsChoice(discord.ui.View):
-    def __init__(self, lobbycommands, lobby_name, runner_id):
-        super().__init__(timeout=20000)
-        self.lobbycommands = lobbycommands
-        self.lobby_name = lobby_name
-        self.runner_id = runner_id
+def get_ascension_buttons_choice(lobbycommands, lobby_name, runner_id):
+    game_data = lobbycommands.bot.game_data
+    ascension_lobby = game_data["ascension"][runner_id]
 
-    @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
-    async def proceed_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
+    forage2_emoji = None
+    forage2_emoji = relics.old_foraging_emoji(ascension_lobby, forage2_emoji)
 
-        self.stop()
+    next_city_modifier_choices = relics.choose_modifiers(ascension_lobby, lobbycommands)
 
-        await recover_helper(self, interaction)
-        self.lobbycommands.bot.save_data()
+    class AscensionButtonsChoice(discord.ui.View):
+        def __init__(self, lobbycommands, lobby_name, runner_id):
+            super().__init__(timeout=20000)
+            self.lobbycommands = lobbycommands
+            self.lobby_name = lobby_name
+            self.runner_id = runner_id
 
-    @discord.ui.button(label="Forage 1", style=discord.ButtonStyle.primary)
-    async def forage1_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
+        @discord.ui.button(label="Proceed", style=discord.ButtonStyle.success)
+        async def proceed_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
 
-        self.stop()
+            self.stop()
 
-        game_data = self.lobbycommands.bot.game_data
-        ascension_lobby = game_data["ascension"][self.runner_id]
-        auxiliary_lobby = game_data["lobbies"][self.lobby_name]
+            await recover_helper(self, interaction)
 
-        ascension_difficulty = ascension_lobby["ascension_difficulty"]
+        @discord.ui.button(label="Forage 1", style=discord.ButtonStyle.primary)
+        async def forage1_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
 
-        if ascension_difficulty < 4:
-            (ascension_lobby["set_difficulties"]).append("Medium")
-        else:
-            (ascension_lobby["set_difficulties"]).append("Tough")
+            self.stop()
 
-        ascension_lobby["extra"] = 1
+            game_data = self.lobbycommands.bot.game_data
+            ascension_lobby = game_data["ascension"][self.runner_id]
+            auxiliary_lobby = game_data["lobbies"][self.lobby_name]
 
-        ascension_lobby["status"] = "Open"
-        auxiliary_lobby["status"] = "Open"
+            ascension_difficulty = ascension_lobby["ascension_difficulty"]
 
-        await interaction.response.defer()
-        await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
-        self.lobbycommands.bot.save_data()
+            if ascension_difficulty < 4:
+                (ascension_lobby["set_difficulties"]).append("Medium")
+            else:
+                (ascension_lobby["set_difficulties"]).append("Tough")
 
-    @discord.ui.button(label="Forage 2", style=discord.ButtonStyle.danger)
-    async def forage2_pressed(self, button, interaction):
-        uid = str(interaction.user.id)
-        if uid != self.runner_id:
-            await interaction.respond("Not your button!", ephemeral=True)
-            return
+            ascension_lobby["extra"] = 1
 
-        self.stop()
+            if relics.immediate_foraging(ascension_lobby):
+                gain_foraging_items(ascension_lobby, 1)
 
-        game_data = self.lobbycommands.bot.game_data
-        ascension_lobby = game_data["ascension"][self.runner_id]
-        auxiliary_lobby = game_data["lobbies"][self.lobby_name]
+            ascension_lobby["status"] = "Open"
+            auxiliary_lobby["status"] = "Open"
 
-        ascension_difficulty = ascension_lobby["ascension_difficulty"]
+            await interaction.response.defer()
+            await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+            self.lobbycommands.bot.save_data()
 
-        if ascension_difficulty < 4:
-            (ascension_lobby["set_difficulties"]).append("Tough")
-        else:
-            (ascension_lobby["set_difficulties"]).append("Very Tough")
+        @discord.ui.button(label="Forage 2", emoji=forage2_emoji, style=discord.ButtonStyle.danger)
+        async def forage2_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
 
-        ascension_lobby["extra"] = 2
+            self.stop()
 
-        ascension_lobby["status"] = "Open"
-        auxiliary_lobby["status"] = "Open"
+            game_data = self.lobbycommands.bot.game_data
+            ascension_lobby = game_data["ascension"][self.runner_id]
+            auxiliary_lobby = game_data["lobbies"][self.lobby_name]
 
-        await interaction.response.defer()
-        await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
-        self.lobbycommands.bot.save_data()
+            ascension_lobby["extra"] = 2
+
+            if relics.old_foraging_skip_level(ascension_lobby):
+                gain_foraging_items(ascension_lobby, 2)
+                await recover_helper(self, interaction)
+                return
+
+            if relics.immediate_foraging(ascension_lobby):
+                gain_foraging_items(ascension_lobby, 2)
+
+            ascension_difficulty = ascension_lobby["ascension_difficulty"]
+
+            if ascension_difficulty < 4:
+                (ascension_lobby["set_difficulties"]).append("Tough")
+            else:
+                (ascension_lobby["set_difficulties"]).append("Very Tough")
+
+            ascension_lobby["status"] = "Open"
+            auxiliary_lobby["status"] = "Open"
+
+            await interaction.response.defer()
+            await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+            self.lobbycommands.bot.save_data()
+
+        if len(next_city_modifier_choices) > 1:
+            @discord.ui.select(
+                placeholder = "🧭 Choose next city modifier",
+                min_values = 1,
+                max_values = 1,
+                options = next_city_modifier_choices
+            )
+            async def relics_selected(self, select, interaction):
+                uid = str(interaction.user.id)
+                if uid != self.runner_id:
+                    await interaction.respond("Not your selection!", ephemeral=True)
+                    return
+
+                ascension_lobby["set_modifiers_override"] = [select.values[0]]
+
+                await interaction.response.defer()
+                await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+                return
+
+    return AscensionButtonsChoice(lobbycommands, lobby_name, runner_id)
+
+def gain_foraging_items(ascension_lobby, item_count):
+    chosen_item = ascension_lobby["chosen_item_1"]
+    if item_count > 1:
+        chosen_item = ascension_lobby["chosen_item_2"]
+    ascension_lobby["items"][chosen_item] = ascension_lobby["items"][chosen_item] + relics.double_foraging_item_count(ascension_lobby, item_count)
 
 
 async def recover_helper(self, interaction):
@@ -972,10 +1024,11 @@ async def recover_helper(self, interaction):
     ascension_lobby = game_data["ascension"][self.runner_id]
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
 
-    if ascension_difficulty < 1: # recover 2/3rds of missing hp
-        ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((2*ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 3))
-    else: #recover 1/2
-        ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 2))
+    if not relics.old_foraging_skip_level(ascension_lobby):
+        if ascension_difficulty < 1: # recover 2/3rds of missing hp
+            ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((2*ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 3))
+        else: #recover 1/2
+            ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 2))
 
     # progress set
     ascension_lobby["current_set"] = ascension_lobby["current_set"] + 1
@@ -1043,7 +1096,7 @@ def get_ascension_welcome_embed(self, ctx, name, runner_id):
 
     ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
 
-    equipped_relics_text = get_equipped_relics(ctx, self, runner_id) + "\n"
+    equipped_relics_text = get_equipped_relics_text(ctx, self, runner_id) + "\n"
 
     specialization_text = ""
     if ascension_difficulty >= 4:
@@ -1104,6 +1157,8 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     ascension_lobby["essence_uses"] = 0
 
+    ascension_lobby["lobby_relics"] = runner_stats["equipped_relics"]
+
     specialization = runner_stats["specialization"]
     ascension_lobby["specialization"] = specialization
 
@@ -1114,9 +1169,25 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     ascension_lobby["no_levels_found_damage_multiplier"] = 1
 
+    ascension_lobby["set_modifiers_override"] = []
+
     self.bot.save_data()
 
     begin_set(self, runner_id, lobby_name)
+
+
+def get_set_modifier_options(ascension_lobby, set_number, lobbycommands):
+    sets_config = lobbycommands.bot.get_sets_config()
+    set_number_str = str(set_number)
+    ascension_difficulty = ascension_lobby["ascension_difficulty"]
+
+    if len(ascension_lobby["set_modifiers_override"]) > 0:
+        return ascension_lobby["set_modifiers_override"]
+
+    if (ascension_difficulty < 7) or (set_number % 2 == 0):
+        return sets_config[set_number_str]['modifier']
+
+    return sets_config[set_number_str]['modifier_hard']
 
 
 def begin_set(self, player_id, lobby_name):
@@ -1140,12 +1211,12 @@ def begin_set(self, player_id, lobby_name):
     ascension_lobby['set_theme'] = set_theme
 
     set_modifier = 'None'
-    if (ascension_difficulty < 7) or (set_number % 2 == 0):
-        if len(sets_config[set_number_str]['modifier']) != 0:
-            set_modifier = random.choice(sets_config[set_number_str]['modifier'])
-    else:
-        if len(sets_config[set_number_str]['modifier_hard']) != 0:
-            set_modifier = random.choice(sets_config[set_number_str]['modifier_hard'])
+
+    set_modifier_options = get_set_modifier_options(ascension_lobby, ascension_lobby['current_set'], self)
+    ascension_lobby["set_modifiers_override"] = []
+
+    if len(set_modifier_options) != 0:
+        set_modifier = random.choice(set_modifier_options)
 
     ascension_lobby['set_modifier'] = set_modifier
 
@@ -1230,6 +1301,8 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
     set_difficulties_bold[level_number] = "**" + set_difficulties_bold[level_number] + "**"
     set_difficulties_text = ' -> '.join(set_difficulties_bold)
 
+    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id) + "\n\n"
+
     items_text = get_current_items_text(ctx, ascension_lobby)
 
     ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
@@ -1247,7 +1320,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
         is_open_text = "# This lobby is open!\nPress \"**Join**\" to join.\n\n"
 
     embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\
-{is_open_text}{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{items_text}**Support:** {support}")
+{is_open_text}{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{equipped_relics_text}{items_text}**Support:** {support}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
 
@@ -1316,6 +1389,8 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
         single_player_facet["single_player"] = 1
         append_tag_facet_options_to_array([], single_player_facet)
 
+    relics.short_levels_roll_settings(ascension_lobby, roll_settings)
+    relics.long_levels_roll_settings(ascension_lobby, roll_settings)
 
 def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_dict, level_chosen, ascension_lobby):
     ready_list = ''
@@ -1337,9 +1412,9 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
     levels.add_level_to_embed(level_embed, level_chosen)
 
     if level_chosen['difficulty'] == "???":
-        level_embed.add_field(name = f"Modifier: None!", value = "City 7's usual modifier does **NOT** apply to this level!", inline = False)
+        level_embed.add_field(name = f"‼️ Modifier: None!", value = "City 7's usual modifier does **NOT** apply to this level!", inline = False)
     elif (set_modifier != "None"):
-        level_embed.add_field(name = f"Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
+        level_embed.add_field(name = f"‼️ Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
 
     level_number = ascension_lobby["level_number"]
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
@@ -1362,7 +1437,7 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
 def get_ascension_item_embed(ctx, lobby_name, runner_id, ascension_lobby):
     items_text = get_current_items_text(ctx, ascension_lobby)
 
-    sp_cost = max(5, ascension_lobby["current_sp"] // 2)
+    sp_cost = get_sp_cost(ascension_lobby)
 
     set_number = ascension_lobby["current_set"]
 
@@ -1371,6 +1446,12 @@ You are about to take {calculate_item_applied_incoming_damage(ascension_lobby)} 
 Press the corresponding button below to use an item.\n\n\
 {items_text}Press \"**Use SP**\" to spend {sp_cost} SP to reduce incoming damage by 3. (This is more expensive if you have a lot of SP!)")
     return level_embed
+
+
+def get_sp_cost(ascension_lobby):
+    sp_cost = max(5, ascension_lobby['current_sp'] // 2)
+    sp_cost = relics.cheaper_sp(ascension_lobby, sp_cost)
+    return sp_cost
 
 
 def get_ascension_essences_embed(ctx, lobby_name, runner_id, ascension_lobby, runner_essences):
@@ -1428,8 +1509,11 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     for item in ascension_lobby["items"]:
         total_essence = total_essence + (1 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
 
+    compass_text = ""
     certification_text = ""
-    if ascension_lobby["ascension_difficulty"] > 0:
+    if ascension_lobby["ascension_difficulty"] == 0:
+        compass_text = "You have been issued your Heart's Compass! Equip it through Relics.\n\n"
+    else:
         certification_text = "**{ CERTIFICATE " + str(ascension_lobby["ascension_difficulty"]) + " OBTAINED }**\n\n"
 
     spec_unlocked_text = ""
@@ -1439,7 +1523,7 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     victory_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
 You have gained {gained_exp} additional \🎵.\n\
-Your remaining items have been converted to {total_essence} total essence.\n\n{spec_unlocked_text}\
+Your remaining items have been converted to {total_essence} total essence.\n\n{spec_unlocked_text}{compass_text}\
 -# You can now attempt Certification {ascension_lobby['ascension_difficulty']+1}...")
     return victory_embed
 
@@ -1462,7 +1546,7 @@ def get_current_items_text(ctx, ascension_lobby):
 
 
 def get_essences_text(ctx, ascension_lobby, runner_essences):
-    essence_cost = 5 * (2 ** ascension_lobby["essence_uses"])
+    essence_cost = get_essence_cost(ascension_lobby)
 
     items_text = "*Your essences (hover for info):*\n"
     for item in runner_essences.keys():
@@ -1472,6 +1556,12 @@ def get_essences_text(ctx, ascension_lobby, runner_essences):
     items_text = items_text + f"\nYou can spend **{str(essence_cost)}** of an essence in order to activate its respective item effect. (This cost doubles per essence usage this run.)"
 
     return items_text
+
+
+def get_essence_cost(ascension_lobby):
+    base_cost = 5
+    base_cost = relics.cheaper_essence(ascension_lobby, base_cost)
+    return base_cost * (2 ** ascension_lobby["essence_uses"])
 
 
 def get_item_text(ctx, ascension_lobby, item):
@@ -1551,8 +1641,11 @@ def calculate_sp(runner_misses, support_misses):
 def calculate_item_applied_incoming_damage(ascension_lobby):
     applied_incoming_damage = ascension_lobby["incoming_damage"]
 
+    shield_block_factor = 2
+    shield_block_factor = relics.shields_powerup(ascension_lobby, shield_block_factor)
+
     # use shields
-    applied_incoming_damage = applied_incoming_damage // (2 ** ascension_lobby["shields_used"])
+    applied_incoming_damage = applied_incoming_damage // (shield_block_factor ** ascension_lobby["shields_used"])
     # use sp
     applied_incoming_damage = applied_incoming_damage - (3 * ascension_lobby["sp_times_used"])
 

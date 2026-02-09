@@ -8,7 +8,7 @@
         "choose_modifiers": {
             "name": "Heart's Compass",
             "emoji": "🧭",
-            "description": "Before foraging, you may choose what the next city's modifiers will be (for cities 3, 5, and 7)"
+            "description": "Before foraging, you may choose what the next city's modifiers will be"
         }
     },
 
@@ -16,7 +16,7 @@
         "apples_powerup": {
             "name": "Red 40 Extract",
             "emoji": "🍎",
-            "description": "If you use an Apple at max HP, gain 10 max HP"
+            "description": "If using an Apple makes you exceed max HP, gain 10 max HP"
         },
         "ivory_dice_powerup": {
             "name": "Overtime Contract",
@@ -26,7 +26,7 @@
         "chronographs_powerup": {
             "name": "Crystallized Time",
             "emoji": "🧊",
-            "description": "When using a Chronograph, replay the level on ice speed (doesn't work on final boss)"
+            "description": "When using a Chronograph, replay the level on 🧊 speed (or normal speed if 🌶️ speed is required)"
         },
         "shields_powerup": {
             "name": "Miracle Painkiller",
@@ -66,12 +66,12 @@
         "double_foraging": {
             "name": "Pocket Mirror",
             "emoji": "🪞",
-            "description": "Levels played when foraging deal double damage, but yield double rewards"
+            "description": "Levels played when foraging deal double damage, but yield double the items"
         },
         "old_foraging": {
             "name": "Bottomless Coffee Cup",
             "emoji": "☕",
-            "description": "Foraging 2 items doesn't require playing a level, but prevents recovering"
+            "description": "Foraging 2 items doesn't require playing a level, but prevents recovering (doesn't work with Pocket Mirror)"
         },
         "cheaper_sp": {
             "name": "Thread of Fate",
