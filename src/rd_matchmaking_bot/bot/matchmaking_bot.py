@@ -106,6 +106,13 @@ class MatchmakingBot(Bot):
                 user_stats["essences"]["Chronographs"] = 0
                 user_stats["essences"]["Shields"] = 0
 
+            if "owned_relics" not in user_stats:
+                user_stats["owned_relics"] = {}
+                user_stats["owned_relics"]["easy_button"] = 1
+
+            if "equipped_relics" not in user_stats:
+                user_stats["equipped_relics"] = []
+
             for i in range(len(user_stats["quests"])):
                 if len(user_stats["quests"][i]) < 8:
                     self.refresh_quest(uid, i)
@@ -161,6 +168,10 @@ class MatchmakingBot(Bot):
                 endless_lobby["chronograph_used"] = False
             if "s_ranked_so_far" not in endless_lobby:
                 endless_lobby["s_ranked_so_far"] = False
+            if "essence_uses" not in endless_lobby:
+                endless_lobby["essence_uses"] = 0
+            if "lobby_relics" not in endless_lobby:
+                endless_lobby["lobby_relics"] = []
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None
@@ -455,6 +466,12 @@ class MatchmakingBot(Bot):
     def get_sets_config(self):
         path = data.get_path("resources/data")
         return data.read_file(path, "sets_config.json")
+
+
+    def get_relic_information(self):
+        path = data.get_path("resources/data")
+        return data.read_file(path, "relic_information.json")
+
 
     async def on_ready(self):
         print(f"{self.user.name} is alive!")

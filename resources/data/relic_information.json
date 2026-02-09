@@ -1,0 +1,92 @@
+{
+    "Standard Issue": {
+        "easy_button": {
+            "name": "7-Bead Abacus",
+            "emoji": "🧮",
+            "description": "Use the easy button (or the normal button if the hard button is required), but receive 1.1x damage"
+        },
+        "choose_modifiers": {
+            "name": "Heart's Compass",
+            "emoji": "🧭",
+            "description": "Before foraging, you may choose what the next city's modifiers will be (for cities 3, 5, and 7)"
+        }
+    },
+
+    "Unique": {
+        "apples_powerup": {
+            "name": "Red 40 Extract",
+            "emoji": "🍎",
+            "description": "If you use an Apple at max HP, gain 10 max HP"
+        },
+        "ivory_dice_powerup": {
+            "name": "Overtime Contract",
+            "emoji": "📄",
+            "description": "When using Ivory Dice, if you have more HP than incoming damage, gain the difference as SP"
+        },
+        "chronographs_powerup": {
+            "name": "Crystallized Time",
+            "emoji": "🧊",
+            "description": "When using a Chronograph, replay the level on ice speed (doesn't work on final boss)"
+        },
+        "shields_powerup": {
+            "name": "Miracle Painkiller",
+            "emoji": "💊",
+            "description": "Shields block 3/4 of damage on Easy/Medium levels"
+        },
+        "max_hp": {
+            "name": "Iron Baguette",
+            "emoji": "🥖",
+            "description": "Gain 7 max HP"
+        },
+        "skip_levels": {
+            "name": "Self-Running Shoes",
+            "emoji": "👟",
+            "description": "Skip the first level of the first 2 cities"
+        },
+        "s_rank_bonus": {
+            "name": "Celebratory Piñata",
+            "emoji": "🪅",
+            "description": "S ranking a level gives you 30 SP"
+        },
+        "use_winner": {
+            "name": "Backup Disk",
+            "emoji": "💾",
+            "description": "Once per run, use the match winner's miss count instead of yours"
+        },
+        "immediate_foraging": {
+            "name": "Omni-Magnet",
+            "emoji": "🧲",
+            "description": "Foraging gives you items immediately, instead of after beating the level"
+        },
+        "cheaper_essence": {
+            "name": "Purifying Alembic",
+            "emoji": "⚗️",
+            "description": "Essence costs are reduced"
+        },
+        "double_foraging": {
+            "name": "Pocket Mirror",
+            "emoji": "🪞",
+            "description": "Levels played when foraging deal double damage, but yield double rewards"
+        },
+        "old_foraging": {
+            "name": "Bottomless Coffee Cup",
+            "emoji": "☕",
+            "description": "Foraging 2 items doesn't require playing a level, but prevents recovering"
+        },
+        "cheaper_sp": {
+            "name": "Thread of Fate",
+            "emoji": "🧵",
+            "description": "SP costs scale slower"
+        },
+        "short_levels": {
+            "name": "Trusty Microscope",
+            "emoji": "🔬",
+            "description": "Levels will be on the shorter side, but deal 1.2x damage"
+        },
+        "long_levels": {
+            "name": "Dusty Telescope",
+            "emoji": "🔭",
+            "description": "Levels will be on the longer side, but deal 0.75x damage"
+        }
+    }
+}

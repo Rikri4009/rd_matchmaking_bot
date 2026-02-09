@@ -116,7 +116,7 @@ class LobbyCommands(commands.Cog):
             ascension_lobby = self.bot.game_data["ascension"][host_id]
 
             if status == 'Not Started':
-                return ascension.get_ascension_welcome_embed(self, lobby_name, host_id)
+                return ascension.get_ascension_welcome_embed(self, ctx, lobby_name, host_id)
             elif status == 'Open':
                 return ascension.get_ascension_open_embed(self, ctx, lobby_name, host_id, player_id_dict, True)
             elif status == 'Rolling':
@@ -150,7 +150,7 @@ class LobbyCommands(commands.Cog):
         elif status == 'Playing':
             return None
         elif status == 'Item':
-            return ascension.AscensionButtonsItem(self, lobby_name, host_id)
+            return ascension.get_ascension_buttons_item(self, lobby_name, host_id)
         elif status == 'Choice':
             return ascension.AscensionButtonsChoice(self, lobby_name, host_id)
         elif status == 'Game Over':
