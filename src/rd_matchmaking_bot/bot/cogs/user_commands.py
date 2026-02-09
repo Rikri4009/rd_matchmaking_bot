@@ -76,7 +76,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
 `/quests`: View your daily quests.\n\
 `/achievements`: View your overall statistics.\n\
 `/player_rating`: Get an estimate of your overall performance.\n\
-`/leaderboard`: View the \🎵 or \⭐ leaderboards.\n\n\
+`/leaderboard`: View the exp or \⭐ leaderboards.\n\n\
 `/out_of_lobby_roll`: Find a level for a set of players outside of a lobby.\n\
 `/upload_rdsave`: Upload your save data. (See [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing) for details.)")
 
@@ -192,7 +192,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
     @discord.slash_command(description="See the rankings")
     async def leaderboard(self, ctx,
-        category: discord.Option(choices = ['🎵', '⭐'], default = '🎵', description = 'Default: 🎵')
+        category: discord.Option(choices = ['exp', '⭐'], default = 'exp', description = 'Default: exp')
     ):
         uid = str(ctx.user.id)
 

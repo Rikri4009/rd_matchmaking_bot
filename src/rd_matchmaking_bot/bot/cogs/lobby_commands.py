@@ -191,6 +191,10 @@ class LobbyCommands(commands.Cog):
             if completed_quests_message != None:
                 dm_message = dm_message + completed_quests_message
 
+            new_milestones_message = self.bot.pop_user_milestones(player_id)
+            if new_milestones_message != None:
+                dm_message = dm_message + new_milestones_message
+
             if dm_message != "":
                 player_user = await self.bot.fetch_user(player_id)
                 player_dm_channel = player_user.dm_channel
@@ -925,13 +929,14 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
                     sp_earned = ascension.calculate_sp(runner_misses, support_misses)
 
                 if player_rank == 1:
+                    ascension_lobby = self.bot.game_data["ascension"][host]
                     relics.use_winner_save_miss_count(ascension_lobby, support_misses)
 
             total_sp_earned = total_sp_earned + sp_earned
 
-            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4}\🎵)\n"
+            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4} exp)\n"
             if sp_earned > 0:
-                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4}\🎵) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
+                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4} exp) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
 
             placement_message = placement_message + placement_message_line
 

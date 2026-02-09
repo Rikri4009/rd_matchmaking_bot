@@ -1,18 +1,5 @@
 {
     "Tiered": {
-        "Doctor in Training": {
-            "Description": "Earned 🎵",
-            "Assoc_Stat": "exp",
-            "Requirements": [
-                200,
-                600,
-                1200,
-                2000,
-                3000,
-                4500,
-                7000
-            ]
-        },
         "Place Your Bets": {
             "Description": "Matches played in lobbies",
             "Assoc_Stat": "matches_played",

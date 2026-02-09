@@ -253,7 +253,7 @@ def get_relics_embed(ctx, lobbycommands, runner_id):
     runner_relic_slots = get_relic_slots(relic_information, runner_owned_relics)
 
     relics_text = "Relics are permanent items that give you special bonuses during runs. You can select your relic loadout here. (You can only equip 1 of each relic.)\n\n"
-    relics_text = relics_text + "You can purchase a random relic if you have 40 💎.\n\n"
+    relics_text = relics_text + f"You have {runner_stats['relic_boxes']} Relic Boxes.\n(You can purchase one for 40 💎 - you currently have {runner_stats['diamonds']} 💎)\n\n"
 
     equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id)
 
@@ -393,23 +393,71 @@ def get_ascension_buttons_relics(lobbycommands, lobby_name, runner_id):
 
             current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
             lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
-
             relics_embed = get_relics_embed(interaction, self.lobbycommands, self.runner_id)
             relics_view = get_ascension_buttons_relics(self.lobbycommands, self.lobby_name, self.runner_id)
 
             await interaction.response.defer()
             await lobby_curr_message.edit(embed=relics_embed, view=relics_view)
-            return
 
-        @discord.ui.button(label="Purchase Relic", emoji="💎", style=discord.ButtonStyle.success)
-        async def purchase_relic_pressed(self, button, interaction):
+        @discord.ui.button(label="Open Relic Box", emoji="📦", style=discord.ButtonStyle.success)
+        async def open_relic_box_pressed(self, button, interaction):
             uid = str(interaction.user.id)
             if uid != self.runner_id:
                 await interaction.respond("Not your button!", ephemeral=True)
                 return
 
-            await interaction.respond("You don't have enough 💎!", ephemeral=True)
-            return
+            runner_stats = self.lobbycommands.bot.users_stats[runner_id]
+            if runner_stats["relic_boxes"] < 1:
+                await interaction.respond("You don't any Relic Boxes!", ephemeral=True)
+                return
+
+            relic_information = self.lobbycommands.bot.get_relic_information()
+            runner_owned_relics = runner_stats["owned_relics"]
+
+            possible_relics = []
+
+            for relic in relic_information["Unique"]:
+                if (relic not in runner_owned_relics) or (runner_owned_relics[relic] == 0):
+                    possible_relics.append(relic)
+
+            if len(possible_relics) == 0:
+                await interaction.respond("You already have every Unique Relic!", ephemeral=True)
+                return
+
+            runner_stats["relic_boxes"] = runner_stats["relic_boxes"] - 1
+
+            new_relic = random.choice(possible_relics)
+            runner_stats["owned_relics"][new_relic] = 1
+
+            await interaction.respond(f"**=-= RELIC OBTAINED:** [ {get_relic_text(interaction, relic_information, new_relic)} ] **=-=**")
+
+            current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
+            lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
+            relics_embed = get_relics_embed(interaction, self.lobbycommands, self.runner_id)
+            relics_view = get_ascension_buttons_relics(self.lobbycommands, self.lobby_name, self.runner_id)
+            await lobby_curr_message.edit(embed=relics_embed, view=relics_view)
+
+        @discord.ui.button(label="Purchase Relic Box", emoji="💎", style=discord.ButtonStyle.secondary)
+        async def purchase_relic_box_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
+
+            runner_stats = self.lobbycommands.bot.users_stats[runner_id]
+            if runner_stats["diamonds"] < 40:
+                await interaction.respond("You don't have enough 💎!", ephemeral=True)
+                return
+
+            runner_stats["diamonds"] = runner_stats["diamonds"] - 40
+            runner_stats["relic_boxes"] = runner_stats["relic_boxes"] + 1
+            await interaction.respond("Relic Box purchased!")
+
+            current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
+            lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
+            relics_embed = get_relics_embed(interaction, self.lobbycommands, self.runner_id)
+            relics_view = get_ascension_buttons_relics(self.lobbycommands, self.lobby_name, self.runner_id)
+            await lobby_curr_message.edit(embed=relics_embed, view=relics_view)
 
     return AscensionButtonsRelics(lobbycommands, lobby_name, runner_id)
 
@@ -923,7 +971,7 @@ def get_victory_random_reward(ctx, ascension_lobby, certificate):
         return {}
 
     box_dict = {}
-    box_dict["item"] = "relic_box"
+    box_dict["item"] = "relic_boxes"
     box_dict["name"] = "📦 Relic Box"
     box_dict["count"] = 1
 
@@ -934,7 +982,7 @@ def get_victory_random_reward(ctx, ascension_lobby, certificate):
 
     exp_boosters_dict = {}
     exp_boosters_dict["item"] = "exp_boosters"
-    exp_boosters_dict["name"] = "🧪 exp boosters"
+    exp_boosters_dict["name"] = "🧪 exp Boosters"
     exp_boosters_dict["count"] = (certificate + 1) // 2
 
     essence_type = random.choice(["Apples", "Ivory Dice", "Chronographs", "Shields"])

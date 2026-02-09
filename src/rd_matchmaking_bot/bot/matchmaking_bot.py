@@ -80,6 +80,9 @@ class MatchmakingBot(Bot):
         number_stats.append("diamonds")
         number_stats.append("exp_boosters")
         number_stats.append("relic_boxes")
+        number_stats.append("last_milestone")
+        number_stats.append("exp")
+        number_stats.append("level")
 
         string_stats = ["specialization"]
 
@@ -226,6 +229,77 @@ class MatchmakingBot(Bot):
         return None
 
 
+    def get_achievement_milestones(self):
+        milestones = {}
+        
+        def add_milestone(achievement_count, item, type, count):
+            milestone = {}
+            milestone["item"] = item
+            milestone["type"] = type
+            milestone["count"] = count
+            milestones[achievement_count] = milestone
+
+        add_milestone(10, "exp_boosters", None, 1)
+        add_milestone(20, "relic_boxes", None, 1)
+        add_milestone(30, "essences", "Apples", 30)
+        add_milestone(40, "exp_boosters", None, 4)
+        add_milestone(50, "essences", "Ivory Dice", 50)
+        add_milestone(60, "relic_boxes", None, 1)
+        add_milestone(70, "essences", "Chronographs", 70)
+        add_milestone(80, "exp_boosters", None, 8)
+        add_milestone(90, "essences", "Shields", 90)
+
+        return milestones
+
+
+    def get_item_emoji(self, item, type):
+        match item:
+            case "current_tickets":
+                return "🎫"
+            case "relic_boxes":
+                return "📦"
+            case "diamonds":
+                return "💎"
+            case "exp_boosters":
+                return "🧪"
+            case "essences":
+                match type:
+                    case "Apples":
+                        return "🌿"
+                    case "Ivory Dice":
+                        return "🪸"
+                    case "Chronographs":
+                        return "🍄"
+                    case "Shields":
+                        return "🪻"
+
+        return "ITEM NOT FOUND"
+
+
+    def get_item_name(self, item, type):
+        match item:
+            case "current_tickets":
+                return "🎫 Tickets"
+            case "relic_boxes":
+                return "📦 Relic Boxes"
+            case "diamonds":
+                return "💎"
+            case "exp_boosters":
+                return "🧪 exp Boosters"
+            case "essences":
+                match type:
+                    case "Apples":
+                        return "🌿 Apples' Essence"
+                    case "Ivory Dice":
+                        return "🪸 Ivory Dice's Essence"
+                    case "Chronographs":
+                        return "🍄 Chronographs' Essence"
+                    case "Shields":
+                        return "🪻 Shields' Essence"
+
+        return "ITEM NOT FOUND"
+
+
     def get_user_achievements(self, ctx, uid):
         if uid not in self.users_stats:
             return None
@@ -283,7 +357,18 @@ class MatchmakingBot(Bot):
                 else:
                     achievement_list['Secret'][achievement]['tier'] = 0
 
-        achievement_list['message'] = achievement_list['message'] + f"\n**Items:** {this_user_stats['current_tickets']} :ticket:"
+        item_list = ["diamonds", "current_tickets", "exp_boosters", "relic_boxes"]
+        essence_list = ["Apples", "Ivory Dice", "Chronographs", "Shields"]
+
+        achievement_list['message'] = achievement_list['message'] + "\n**Items:**"
+        for item in item_list:
+            achievement_list['message'] = achievement_list['message'] + f" {this_user_stats[item]} {self.get_item_emoji(item, None)} |"
+        achievement_list['message'] = achievement_list['message'][:-1]
+
+        achievement_list['message'] = achievement_list['message'] + "\n\n**Essences:**"
+        for essence_type in essence_list:
+            achievement_list['message'] = achievement_list['message'] + f" {this_user_stats['essences'][essence_type]} {self.get_item_emoji('essences', essence_type)} |"
+        achievement_list['message'] = achievement_list['message'][:-1]
 
         return achievement_list
 
@@ -410,14 +495,14 @@ class MatchmakingBot(Bot):
         user_quests = self.get_user_stat(uid, "quests")
 
         if i == 0:
-            user_quests[i]["description"] = "Earn \🎵 from lobbies!"
+            user_quests[i]["description"] = "Earn exp from lobbies!"
             user_quests[i]["assoc_stat"] = "exp"
             user_quests[i]["completion"] = 0
             user_quests[i]["requirement"] = 50
             user_quests[i]["completion_time"] = None
             user_quests[i]["reward_stat"] = "exp"
             user_quests[i]["reward_amount"] = 50
-            user_quests[i]["reward_description"] = "\🎵"
+            user_quests[i]["reward_description"] = "exp"
         elif i == 1:
             user_curr_tickets = self.get_user_stat(uid, "current_tickets")
 
@@ -475,6 +560,38 @@ class MatchmakingBot(Bot):
         
         completed_quests_message = "**Quest Completed!**\n" + completed_quests_message
         return completed_quests_message
+
+
+    def pop_user_milestones(self, uid):
+        milestones_message = ""
+
+        achievement_count = self.users_achievements[uid]["total"]
+        milestones = self.get_achievement_milestones()
+        user_stats = self.users_stats[uid]
+        highest_milestone = user_stats["last_milestone"]
+
+        for milestone_requirement in milestones:
+            if (user_stats["last_milestone"] < milestone_requirement) and (achievement_count >= milestone_requirement):
+                highest_milestone = max(highest_milestone, milestone_requirement)
+
+                item = milestones[milestone_requirement]["item"]
+                type = milestones[milestone_requirement]["type"]
+                name = self.get_item_name(item, type)
+                count = milestones[milestone_requirement]["count"]
+
+                if item == "essences":
+                    user_stats["essences"][type] = user_stats["essences"][type] + count
+                else:
+                    user_stats[item] = user_stats[item] + count
+
+                milestones_message = milestones_message + f"- {milestone_requirement}\⭐ You earned {count} {name}!\n"
+
+        if milestones_message == "":
+            return None
+
+        user_stats["last_milestone"] = highest_milestone
+        milestones_message = "**Milestone Achieved!**\n" + milestones_message
+        return milestones_message
 
 
     def get_sets_config(self):

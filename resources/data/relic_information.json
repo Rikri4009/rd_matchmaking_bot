@@ -11,7 +11,6 @@
             "description": "Before foraging, you may choose what the next city's modifiers will be"
         }
     },
-
     "Unique": {
         "apples_powerup": {
             "name": "Red 40 Extract",
@@ -20,7 +19,7 @@
         },
         "ivory_dice_powerup": {
             "name": "Overtime Contract",
-            "emoji": "📄",
+            "emoji": "📜",
             "description": "When using Ivory Dice, if you have more HP than incoming damage, gain the difference as SP"
         },
         "chronographs_powerup": {
@@ -66,12 +65,12 @@
         "double_foraging": {
             "name": "Pocket Mirror",
             "emoji": "🪞",
-            "description": "Levels played when foraging deal double damage, but yield double the items"
+            "description": "Levels played when foraging deal double damage, but yield double the items (not with Coffee)"
         },
         "old_foraging": {
             "name": "Bottomless Coffee Cup",
             "emoji": "☕",
-            "description": "Foraging 2 items doesn't require playing a level, but prevents recovering (doesn't work with Pocket Mirror)"
+            "description": "Foraging 2 items doesn't require playing a level, but prevents recovering"
         },
         "cheaper_sp": {
             "name": "Thread of Fate",
