@@ -901,6 +901,14 @@ async def proceed_helper(self, interaction):
     for item in ascension_lobby["items"]:
         player_stats["essences"][item] = player_stats["essences"][item] + (1 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
 
+    victory_random_reward = get_victory_random_reward(interaction, ascension_lobby, ascension_lobby["ascension_difficulty"])
+    ascension_lobby["victory_random_reward"] = victory_random_reward
+
+    if victory_random_reward["item"] == "essences":
+        player_stats["essences"][victory_random_reward["type"]] = player_stats["essences"][victory_random_reward["type"]] + victory_random_reward["count"]
+    else:
+        player_stats[victory_random_reward["item"]] = player_stats[victory_random_reward["item"]] + victory_random_reward["count"]
+
     ascension_lobby["status"] = "Victory"
     auxiliary_lobby["status"] = "Victory"
 
@@ -908,6 +916,39 @@ async def proceed_helper(self, interaction):
     await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
     self.lobbycommands.bot.save_data()
     return
+
+
+def get_victory_random_reward(ctx, ascension_lobby, certificate):
+    if certificate == 0:
+        return {}
+
+    box_dict = {}
+    box_dict["item"] = "relic_box"
+    box_dict["name"] = "📦 Relic Box"
+    box_dict["count"] = 1
+
+    diamonds_dict = {}
+    diamonds_dict["item"] = "diamonds"
+    diamonds_dict["name"] = "💎"
+    diamonds_dict["count"] = certificate
+
+    exp_boosters_dict = {}
+    exp_boosters_dict["item"] = "exp_boosters"
+    exp_boosters_dict["name"] = "🧪 exp boosters"
+    exp_boosters_dict["count"] = (certificate + 1) // 2
+
+    essence_type = random.choice(["Apples", "Ivory Dice", "Chronographs", "Shields"])
+
+    essence_dict = {}
+    essence_dict["item"] = "essences"
+    essence_dict["type"] = essence_type
+    essence_dict["name"] = get_essence_text(ctx, ascension_lobby, essence_type)
+    essence_dict["count"] = 5 * certificate
+
+    if 100*random.random() < certificate:
+        return box_dict
+
+    return random.choice([diamonds_dict, exp_boosters_dict, essence_dict])
 
 
 def weighted_choose_from_dict(item_dict):
@@ -1166,11 +1207,9 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["die_used"] = False
     ascension_lobby["chronograph_used"] = False
 
-    ascension_lobby["current_set"] = 3
+    ascension_lobby["current_set"] = 2
 
-    if (ascension_difficulty == 1) or (ascension_difficulty == 6):
-        ascension_lobby["current_set"] = 2
-    elif (ascension_difficulty == 0) or (ascension_difficulty == 7):
+    if (ascension_difficulty == 0) or (ascension_difficulty == 7):
         ascension_lobby["current_set"] = 1
 
     ascension_lobby["level_number"] = 0
@@ -1560,7 +1599,8 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     victory_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
 You have gained {gained_exp} additional \🎵.\n\
-Your remaining items have been converted to {total_essence} total essence.\n\n{spec_unlocked_text}{compass_text}\
+Your remaining items have been converted to {total_essence} total essence.\n\
+You have earned a random special reward: {ascension_lobby['victory_random_reward']['count']} {ascension_lobby['victory_random_reward']['name']}!\n\n{spec_unlocked_text}{compass_text}\
 -# You can now attempt Certification {ascension_lobby['ascension_difficulty']+1}...")
     return victory_embed
 
@@ -1631,9 +1671,9 @@ def get_apple_heal_amount(ascension_lobby):
     if ascension_lobby["ascension_difficulty"] < 2:
         return 10
     elif ascension_lobby["ascension_difficulty"] < 6:
-        return 12
-    else:
         return 15
+    else:
+        return 25
 
 
 def get_ascension_difficulty_text(ascension_difficulty):
@@ -1653,7 +1693,7 @@ def get_ascension_difficulty_text(ascension_difficulty):
     if ascension_difficulty >= 5:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:illustrious:1399860117700087888> City 5 invades easy levels **/** City 5 is harder **/** Hard button final boss"
     if ascension_difficulty >= 6:
-        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** No recovery after City 2 **/** Apples heal even more"
+        ascension_difficulty_text = ascension_difficulty_text + "\n<:stellar:1399860119092854936> All levels deal more damage **/** No City 2 recovery **/** Apples heal more"
     if ascension_difficulty >= 7:
         ascension_difficulty_text = ascension_difficulty_text + "\n<:medical_grade:1399860122288783390> Odd cities are corrupted **/** Clear cities 1-7 **/** Double damage final boss" # double damage
 

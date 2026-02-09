@@ -77,6 +77,9 @@ class MatchmakingBot(Bot):
 
         number_stats.append("current_ascension_difficulty")
         number_stats.append("current_tickets")
+        number_stats.append("diamonds")
+        number_stats.append("exp_boosters")
+        number_stats.append("relic_boxes")
 
         string_stats = ["specialization"]
 
@@ -181,6 +184,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["set_modifiers_override"] = []
             if "relic_data" not in endless_lobby:
                 endless_lobby["relic_data"] = {}
+            if "victory_random_reward" not in endless_lobby:
+                endless_lobby["victory_random_reward"] = None
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None
