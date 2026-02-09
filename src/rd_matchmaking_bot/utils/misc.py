@@ -46,13 +46,13 @@ def rank_players(unsorted_scores, reverse):
 def get_leaderboard_embed(ctx, bot, category, page):
     unsorted_scores = {}
 
-    category = "\\" + category
-
     if category == 'exp':
+        category = " " + category
         for uid in bot.users_stats:
             if bot.users_stats[uid]['exp'] > 0: #remove people with 0 exp
                 unsorted_scores[uid] = bot.users_stats[uid]['exp']
     else:
+        category = "\\" + category
         for uid in bot.users_stats:
             user_achievements = bot.get_user_achievements(ctx, uid)
             if user_achievements['total'] > 0:
