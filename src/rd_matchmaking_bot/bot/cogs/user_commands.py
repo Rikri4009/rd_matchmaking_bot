@@ -285,6 +285,10 @@ Other lobby commands are explained after you create a lobby.\n\n\
                 await self.edit_world_tour_run(ctx, args[1], args[2], args[3])
                 return
 
+            if (len(args) == 1) and (args[0] == "post_about_publicly"):
+                await self.post_about_publicly(ctx)
+                return
+
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
 
@@ -336,6 +340,18 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         ascension_lobby[key] = value
         await ctx.respond("Done!")
+
+
+async def post_about_publicly(self, ctx):
+    tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"\⭐ About This Bot \🎵", description = "Welcome to the __sync__hronized __ope__rations program!\n\
+Treating patients from across the globe can require multiple interns working at once, which Syncope is designed to streamline.\n\n\
+Be warned: You will only be assigned to **all-new treatments** (levels you've never played), so be prepared for anything!\n\n\
+To begin a treatment session, do `/lobby create`!\nFor an overview of commands, do `/help`.\n\
+Detailed documentation can be found [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing).\n\n\
+-# Direct feedback/bug reports to <@1207345676141465622>.\n\
+-# Character and artwork by <@201091631795929089>. Full credits are in the documentation.")
+    await ctx.respond(embed=tooltipEmbed, ephemeral=True)
+    await ctx.respond("Done!")
 
 
 def setup(bot: MatchmakingBot):

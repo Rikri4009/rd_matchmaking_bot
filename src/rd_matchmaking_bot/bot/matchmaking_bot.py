@@ -615,8 +615,8 @@ class MatchmakingBot(Bot):
     
         while self.exp_to_next_level(uid) <= 0:
             user_stats["level"] = user_stats["level"] + 1
-            user_stats["diamonds"] = user_stats["diamonds"] + 1
-            levels_message = levels_message + f"\🎵 **Level Up!** \🎵\nYou are now Level {user_stats['level']}. (+1 💎)\n"
+            user_stats["diamonds"] = user_stats["diamonds"] + 3
+            levels_message = levels_message + f"\🎵 **Level Up!** \🎵\nYou are now Level {user_stats['level']}. (+3 💎)\n"
 
         return levels_message
 
