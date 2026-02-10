@@ -67,7 +67,13 @@ class LobbyCommands(commands.Cog):
 
         players = ', '.join(player_list)
 
-        embed = discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
+        current_lobby = self.bot.game_data["lobbies"][lobby_name]
+
+        exp_boost_text = ""
+        if current_lobby["exp_boost"] > 0:
+            exp_boost_text = f"\n:star2: **Double EXP Active!** :star2: ({current_lobby['exp_boost']} levels remaining)\n"
+
+        embed = discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n{exp_boost_text}# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
         embed.set_footer(text="Buttons broke? Use /lobby resend")
         return embed
 
@@ -305,6 +311,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['players'][uid]['miss_count'] = None
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
+        current_lobby['exp_boost'] = 0
 
         if mode == "Free Play":
             current_lobby['status'] = 'Open'
@@ -922,6 +929,11 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         total_sp_earned = 0
 
+        exp_multiplier = 1
+        if current_lobby["exp_boost"] > 0:
+            exp_multiplier = 2
+            current_lobby["exp_boost"] = current_lobby["exp_boost"] - 1
+
         for player in players_places:
             player_rank = players_places[player]['rank']
 
@@ -938,9 +950,11 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             total_sp_earned = total_sp_earned + sp_earned
 
-            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4} exp)\n"
+            exp_earned = exp_multiplier * (num_players*2 - player_rank + 4)
+
+            placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{exp_earned} exp)\n"
             if sp_earned > 0:
-                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{num_players*2 - player_rank + 4} exp) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
+                placement_message_line = f"{players_places[player]['text']}: <@{player}> with {'{0:g}'.format(unsorted_misses[player])} misses (+{exp_earned} exp) [+{ascension.calculate_sp(runner_misses, support_misses)} SP]\n"
 
             placement_message = placement_message + placement_message_line
 
@@ -952,7 +966,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
             level_is_tough_plus = (current_lobby['level']['difficulty'] == 'Tough') or (current_lobby['level']['difficulty'] == 'Very Tough')
 
-            self.bot.increment_user_stat(player, "exp", num_players*2 - player_rank + 4, True)
+            self.bot.increment_user_stat(player, "exp", exp_earned, True)
             self.bot.increment_user_stat(player, "total_sp_earned", sp_earned, True)
 
             player_stats['matches_played'] = player_stats['matches_played'] + 1
@@ -1258,6 +1272,37 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         lobby_host = current_lobbies[name]['host']
         await self.has_everyone_submitted(ctx, name, lobby_host)
 
+
+    @lobby.command(description="Use an EXP Booster, doubling all exp earned in a lobby for 5 levels")
+    async def use_exp_booster(self, ctx):
+        uid = str(ctx.user.id)
+        user_stats = self.bot.users_stats[uid]
+
+        lobby_name_user_is_playing_in = self.bot.lobby_name_user_is_playing_in(uid)
+        if lobby_name_user_is_playing_in == None:
+            await ctx.respond(f'You are not playing in any lobbies!', ephemeral=True)
+            return
+
+        current_lobbies = self.bot.game_data["lobbies"]
+        current_lobby = current_lobbies[lobby_name_user_is_playing_in]
+
+        if user_stats["exp_boosters"] < 1:
+            await ctx.respond(f'You don\'t have any EXP Boosters!', ephemeral=True)
+            return
+
+        if current_lobby["status"] != 'Open':
+            await ctx.respond(f'This lobby is not open!', ephemeral=True)
+            return
+
+        if current_lobby["exp_boost"] > 0:
+            await ctx.respond(f'This lobby already has an EXP Boost!', ephemeral=True)
+            return
+
+        user_stats["exp_boosters"] = user_stats["exp_boosters"] - 1
+        current_lobby["exp_boost"] = 5
+
+        await ctx.respond(f'EXP Booster used on \"{lobby_name_user_is_playing_in}\"!')
+        await self.edit_current_lobby_message(lobby_name_user_is_playing_in, ctx)
 
 def setup(bot: MatchmakingBot):
     cog = LobbyCommands(bot)
