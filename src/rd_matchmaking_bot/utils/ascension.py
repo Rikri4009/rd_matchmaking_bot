@@ -52,33 +52,40 @@ def get_certify_buttons(lobbycommands, lobby_name, runner_id):
         async def c0_pressed(self, button, interaction):
             await self.update_certification(interaction, 0)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(1), row=0, style=discord.ButtonStyle.secondary)
-        async def c1_pressed(self, button, interaction):
-            await self.update_certification(interaction, 1)
+        if max_available_certification >= 1:
+            @discord.ui.button(emoji=misc.get_number_emoji(1), row=0, style=discord.ButtonStyle.secondary)
+            async def c1_pressed(self, button, interaction):
+                await self.update_certification(interaction, 1)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(2), row=0, style=discord.ButtonStyle.secondary)
-        async def c2_pressed(self, button, interaction):
-            await self.update_certification(interaction, 2)
+        if max_available_certification >= 2:
+            @discord.ui.button(emoji=misc.get_number_emoji(2), row=0, style=discord.ButtonStyle.secondary)
+            async def c2_pressed(self, button, interaction):
+                await self.update_certification(interaction, 2)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(3), row=0, style=discord.ButtonStyle.secondary)
-        async def c3_pressed(self, button, interaction):
-            await self.update_certification(interaction, 3)
+        if max_available_certification >= 3:
+            @discord.ui.button(emoji=misc.get_number_emoji(3), row=0, style=discord.ButtonStyle.secondary)
+            async def c3_pressed(self, button, interaction):
+                await self.update_certification(interaction, 3)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(4), row=1, style=discord.ButtonStyle.secondary)
-        async def c4_pressed(self, button, interaction):
-            await self.update_certification(interaction, 4)
+        if max_available_certification >= 4:
+            @discord.ui.button(emoji=misc.get_number_emoji(4), row=1, style=discord.ButtonStyle.secondary)
+            async def c4_pressed(self, button, interaction):
+                await self.update_certification(interaction, 4)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(5), row=1, style=discord.ButtonStyle.secondary)
-        async def c5_pressed(self, button, interaction):
-            await self.update_certification(interaction, 5)
+        if max_available_certification >= 5:
+            @discord.ui.button(emoji=misc.get_number_emoji(5), row=1, style=discord.ButtonStyle.secondary)
+            async def c5_pressed(self, button, interaction):
+                await self.update_certification(interaction, 5)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(6), row=1, style=discord.ButtonStyle.secondary)
-        async def c6_pressed(self, button, interaction):
-            await self.update_certification(interaction, 6)
+        if max_available_certification >= 6:
+            @discord.ui.button(emoji=misc.get_number_emoji(6), row=1, style=discord.ButtonStyle.secondary)
+            async def c6_pressed(self, button, interaction):
+                await self.update_certification(interaction, 6)
 
-        @discord.ui.button(emoji=misc.get_number_emoji(7), row=1, style=discord.ButtonStyle.secondary)
-        async def c7_pressed(self, button, interaction):
-            await self.update_certification(interaction, 7)
+        if max_available_certification >= 7:
+            @discord.ui.button(emoji=misc.get_number_emoji(7), row=1, style=discord.ButtonStyle.secondary)
+            async def c7_pressed(self, button, interaction):
+                await self.update_certification(interaction, 7)
 
 
     return CertifyButtons(lobbycommands, lobby_name, runner_id)
@@ -252,7 +259,7 @@ def get_relics_embed(ctx, lobbycommands, runner_id):
     runner_relic_slots = get_relic_slots(relic_information, runner_owned_relics)
 
     relics_text = "Relics are permanent items that give you special bonuses during runs. You can select your relic loadout here. (You can only equip 1 of each relic.)\n\n"
-    relics_text = relics_text + f"You have {runner_stats['relic_boxes']} Relic Boxes.\n(You can purchase one for 40 💎 - you currently have {runner_stats['diamonds']} 💎)\n\n"
+    relics_text = relics_text + f"You have {runner_stats['relic_boxes']} 📦 Relic Boxes.\n(You can purchase one for 40 💎 - you currently have {runner_stats['diamonds']} 💎)\n\n"
 
     equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id, runner_equipped_relics)
 
