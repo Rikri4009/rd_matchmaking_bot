@@ -222,11 +222,10 @@ def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
     return AscensionButtonsWelcome(lobbycommands, lobby_name, runner_id)
 
 
-def get_equipped_relics_text(ctx, lobbycommands, runner_id):
+def get_equipped_relics_text(ctx, lobbycommands, runner_id, runner_equipped_relics):
     relic_information = lobbycommands.bot.get_relic_information()
     runner_stats = lobbycommands.bot.users_stats[runner_id]
     runner_owned_relics = runner_stats["owned_relics"]
-    runner_equipped_relics = runner_stats["equipped_relics"]
 
     runner_relic_slots = get_relic_slots(relic_information, runner_owned_relics)
 
@@ -255,7 +254,7 @@ def get_relics_embed(ctx, lobbycommands, runner_id):
     relics_text = "Relics are permanent items that give you special bonuses during runs. You can select your relic loadout here. (You can only equip 1 of each relic.)\n\n"
     relics_text = relics_text + f"You have {runner_stats['relic_boxes']} Relic Boxes.\n(You can purchase one for 40 💎 - you currently have {runner_stats['diamonds']} 💎)\n\n"
 
-    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id)
+    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id, runner_equipped_relics)
 
     relics_text = relics_text + equipped_relics_text
 
@@ -640,19 +639,9 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
                 await lobby_curr_message.edit(embed=get_ascension_essences_embed(interaction, self.lobby_name, self.runner_id, ascension_lobby, runner_essences), view=AscensionButtonsEssences(self.lobbycommands, self.lobby_name, self.runner_id))
                 return
 
-        @discord.ui.button(label="Proceed", emoji=proceed_emoji, style=proceed_color)
-        async def proceed_pressed(self, button, interaction):
-            uid = str(interaction.user.id)
-            if uid != self.runner_id:
-                await interaction.respond("Not your button!", ephemeral=True)
-                return
-
-            self.stop()
-            await proceed_helper(self, interaction)
-
         if has_use_winner_usage:
-            @discord.ui.button(label="Use Winner's Score", emoji='💾', style=discord.ButtonStyle.primary)
-            async def view_essences_pressed(self, button, interaction):
+            @discord.ui.button(label="Use Winner", emoji='💾', style=discord.ButtonStyle.primary)
+            async def use_winner_pressed(self, button, interaction):
                 uid = str(interaction.user.id)
                 if uid != self.runner_id:
                     await interaction.respond("Not your button!", ephemeral=True)
@@ -667,6 +656,16 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
                 await interaction.response.defer()
                 await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
                 return
+
+        @discord.ui.button(label="Proceed", emoji=proceed_emoji, style=proceed_color)
+        async def proceed_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
+
+            self.stop()
+            await proceed_helper(self, interaction)
 
     return AscensionButtonsItem(lobbycommands, lobby_name, runner_id)
 
@@ -949,13 +948,14 @@ async def proceed_helper(self, interaction):
     for item in ascension_lobby["items"]:
         player_stats["essences"][item] = player_stats["essences"][item] + (1 + ascension_lobby["ascension_difficulty"]) * ascension_lobby["items"][item]
 
-    victory_random_reward = get_victory_random_reward(interaction, ascension_lobby, ascension_lobby["ascension_difficulty"])
-    ascension_lobby["victory_random_reward"] = victory_random_reward
+    if ascension_lobby["ascension_difficulty"] > 0:
+        victory_random_reward = get_victory_random_reward(interaction, ascension_lobby, ascension_lobby["ascension_difficulty"])
+        ascension_lobby["victory_random_reward"] = victory_random_reward
 
-    if victory_random_reward["item"] == "essences":
-        player_stats["essences"][victory_random_reward["type"]] = player_stats["essences"][victory_random_reward["type"]] + victory_random_reward["count"]
-    else:
-        player_stats[victory_random_reward["item"]] = player_stats[victory_random_reward["item"]] + victory_random_reward["count"]
+        if victory_random_reward["item"] == "essences":
+            player_stats["essences"][victory_random_reward["type"]] = player_stats["essences"][victory_random_reward["type"]] + victory_random_reward["count"]
+        else:
+            player_stats[victory_random_reward["item"]] = player_stats[victory_random_reward["item"]] + victory_random_reward["count"]
 
     ascension_lobby["status"] = "Victory"
     auxiliary_lobby["status"] = "Victory"
@@ -982,7 +982,7 @@ def get_victory_random_reward(ctx, ascension_lobby, certificate):
 
     exp_boosters_dict = {}
     exp_boosters_dict["item"] = "exp_boosters"
-    exp_boosters_dict["name"] = "🧪 exp Boosters"
+    exp_boosters_dict["name"] = "🧪 EXP Boosters"
     exp_boosters_dict["count"] = (certificate + 1) // 2
 
     essence_type = random.choice(["Apples", "Ivory Dice", "Chronographs", "Shields"])
@@ -1208,7 +1208,8 @@ def get_ascension_welcome_embed(self, ctx, name, runner_id):
 
     ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
 
-    equipped_relics_text = get_equipped_relics_text(ctx, self, runner_id) + "\n"
+    runner_equipped_relics = runner_stats["equipped_relics"]
+    equipped_relics_text = get_equipped_relics_text(ctx, self, runner_id, runner_equipped_relics) + "\n"
 
     specialization_text = ""
     if ascension_difficulty >= 4:
@@ -1237,6 +1238,9 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     achievement_count = (self.bot.get_user_achievements(ctx, runner_id))["total"]
 
+    ascension_lobby["relic_data"] = {}
+    ascension_lobby["lobby_relics"] = copy.deepcopy(runner_stats["equipped_relics"])
+
     ascension_lobby["max_hp"] = achievement_count
     ascension_lobby["current_hp"] = achievement_count
 
@@ -1262,6 +1266,7 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     ascension_lobby["level_number"] = 0
 
+    relics.skip_levels_initialize_data(ascension_lobby)
     relics.skip_levels_use(ascension_lobby)
 
     ascension_lobby["items"]["Apples"] = 0
@@ -1270,8 +1275,6 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["items"]["Shields"] = 0
 
     ascension_lobby["essence_uses"] = 0
-
-    ascension_lobby["lobby_relics"] = runner_stats["equipped_relics"]
 
     specialization = runner_stats["specialization"]
     ascension_lobby["specialization"] = specialization
@@ -1285,8 +1288,8 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
 
     ascension_lobby["set_modifiers_override"] = []
 
-    ascension_lobby["relic_data"] = {}
-    relics.skip_levels_initialize_data(ascension_lobby)
+    ascension_lobby["victory_random_reward"] = {}
+
     relics.use_winner_initialize_data(ascension_lobby)
 
     self.bot.save_data()
@@ -1419,7 +1422,7 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
     set_difficulties_bold[level_number] = "**" + set_difficulties_bold[level_number] + "**"
     set_difficulties_text = ' -> '.join(set_difficulties_bold)
 
-    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id) + "\n\n"
+    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id, ascension_lobby["lobby_relics"]) + "\n\n"
 
     items_text = get_current_items_text(ctx, ascension_lobby)
 
@@ -1609,7 +1612,7 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     level_embed = discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP)\n\n\
 You have beaten this set and have {ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP!\n\
-You have also gained {gained_exp} additional \🎵.\n\n\
+You have also gained {gained_exp} additional exp.\n\n\
 {recover_text}\
 You can choose to **proceed** to the next set now...\n\
 Or, you can first play an extra {forage_1_difficulty} this set to **forage 1** {get_item_text(ctx, ascension_lobby, ascension_lobby['chosen_item_1'])}...\n\
@@ -1626,7 +1629,7 @@ Press **Main Menu** to try again, or press **Delete** to delete this lobby.")
     return gameover_embed
 
 
-def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
+def get_ascension_victory_embed(lobbycommands, ctx, lobby_name, runner_id, ascension_lobby):
     gained_exp = 2 * (6 + ascension_lobby["ascension_difficulty"] + ascension_lobby["current_set"])
 
     total_essence = 0
@@ -1636,7 +1639,7 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     compass_text = ""
     certification_text = ""
     if ascension_lobby["ascension_difficulty"] == 0:
-        compass_text = "You have been issued your Heart's Compass! Equip it through Relics.\n\n"
+        compass_text = f"You have been issued your {get_relic_text(ctx, lobbycommands.bot.get_relic_information(), 'choose_modifiers')}! Equip it through Relics.\n\n"
     else:
         certification_text = "**{ CERTIFICATE " + str(ascension_lobby["ascension_difficulty"]) + " OBTAINED }**\n\n"
 
@@ -1644,11 +1647,15 @@ def get_ascension_victory_embed(lobby_name, runner_id, ascension_lobby):
     if ascension_lobby["ascension_difficulty"] == 3:
         spec_unlocked_text = "**You can now specialize!**\n\n"
 
+    random_reward_text = ""
+    if ascension_lobby["ascension_difficulty"] > 0:
+        random_reward_text = f"You have gained a special reward: {ascension_lobby['victory_random_reward']['count']} {ascension_lobby['victory_random_reward']['name']}!\n\n"
+
     victory_embed = discord.Embed(colour = discord.Colour.yellow(), title = f"World Tour Lobby: \"{lobby_name}\" | **VICTORY!**", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\n\
 {certification_text}YOU WIN! Congratulations!!!!!\n\
-You have gained {gained_exp} additional \🎵.\n\
-Your remaining items have been converted to {total_essence} total essence.\n\
-You have earned a random special reward: {ascension_lobby['victory_random_reward']['count']} {ascension_lobby['victory_random_reward']['name']}!\n\n{spec_unlocked_text}{compass_text}\
+You have gained {gained_exp} additional exp.\n\
+Your remaining items have been converted to {total_essence} total essence.\n\n\
+{random_reward_text}{spec_unlocked_text}{compass_text}\
 -# You can now attempt Certification {ascension_lobby['ascension_difficulty']+1}...")
     return victory_embed
 

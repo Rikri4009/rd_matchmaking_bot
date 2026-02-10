@@ -1,4 +1,5 @@
 import discord
+import math
 import rd_matchmaking_bot.utils.ascension as ascension
 
 def easy_button_damage(ascension_lobby):
@@ -106,6 +107,13 @@ def use_winner_save_miss_count(ascension_lobby, miss_count):
         return
 
     ascension_lobby["relic_data"]["use_winner_miss_count"] = miss_count
+
+
+def use_winner_add_damage_factor(ascension_lobby, damage_factor):
+    if "use_winner" not in ascension_lobby["lobby_relics"]:
+        return
+
+    ascension_lobby["relic_data"]["use_winner_miss_count"] = math.floor(ascension_lobby["relic_data"]["use_winner_miss_count"] * damage_factor)
 
 
 def use_winner_has_usage(ascension_lobby):

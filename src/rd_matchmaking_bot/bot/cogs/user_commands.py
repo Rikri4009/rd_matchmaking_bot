@@ -61,7 +61,7 @@ Detailed documentation can be found [here](https://docs.google.com/document/d/1l
 -# Direct feedback/bug reports to <@1207345676141465622>.\n\
 -# Character and artwork by <@201091631795929089>. Full credits are in the documentation.")
 
-        await ctx.respond(embed=tooltipEmbed)
+        await ctx.respond(embed=tooltipEmbed, ephemeral=True)
 
 
     @discord.slash_command(description="List of commands")
@@ -80,7 +80,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
 `/out_of_lobby_roll`: Find a level for a set of players outside of a lobby.\n\
 `/upload_rdsave`: Upload your save data. (See [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing) for details.)")
 
-        await ctx.respond(embed=tooltipEmbed)
+        await ctx.respond(embed=tooltipEmbed, ephemeral=True)
 
 
     @discord.slash_command(description="Upload your \"settings.rdsave\" file, located in the \"User\" directory of your RD installation")
@@ -268,9 +268,21 @@ Other lobby commands are explained after you create a lobby.\n\n\
             if (len(args) == 1) and (args[0] == "get_backups"):
                 await self.get_backups(ctx)
                 return
-            
+
+            if (len(args) == 1) and (args[0] == "clear_backups"):
+                await self.clear_backups(ctx)
+                return
+
             if (len(args) == 2) and (args[0] == "clear_rdsave"):
                 await self.clear_rdsave(ctx, args[1])
+                return
+
+            if (len(args) == 2) and (args[0] == "clear_stat_from_all_users"):
+                await self.clear_stat_from_all_users(ctx, args[1])
+                return
+
+            if (len(args) == 4) and (args[0] == "edit_world_tour_run"):
+                await self.edit_world_tour_run(ctx, args[1], args[2], args[3])
                 return
 
         await ctx.respond(f"Invalid command!", ephemeral=True)
@@ -281,11 +293,48 @@ Other lobby commands are explained after you create a lobby.\n\n\
         path = data.get_path("resources/data")
 
         await ctx.respond("Backups:", file = discord.File(fp = (path + os.sep + "users_stats_backups.json")))
-    
+
+    async def clear_backups(self, ctx):
+        path = data.get_path("resources/data")
+        users_stats_backups = data.read_file(path, "users_stats_backups.json")
+
+        users_stats_backups = []
+
+        data.write_json(users_stats_backups, path, "users_stats_backups.json")
+
+        await ctx.respond("Backups cleared.")
+
     async def clear_rdsave(self, ctx, uid):
         self.bot.users_rdsaves[uid] = []
         self.bot.save_data()
 
+        await ctx.respond("Done!")
+
+    async def clear_stat_from_all_users(self, ctx, stat):
+        users_stats = self.bot.users_stats
+
+        for user in users_stats:
+            if stat in users_stats[user]:
+                del users_stats[user][stat]
+
+        self.bot.validate_users_stats()
+        self.bot.save_data()
+
+        await ctx.respond("Done!")
+
+    async def edit_world_tour_run(self, ctx, key, value_type, value):
+        uid = str(ctx.user.id)
+        game_data = self.bot.game_data
+        ascension_lobby = game_data["ascension"][uid]
+
+        if key not in ascension_lobby:
+            await ctx.respond("Key not found!")
+            return
+
+        if value_type == "int":
+            value = int(value)
+
+        ascension_lobby[key] = value
         await ctx.respond("Done!")
 
 

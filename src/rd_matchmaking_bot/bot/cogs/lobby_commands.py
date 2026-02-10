@@ -30,6 +30,10 @@ class LobbyButtonsOpen(discord.ui.View):
     async def roll_pressed(self, button, interaction):
         await LobbyCommands.roll(interaction, "Yes", "No", "Any", "")
 
+    @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
+    async def delete_pressed(self, button, interaction):
+        await LobbyCommands.delete(interaction)
+
 
 class LobbyButtonsRolling(discord.ui.View):
     def __init__(self):
@@ -131,7 +135,7 @@ class LobbyCommands(commands.Cog):
             elif status == 'Game Over':
                 return ascension.get_ascension_gameover_embed(self, lobby_name, host_id, ascension_lobby)
             elif status == 'Victory':
-                return ascension.get_ascension_victory_embed(lobby_name, host_id, ascension_lobby)
+                return ascension.get_ascension_victory_embed(self, ctx, lobby_name, host_id, ascension_lobby)
         print('Huge Mistake')
 
 
@@ -1065,6 +1069,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             ascension_lobby["relic_damage_multipliers"] = []
 
             ascension_lobby["incoming_damage"] = math.floor(runner_misses * damage_factor)
+            relics.use_winner_add_damage_factor(ascension_lobby, damage_factor)
 
             if runner_misses == -1:
                 current_lobby['status'] = 'Open'

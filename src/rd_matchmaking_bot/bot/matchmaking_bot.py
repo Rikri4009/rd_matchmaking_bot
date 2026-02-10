@@ -285,7 +285,7 @@ class MatchmakingBot(Bot):
             case "diamonds":
                 return "💎"
             case "exp_boosters":
-                return "🧪 exp Boosters"
+                return "🧪 EXP Boosters"
             case "essences":
                 match type:
                     case "Apples":
@@ -584,7 +584,12 @@ class MatchmakingBot(Bot):
                 else:
                     user_stats[item] = user_stats[item] + count
 
-                milestones_message = milestones_message + f"- {milestone_requirement}\⭐ You earned {count} {name}!\n"
+                milestones_message = milestones_message + f"- {milestone_requirement}\⭐ You earned {count} {name}!"
+
+                if item == "exp_boosters":
+                    milestones_message = milestones_message + " (Use it in a lobby using `/use_exp_booster` to double exp gain for 5 levels.)"
+
+                milestones_message = milestones_message + "\n"
 
         if milestones_message == "":
             return None
