@@ -205,6 +205,10 @@ class LobbyCommands(commands.Cog):
             if new_milestones_message != None:
                 dm_message = dm_message + new_milestones_message
 
+            new_levels_message = self.bot.pop_user_levels(player_id)
+            if new_levels_message != None:
+                dm_message = dm_message + new_levels_message
+
             if dm_message != "":
                 player_user = await self.bot.fetch_user(player_id)
                 player_dm_channel = player_user.dm_channel

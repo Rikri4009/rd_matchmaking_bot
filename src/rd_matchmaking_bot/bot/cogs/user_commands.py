@@ -184,7 +184,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         total_player_rating = '{:.2f}'.format(self.bot.get_user_ratings(ach_uid)["Total"])
 
-        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.display_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['exp']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
+        tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.display_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['level']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
         tooltipEmbed.set_footer(text="Hover over text for info!")
 
         await ctx.respond(embed=tooltipEmbed)

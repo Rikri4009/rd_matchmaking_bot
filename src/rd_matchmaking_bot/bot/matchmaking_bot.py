@@ -309,7 +309,7 @@ class MatchmakingBot(Bot):
         path = data.get_path("resources/data")
 
         achievement_list = data.read_file(path, "achievement_requirements.json")
-        achievement_list['message'] = '**Tiered Achievements:**\n'
+        achievement_list['message'] = f"You have **{this_user_stats['exp']}** exp. ({self.exp_to_next_level(uid)} to next level)\n\n**Tiered Achievements:**\n"
         achievement_list['total'] = 0
 
         for achievement in achievement_list['Tiered']:
@@ -500,9 +500,9 @@ class MatchmakingBot(Bot):
             user_quests[i]["completion"] = 0
             user_quests[i]["requirement"] = 50
             user_quests[i]["completion_time"] = None
-            user_quests[i]["reward_stat"] = "exp"
-            user_quests[i]["reward_amount"] = 50
-            user_quests[i]["reward_description"] = "exp"
+            user_quests[i]["reward_stat"] = "diamonds"
+            user_quests[i]["reward_amount"] = 1
+            user_quests[i]["reward_description"] = "💎"
         elif i == 1:
             user_curr_tickets = self.get_user_stat(uid, "current_tickets")
 
@@ -607,6 +607,33 @@ class MatchmakingBot(Bot):
     def get_relic_information(self):
         path = data.get_path("resources/data")
         return data.read_file(path, "relic_information.json")
+
+
+    def pop_user_levels(self, uid):
+        user_stats = self.users_stats[uid]
+        levels_message = ""
+    
+        while self.exp_to_next_level(uid) <= 0:
+            user_stats["level"] = user_stats["level"] + 1
+            user_stats["diamonds"] = user_stats["diamonds"] + 1
+            levels_message = levels_message + f"\🎵 **Level Up!** \🎵\nYou are now Level {user_stats['level']}. (+1 💎)\n"
+
+        return levels_message
+
+
+    def exp_to_next_level(self, uid):
+        user_stats = self.users_stats[uid]
+        user_exp = user_stats["exp"]
+        user_level = user_stats["level"]
+
+        exp_sum = 0
+        increment = 100
+        for _ in range(user_level+1):
+            exp_sum = exp_sum + increment
+            if increment < 300:
+                increment = increment + 25
+
+        return exp_sum - user_exp
 
 
     async def on_ready(self):
