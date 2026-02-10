@@ -1211,7 +1211,7 @@ def get_ascension_welcome_embed(self, ctx, name, runner_id):
 
     ticket_cost_text = ""
     if ascension_difficulty >= 1:
-        ticket_cost_text = f"**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
+        ticket_cost_text = f"\n**Starting a new game costs 1 🎫!** (You currently have {runner_tickets} 🎫)"
 
     ascension_difficulty_text = get_ascension_difficulty_text(ascension_difficulty)
 
@@ -1221,9 +1221,9 @@ def get_ascension_welcome_embed(self, ctx, name, runner_id):
     specialization_text = ""
     if ascension_difficulty >= 4:
         if runner_stats['specialization'] == None:
-            specialization_text = "You are not specializing in anything.\n\n"
+            specialization_text = "You are not specializing in anything.\n"
         else:
-            specialization_text = f"You are specializing in {runner_stats['specialization']}.\n\n"
+            specialization_text = f"You are specializing in {runner_stats['specialization']}.\n"
 
     return discord.Embed(colour = discord.Colour.light_grey(), title = f"World Tour Lobby: \"{name}\"", description = f"Runner: <@{runner_id}>\n\n\
     Welcome to World Tour!\n\
