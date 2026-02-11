@@ -238,7 +238,6 @@
     },
     "Double Boss": {
         "diff_override": [
-            "Easy",
             "Medium",
             "Tough",
             "Tough"

@@ -99,7 +99,11 @@ class LobbyCommands(commands.Cog):
         if mode == "Ascension":
             host_title = "Runner"
 
-        return discord.Embed(colour = discord.Colour.red(), title = f"{mode} Lobby: \"{lobby_name}\"", description = f"{host_title}: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
+        mode_name = mode
+        if mode == "Ascension":
+            mode_name = "World Tour"
+
+        return discord.Embed(colour = discord.Colour.red(), title = f"{mode_name} Lobby: \"{lobby_name}\"", description = f"{host_title}: <@{host_id}>\n\nMake sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, when you\'re done, do `/lobby submit_misses` to submit your miss count.\nOnce everyone submits, final results will be posted. (The host should kick AFK players.)\n\n{submitted_list}")
 
 
     # pseudo-state machine my beloved

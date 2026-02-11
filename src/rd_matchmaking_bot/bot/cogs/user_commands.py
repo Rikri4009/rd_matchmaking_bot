@@ -98,11 +98,11 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         played_levels = []
         for level, rank in rdsave.items():
-            is_custom = level.startswith("CustomLevel_") and level.endswith("_normal")
+            is_custom = level.startswith("CustomLevel_") #and level.endswith("_normal")
             was_played = rank != "NotFinished"
 
             if is_custom and was_played:
-                level_hash = level[12:-7]
+                level_hash = level[12:44]
                 played_levels.append(level_hash)
 
         self.bot.users_rdsaves[uid] = played_levels
@@ -245,7 +245,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         quests_embed = discord.Embed(colour = discord.Colour.green(), title = "Daily Quests", description = quests_text)
 
-        await ctx.respond(embed=quests_embed)
+        await ctx.respond(embed=quests_embed, ephemeral=True)
 
 
     @discord.slash_command(description="(ADVANCED) Run an admin command.")

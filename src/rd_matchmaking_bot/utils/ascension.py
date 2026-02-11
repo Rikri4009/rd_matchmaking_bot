@@ -1124,7 +1124,7 @@ def get_ascension_buttons_choice(lobbycommands, lobby_name, runner_id):
                 ascension_lobby["set_modifiers_override"] = [select.values[0]]
 
                 await interaction.response.defer()
-                await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
+                await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
                 return
 
     return AscensionButtonsChoice(lobbycommands, lobby_name, runner_id)
