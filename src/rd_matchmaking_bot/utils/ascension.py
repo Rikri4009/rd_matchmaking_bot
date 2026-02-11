@@ -862,16 +862,16 @@ async def proceed_helper(self, interaction):
                 await interaction.channel.send("You've made it to the end of City 7!\nThankfully, you're given a bit of reprieve, and heal 1/2 of your remaining HP.")
             
             final_boss_level = {}
-            final_boss_level["hash"] = "temp"
-            final_boss_level["authors"] = "temp"
-            final_boss_level["artist"] = "temp"
-            final_boss_level["song"] = "rrr5 lmao"
-            final_boss_level["description"] = "temp"
+            final_boss_level["hash"] = "Final_Ascent"
+            final_boss_level["authors"] = "The Row Association"
+            final_boss_level["artist"] = "Various"
+            final_boss_level["song"] = "Final Ascent (Mix)"
+            final_boss_level["description"] = "The ultimate obstacle in any aspiring Rhythm Doctor's journey. Can you make it through?"
             final_boss_level["difficulty"] = "???"
             final_boss_level["peer review status"] = "Peer Reviewed"
             final_boss_level["total_hits_approx"] = 300
-            final_boss_level["zip"] = "https://codex.rhythm.cafe/rodney-s-HGfkpCv3PS3.rdzip"
-            final_boss_level["image_url"] = "https://cdn.discordapp.com/emojis/1393723419031244832.webp?size=128"
+            final_boss_level["zip"] = "https://cdn.discordapp.com/attachments/1249122614505377863/1470973670364024904/a_lot_of_people_-_Final_Ascent_Mix.rdzip?ex=698d3e7c&is=698becfc&hm=608568ffdbd5b430554ae23f94a4fa61fdf0f1267b17e58f7e1312a730f07bfc&"
+            final_boss_level["image_url"] = "https://cdn.discordapp.com/attachments/1392061633076920331/1470974626308821244/space_gradiant.png?ex=698d3f60&is=698bede0&hm=4dd031ebb95af8f22bfb30b1d6cc28400abcc59a6e14b1fe303d2ffa2d1e5ea6&"
             final_boss_level["tags"] = []
             final_boss_level["possibilities"] = 1
 
