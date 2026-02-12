@@ -456,6 +456,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
     ):
         current_lobbies = self.bot.game_data["lobbies"]
 
+        uid = str(ctx.user.id)
         lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
 
         # if user is not hosting
@@ -463,7 +464,6 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             await ctx.respond(f'You are not hosting!', ephemeral=True)
             return
 
-        uid = str(ctx.user.id)
         player_to_kick = str(player.id)
         current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
