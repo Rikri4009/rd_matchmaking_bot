@@ -455,20 +455,21 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         player: discord.Option(discord.SlashCommandOptionType.user)
     ):
         current_lobbies = self.bot.game_data["lobbies"]
-        current_lobby = current_lobbies[lobby_name_user_is_hosting]
+
+        lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
+
+        # if user is not hosting
+        if lobby_name_user_is_hosting == None:
+            await ctx.respond(f'You are not hosting!', ephemeral=True)
+            return
 
         uid = str(ctx.user.id)
         player_to_kick = str(player.id)
+        current_lobby = current_lobbies[lobby_name_user_is_hosting]
 
         # if not free play and host tries to kick themselves
         if (current_lobby["mode"] != "Free Play") and (uid == player_to_kick):
             await ctx.respond(f"You can't leave in this mode!", ephemeral=True)
-            return
-
-        # if user is not hosting
-        lobby_name_user_is_hosting = self.bot.lobby_name_user_is_hosting(uid)
-        if lobby_name_user_is_hosting == None:
-            await ctx.respond(f'You are not hosting!', ephemeral=True)
             return
 
         lobby_channel_id = current_lobby['channel_id']
