@@ -969,7 +969,7 @@ def get_victory_random_reward(ctx, ascension_lobby, certificate):
     diamonds_dict = {}
     diamonds_dict["item"] = "diamonds"
     diamonds_dict["name"] = "💎"
-    diamonds_dict["count"] = certificate
+    diamonds_dict["count"] = (3 * (certificate + 1)) // 2
 
     exp_boosters_dict = {}
     exp_boosters_dict["item"] = "exp_boosters"
@@ -1467,7 +1467,7 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
         final_boss_level["difficulty"] = "???"
         final_boss_level["peer review status"] = "Peer Reviewed"
         final_boss_level["total_hits_approx"] = 300
-        final_boss_level["zip"] = "https://cdn.discordapp.com/attachments/1249122614505377863/1470973670364024904/a_lot_of_people_-_Final_Ascent_Mix.rdzip?ex=698d3e7c&is=698becfc&hm=608568ffdbd5b430554ae23f94a4fa61fdf0f1267b17e58f7e1312a730f07bfc&"
+        final_boss_level["zip"] = "https://cdn.discordapp.com/attachments/1249122614505377863/1470973670364024904/a_lot_of_people_-_Final_Ascent_Mix.rdzip?ex=698e8ffc&is=698d3e7c&hm=b9e42f1c358ff74f06d77b321c21345e383bcc92e523c25c4b5ccefd478bea4a&"
         final_boss_level["image_url"] = "https://cdn.discordapp.com/attachments/1392061633076920331/1470974626308821244/space_gradiant.png?ex=698d3f60&is=698bede0&hm=4dd031ebb95af8f22bfb30b1d6cc28400abcc59a6e14b1fe303d2ffa2d1e5ea6&"
         final_boss_level["tags"] = []
         final_boss_level["possibilities"] = 1
