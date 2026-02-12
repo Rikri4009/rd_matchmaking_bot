@@ -105,7 +105,7 @@
             ]
         },
         "Tourist": {
-            "Description": "Total World Tour sets beaten",
+            "Description": "Total World Tour cities beaten",
             "Assoc_Stat": "total_sets_beaten",
             "Requirements": [
                 2,

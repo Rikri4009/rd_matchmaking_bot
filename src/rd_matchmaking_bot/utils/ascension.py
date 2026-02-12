@@ -860,22 +860,6 @@ async def proceed_helper(self, interaction):
                 ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], math.ceil((ascension_lobby["max_hp"] + ascension_lobby["current_hp"]) / 2))
 
                 await interaction.channel.send("You've made it to the end of City 7!\nThankfully, you're given a bit of reprieve, and heal 1/2 of your remaining HP.")
-            
-            final_boss_level = {}
-            final_boss_level["hash"] = "Final_Ascent"
-            final_boss_level["authors"] = "The Row Association"
-            final_boss_level["artist"] = "Various"
-            final_boss_level["song"] = "Final Ascent (Mix)"
-            final_boss_level["description"] = "The ultimate obstacle in any aspiring Rhythm Doctor's journey. Can you make it through?"
-            final_boss_level["difficulty"] = "???"
-            final_boss_level["peer review status"] = "Peer Reviewed"
-            final_boss_level["total_hits_approx"] = 300
-            final_boss_level["zip"] = "https://cdn.discordapp.com/attachments/1249122614505377863/1470973670364024904/a_lot_of_people_-_Final_Ascent_Mix.rdzip?ex=698d3e7c&is=698becfc&hm=608568ffdbd5b430554ae23f94a4fa61fdf0f1267b17e58f7e1312a730f07bfc&"
-            final_boss_level["image_url"] = "https://cdn.discordapp.com/attachments/1392061633076920331/1470974626308821244/space_gradiant.png?ex=698d3f60&is=698bede0&hm=4dd031ebb95af8f22bfb30b1d6cc28400abcc59a6e14b1fe303d2ffa2d1e5ea6&"
-            final_boss_level["tags"] = []
-            final_boss_level["possibilities"] = 1
-
-            auxiliary_lobby["roll_settings"]["level_override"] = final_boss_level
 
         await interaction.response.defer()
         await self.lobbycommands.send_current_lobby_message(lobby_name_user_is_hosting, interaction, False)
@@ -1472,6 +1456,23 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
     roll_settings["played_before"] = "No"
     roll_settings["difficulty"] = ascension_lobby["set_difficulties"][level_number]
     roll_settings["special"] = []
+
+    if roll_settings["difficulty"] == "???":
+        final_boss_level = {}
+        final_boss_level["hash"] = "Final_Ascent"
+        final_boss_level["authors"] = "The Row Association"
+        final_boss_level["artist"] = "Various"
+        final_boss_level["song"] = "Final Ascent (Mix)"
+        final_boss_level["description"] = "The ultimate obstacle in any aspiring Rhythm Doctor's journey. Can you make it through?"
+        final_boss_level["difficulty"] = "???"
+        final_boss_level["peer review status"] = "Peer Reviewed"
+        final_boss_level["total_hits_approx"] = 300
+        final_boss_level["zip"] = "https://cdn.discordapp.com/attachments/1249122614505377863/1470973670364024904/a_lot_of_people_-_Final_Ascent_Mix.rdzip?ex=698d3e7c&is=698becfc&hm=608568ffdbd5b430554ae23f94a4fa61fdf0f1267b17e58f7e1312a730f07bfc&"
+        final_boss_level["image_url"] = "https://cdn.discordapp.com/attachments/1392061633076920331/1470974626308821244/space_gradiant.png?ex=698d3f60&is=698bede0&hm=4dd031ebb95af8f22bfb30b1d6cc28400abcc59a6e14b1fe303d2ffa2d1e5ea6&"
+        final_boss_level["tags"] = []
+        final_boss_level["possibilities"] = 1
+
+        auxiliary_lobby["roll_settings"]["level_override"] = final_boss_level
 
     tag_facet_array = []
 
