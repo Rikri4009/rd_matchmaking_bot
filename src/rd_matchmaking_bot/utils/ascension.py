@@ -1549,7 +1549,7 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
     if level_chosen['difficulty'] == "???":
         level_embed.add_field(name = f"‼️ Modifier: None!", value = "City 7's usual modifier does **NOT** apply to this level!", inline = False)
     elif (set_modifier != "None") and (set_modifier != "Double Boss") and (set_modifier != "Polarity") and (set_modifier != "Rainbow"):
-        level_embed.add_field(name = f"‼️ Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
+        level_embed.add_field(name = f"‼️‼️ **__MODIFIER__**: **{set_modifier}** ‼️‼️", value = sets_config[set_modifier]['description'], inline = False)
 
     level_number = ascension_lobby["level_number"]
     ascension_difficulty = ascension_lobby["ascension_difficulty"]
