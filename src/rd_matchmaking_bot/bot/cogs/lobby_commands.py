@@ -214,13 +214,7 @@ class LobbyCommands(commands.Cog):
                 dm_message = dm_message + new_levels_message
 
             if dm_message != "":
-                player_user = await self.bot.fetch_user(player_id)
-                player_dm_channel = player_user.dm_channel
-
-                if player_dm_channel == None:
-                    player_dm_channel = await player_user.create_dm()
-
-                await player_dm_channel.send(dm_message)
+                await self.bot.send_user_dm(player_id, dm_message)
 
 
     async def get_lobby_curr_message(self, lobby):
@@ -259,7 +253,8 @@ class LobbyCommands(commands.Cog):
 
         lobby_list_message = ''
         for name in current_lobbies:
-            lobby_list_message = lobby_list_message + f"{name}: {len(current_lobbies[name]['players'])} Players (<#{current_lobbies[name]['channel_id']}>)\n"
+            if "channel_id" in current_lobbies[name]:
+                lobby_list_message = lobby_list_message + f"{name}: {len(current_lobbies[name]['players'])} Players (<#{current_lobbies[name]['channel_id']}>)\n"
 
         await ctx.respond(lobby_list_message, ephemeral=True)
 
@@ -320,6 +315,7 @@ class LobbyCommands(commands.Cog):
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
         current_lobby['exp_boost'] = 0
+        current_lobby['large_number_of_players_notification_sent'] = False
 
         if mode == "Free Play":
             current_lobby['status'] = 'Open'
@@ -340,6 +336,9 @@ Do `/lobby delete` to delete this lobby. (Your current run will be saved.)\n\n\
 Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         await self.send_current_lobby_message(name, ctx, False)
+
+        if mode == "Free Play":
+            await self.bot.send_notifications(self, name, "All Lobbies")
 
         self.bot.save_data()
 
@@ -411,6 +410,10 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         await lobby_channel.send(f'<@{uid}> Joined \"{name}\"!')
 
         await self.edit_current_lobby_message(name, ctx)
+        
+        if (current_lobby['large_number_of_players_notification_sent'] == False) and (len(current_lobby['players']) >= 5):
+            current_lobby['large_number_of_players_notification_sent'] = True
+            await self.bot.send_notifications(self, name, "Large Lobbies")
 
 
     @lobby.command(description="Leave the lobby you're in")

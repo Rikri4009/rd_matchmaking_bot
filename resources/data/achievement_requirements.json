@@ -222,6 +222,11 @@
             "Description": "Spend 100 SP at once",
             "Assoc_Stat": "100_sp_spent_at_once",
             "Requirement": 1
+        },
+        "Black Hole Apocalypse": {
+            "Description": "Cause a Paradox",
+            "Assoc_Stat": "paradox_caused",
+            "Requirement": 1
         }
     }
 }

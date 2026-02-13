@@ -636,5 +636,34 @@ class MatchmakingBot(Bot):
         return exp_sum - user_exp
 
 
+    async def send_notifications(self, lobby_name, type):
+        users_stats = self.users_stats
+        lobby = self.game_data["lobbies"][lobby_name]
+
+        if ("channel_id" not in lobby) or ("message_id" not in lobby):
+            print("SEND_NOTIFICATION CHANNEL ID NOT FOUND OR MESSAGE ID NOT FOUND")
+            return
+
+        channel_id = lobby["channel_id"]
+        if channel_id != 1470904655767666698: #make sure lobby is from syncope channel in rdl
+            return
+
+        message_id = lobby["message_id"]
+
+        for uid in users_stats:
+            if (users_stats[uid]["notification_settings"] == type) and (uid != lobby["host"]) and (uid not in lobby["players"]):
+                await self.send_user_dm(uid, f"A lobby is active: https://discord.com/channels/296802696243970049/1470904655767666698/{str(message_id)}!")
+
+
+    async def send_user_dm(self, uid, message):
+        user = await self.bot.fetch_user(uid)
+        user_dm_channel = user.dm_channel
+
+        if user_dm_channel == None:
+            user_dm_channel = await user.create_dm()
+
+        await user_dm_channel.send(message)
+
+
     async def on_ready(self):
         print(f"{self.user.name} is alive!")

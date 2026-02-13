@@ -29,6 +29,9 @@ async def newgame_button_pressed(self, button, interaction):
     await interaction.response.defer()
     await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
+    await self.lobbycommands.bot.send_notifications(self, self.lobby_name, "All Lobbies")
+    await self.lobbycommands.bot.send_notifications(self, self.lobby_name, "World Tour Lobbies")
+
 
 def get_certify_buttons(lobbycommands, lobby_name, runner_id):
     user_stats = lobbycommands.bot.users_stats[runner_id]
@@ -1710,8 +1713,9 @@ def get_essences_text(ctx, ascension_lobby, runner_essences):
 
 def get_essence_cost(ascension_lobby):
     base_cost = 5
-    base_cost = relics.cheaper_essence(ascension_lobby, base_cost)
-    return base_cost * (2 ** ascension_lobby["essence_uses"])
+    base_base = 2
+    costs = relics.cheaper_essence(ascension_lobby, base_cost, base_base)
+    return math.floor(costs[0] * (costs[1] ** ascension_lobby["essence_uses"]))
 
 
 def get_item_text(ctx, ascension_lobby, item):
