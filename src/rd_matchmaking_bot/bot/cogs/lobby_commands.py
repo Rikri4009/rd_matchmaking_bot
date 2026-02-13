@@ -338,7 +338,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         await self.send_current_lobby_message(name, ctx, False)
 
         if mode == "Free Play":
-            await self.bot.send_notifications(self, name, "All Lobbies")
+            await self.bot.send_notifications(name, "All Lobbies")
 
         self.bot.save_data()
 
@@ -413,7 +413,7 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         
         if (current_lobby['large_number_of_players_notification_sent'] == False) and (len(current_lobby['players']) >= 5):
             current_lobby['large_number_of_players_notification_sent'] = True
-            await self.bot.send_notifications(self, name, "Large Lobbies")
+            await self.bot.send_notifications(name, "Large Lobbies")
 
 
     @lobby.command(description="Leave the lobby you're in")
