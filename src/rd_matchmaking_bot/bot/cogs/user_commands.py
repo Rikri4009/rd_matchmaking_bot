@@ -325,6 +325,10 @@ Other lobby commands are explained after you create a lobby.\n\n\
                 await self.post_about_publicly(ctx)
                 return
 
+            if (len(args) == 4) and (args[0] == "set_user_stat"):
+                await self.set_user_stat(ctx, args[1], args[2], int(args[3])) # uid stat number
+                return
+
         await ctx.respond(f"Invalid command!", ephemeral=True)
         return
 
@@ -386,6 +390,14 @@ Other lobby commands are explained after you create a lobby.\n\n\
     -# Direct feedback/bug reports to <@1207345676141465622>.\n\
     -# Character and artwork by <@201091631795929089>. Full credits are in the documentation.")
         await ctx.respond(embed=tooltipEmbed)
+
+    async def set_user_stat(self, ctx, uid, stat, number):
+        user_stats = self.bot.users_stats[uid]
+
+        user_stats[stat] = number
+
+        self.bot.save_data()
+        await ctx.respond("Done!")
 
 
 def setup(bot: MatchmakingBot):

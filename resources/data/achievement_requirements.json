@@ -131,7 +131,7 @@
             ]
         },
         "Another Team Tries": {
-            "Description": "Highest World Tour set beaten",
+            "Description": "Highest World Tour city beaten",
             "Assoc_Stat": "highest_set_beaten",
             "Requirements": [
                 1,
