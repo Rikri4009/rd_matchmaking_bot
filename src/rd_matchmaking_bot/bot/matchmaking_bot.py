@@ -189,6 +189,8 @@ class MatchmakingBot(Bot):
                 endless_lobby["relic_data"] = {}
             if "victory_random_reward" not in endless_lobby:
                 endless_lobby["victory_random_reward"] = None
+            if "unequipped_relics" not in endless_lobby:
+                endless_lobby["unequipped_relics"] = []
 
             if "set_theme" not in endless_lobby:
                 endless_lobby["set_theme"] = None

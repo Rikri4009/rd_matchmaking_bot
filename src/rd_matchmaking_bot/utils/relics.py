@@ -67,8 +67,8 @@ def max_hp(ascension_lobby):
 
 
 def skip_levels_initialize_data(ascension_lobby):
-    if "skip_levels" not in ascension_lobby["lobby_relics"]:
-        return
+    #if "skip_levels" not in ascension_lobby["lobby_relics"]:
+    #    return
 
     ascension_lobby["relic_data"]["skip_levels"] = 0
 
@@ -95,8 +95,8 @@ def s_rank_bonus(ascension_lobby, miss_count):
 
 
 def use_winner_initialize_data(ascension_lobby):
-    if "use_winner" not in ascension_lobby["lobby_relics"]:
-        return
+    #if "use_winner" not in ascension_lobby["lobby_relics"]:
+    #    return
 
     ascension_lobby["relic_data"]["use_winner_uses"] = 0
     ascension_lobby["relic_data"]["use_winner_miss_count"] = -1

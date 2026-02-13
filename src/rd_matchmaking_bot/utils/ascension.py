@@ -2,9 +2,11 @@ import discord
 import random
 import math
 import copy
+import re
 import rd_matchmaking_bot.utils.levels as levels
 import rd_matchmaking_bot.utils.misc as misc
 import rd_matchmaking_bot.utils.relics as relics
+import rd_matchmaking_bot.bot.cogs.lobby_commands as lobby_commands
 
 async def newgame_button_pressed(self, button, interaction):
     uid = str(interaction.user.id)
@@ -235,6 +237,47 @@ def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
     return AscensionButtonsWelcome(lobbycommands, lobby_name, runner_id)
 
 
+class AscensionButtonsOpen(discord.ui.View):
+    def __init__(self, lobbycommands, lobby_name, runner_id):
+        super().__init__(timeout=20000)
+
+        self.lobbycommands = lobbycommands
+        self.lobby_name = lobby_name
+        self.runner_id = runner_id
+
+        self.user_stats = lobbycommands.bot.users_stats[runner_id]
+
+    @discord.ui.button(label="Join", style=discord.ButtonStyle.success)
+    async def join_pressed(self, button, interaction):
+        lobby_title = interaction.message.embeds[0].title
+        lobby_name = re.findall('"([^"]*)"', lobby_title)[0]
+        await lobby_commands.LobbyCommands.join(self.lobbycommands, interaction, lobby_name)
+
+    @discord.ui.button(label="Leave", style=discord.ButtonStyle.secondary)
+    async def leave_pressed(self, button, interaction):
+        await lobby_commands.LobbyCommands.leave(self.lobbycommands, interaction)
+
+    @discord.ui.button(label="Roll Level", style=discord.ButtonStyle.primary)
+    async def roll_pressed(self, button, interaction):
+        await lobby_commands.LobbyCommands.roll(self.lobbycommands, interaction, "Yes", "No", "Any", "")
+
+    @discord.ui.button(label="Switch Relics", style=discord.ButtonStyle.primary)
+    async def switch_relics_pressed(self, button, interaction):
+        current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
+        lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
+
+        switch_relics_embed = get_switch_relics_embed(interaction, self.lobbycommands, self.runner_id)
+        switch_relics_view = get_ascension_buttons_switch_relics(self.lobbycommands, self.lobby_name, self.runner_id)
+
+        await interaction.response.defer()
+        await lobby_curr_message.edit(embed=switch_relics_embed, view=switch_relics_view)
+        return
+
+    @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
+    async def delete_pressed(self, button, interaction):
+        await lobby_commands.LobbyCommands.delete(self.lobbycommands, interaction)
+
+
 def get_equipped_relics_text(ctx, lobbycommands, runner_id, runner_equipped_relics):
     relic_information = lobbycommands.bot.get_relic_information()
     runner_stats = lobbycommands.bot.users_stats[runner_id]
@@ -294,6 +337,39 @@ def get_relics_embed(ctx, lobbycommands, runner_id):
     relics_embed = discord.Embed(colour = discord.Colour.yellow(), title = "Relics", description = f"{relics_text}\n(Not all Unique relics have been thoroughly tested. Let <@1207345676141465622> know if something breaks.)")
     relics_embed.set_footer(text="Hover over text for info!")
     return relics_embed
+
+
+def get_switch_relics_embed(ctx, lobbycommands, runner_id):
+    relic_information = lobbycommands.bot.get_relic_information()
+    runner_stats = lobbycommands.bot.users_stats[runner_id]
+    runner_owned_relics = runner_stats["owned_relics"]
+    ascension_lobby = lobbycommands.bot.game_data["ascension"][runner_id]
+    lobby_relics = ascension_lobby["lobby_relics"]
+    lobby_usable_relics = get_lobby_usable_relics(runner_owned_relics, ascension_lobby["unequipped_relics"])
+
+    equipped_relics_text = get_equipped_relics_text(ctx, lobbycommands, runner_id, lobby_relics)
+
+    relics_text = "WARNING: Once you unequip a relic, you cannot re-equip it for the rest of the run!\n\n" + equipped_relics_text + "\n\n**=-= Owned Relics =-=**\n"
+
+    for relic_type in relic_information.keys():
+        for relic in relic_information[relic_type].keys():
+            if (relic in lobby_usable_relics) and (runner_owned_relics[relic] > 0):
+                relics_text = relics_text + get_relic_text(ctx, relic_information, relic) + "\n"
+
+    relics_embed = discord.Embed(colour = discord.Colour.yellow(), title = "Switch Relics", description = f"{relics_text}\n(Relic switching has not been thoroughly tested. Let <@1207345676141465622> know if something breaks.)")
+    relics_embed.set_footer(text="Hover over text for info!")
+
+    return relics_embed
+
+
+def get_lobby_usable_relics(runner_owned_relics, unequipped_relics):
+    lobby_usable_relics = copy.deepcopy(runner_owned_relics)
+
+    for relic in runner_owned_relics:
+        if relic in unequipped_relics:
+            del lobby_usable_relics[relic]
+
+    return lobby_usable_relics
 
 
 def get_relic_slots(relic_information, runner_owned_relics):
@@ -408,6 +484,7 @@ def get_ascension_buttons_relics(lobbycommands, lobby_name, runner_id):
             relics_embed = get_relics_embed(interaction, self.lobbycommands, self.runner_id)
             relics_view = get_ascension_buttons_relics(self.lobbycommands, self.lobby_name, self.runner_id)
 
+            self.lobbycommands.bot.save_data()
             await interaction.response.defer()
             await lobby_curr_message.edit(embed=relics_embed, view=relics_view)
 
@@ -470,6 +547,109 @@ def get_ascension_buttons_relics(lobbycommands, lobby_name, runner_id):
             relics_embed = get_relics_embed(interaction, self.lobbycommands, self.runner_id)
             relics_view = get_ascension_buttons_relics(self.lobbycommands, self.lobby_name, self.runner_id)
             await lobby_curr_message.edit(embed=relics_embed, view=relics_view)
+
+    return AscensionButtonsRelics(lobbycommands, lobby_name, runner_id)
+
+
+def get_ascension_buttons_switch_relics(lobbycommands, lobby_name, runner_id):
+    relic_information = lobbycommands.bot.get_relic_information()
+    runner_stats = lobbycommands.bot.users_stats[runner_id]
+    runner_owned_relics = runner_stats["owned_relics"]
+
+    ascension_lobby = lobbycommands.bot.game_data["ascension"][runner_id]
+    lobby_usable_relics = get_lobby_usable_relics(runner_owned_relics, ascension_lobby["unequipped_relics"])
+
+    lobby_usable_relics_options = []
+
+    for relic_type in relic_information.keys():
+        for relic in relic_information[relic_type].keys():
+            if (relic in lobby_usable_relics) and (runner_owned_relics[relic] > 0):
+                relic_option = discord.SelectOption(label = relic_information[relic_type][relic]["name"], value = relic, description = relic_information[relic_type][relic]["description"])
+                lobby_usable_relics_options.append(relic_option)
+
+    relic_slots = get_relic_slots(relic_information, runner_owned_relics)
+
+    class AscensionButtonsRelics(discord.ui.View):
+        def __init__(self, lobbycommands, lobby_name, runner_id):
+            super().__init__(timeout=20000)
+            self.lobbycommands = lobbycommands
+            self.lobby_name = lobby_name
+            self.runner_id = runner_id
+
+        @discord.ui.select(
+                placeholder = "Choose Relics",
+                min_values = 0,
+                max_values = relic_slots,
+                options = lobby_usable_relics_options
+        )
+        async def relics_selected(self, select, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your selection!", ephemeral=True)
+                return
+
+            ascension_lobby = self.lobbycommands.bot.game_data["ascension"][runner_id]
+
+            for relic in ascension_lobby["lobby_relics"]:
+                if relic not in select.values:
+                    ascension_lobby["unequipped_relics"].append(relic)
+
+            ascension_lobby["lobby_relics"] = []
+
+            for relic in select.values:
+                ascension_lobby["lobby_relics"].append(relic)
+
+            if ("short_levels" in ascension_lobby["lobby_relics"]) and ("long_levels" in ascension_lobby["lobby_relics"]):
+                ascension_lobby["lobby_relics"] = []
+                await interaction.respond("ERROR: PARADOX DETECTED -- PARADOX RESOLUTION PROTOCOL NOT IMPLEMENTED!")
+            else:
+                await interaction.response.defer()
+
+            current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
+            lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
+
+            switch_relics_embed = get_switch_relics_embed(interaction, self.lobbycommands, self.runner_id)
+            switch_relics_view = get_ascension_buttons_switch_relics(self.lobbycommands, self.lobby_name, self.runner_id)
+
+            await lobby_curr_message.edit(embed=switch_relics_embed, view=switch_relics_view)
+            return
+
+        @discord.ui.button(label="Unequip All", style=discord.ButtonStyle.danger)
+        async def unequip_all_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
+
+            ascension_lobby = self.lobbycommands.bot.game_data["ascension"][runner_id]
+
+            for relic_name in ascension_lobby["lobby_relics"]:
+                ascension_lobby["unequipped_relics"].append(relic_name)
+
+            ascension_lobby["lobby_relics"] = []
+
+            current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
+            lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
+
+            switch_relics_embed = get_switch_relics_embed(interaction, self.lobbycommands, self.runner_id)
+            switch_relics_view = get_ascension_buttons_switch_relics(self.lobbycommands, self.lobby_name, self.runner_id)
+
+            self.lobbycommands.bot.save_data()
+            await interaction.response.defer()
+            await lobby_curr_message.edit(embed=switch_relics_embed, view=switch_relics_view)
+            return
+
+        @discord.ui.button(label="Back", style=discord.ButtonStyle.primary)
+        async def back_pressed(self, button, interaction):
+            uid = str(interaction.user.id)
+            if uid != self.runner_id:
+                await interaction.respond("Not your button!", ephemeral=True)
+                return
+
+            self.lobbycommands.bot.save_data()
+            await interaction.response.defer()
+            await self.lobbycommands.edit_current_lobby_message(self.lobby_name, interaction)
+            return
 
     return AscensionButtonsRelics(lobbycommands, lobby_name, runner_id)
 
@@ -1123,6 +1303,7 @@ def get_ascension_buttons_choice(lobbycommands, lobby_name, runner_id):
 
     return AscensionButtonsChoice(lobbycommands, lobby_name, runner_id)
 
+
 def gain_foraging_items(ascension_lobby, item_count):
     chosen_item = ascension_lobby["chosen_item_1"]
     if item_count > 1:
@@ -1290,6 +1471,7 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
     ascension_lobby["set_modifiers_override"] = []
 
     ascension_lobby["victory_random_reward"] = {}
+    ascension_lobby["unequipped_relics"] = []
 
     relics.use_winner_initialize_data(ascension_lobby)
 
@@ -1536,6 +1718,7 @@ def set_roll_settings(lobbycommands, lobby_name, runner_id, use_theme):
 
     relics.short_levels_roll_settings(ascension_lobby, roll_settings)
     relics.long_levels_roll_settings(ascension_lobby, roll_settings)
+
 
 def get_ascension_rolling_embed(lobbycommands, lobby_name, runner_id, player_id_dict, level_chosen, ascension_lobby):
     ready_list = ''

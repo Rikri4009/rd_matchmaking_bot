@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import time
 import re
 import math
 import asyncio
@@ -159,7 +158,10 @@ class LobbyCommands(commands.Cog):
         if status == 'Not Started':
             return ascension.get_ascension_buttons_welcome(self, lobby_name, host_id)
         elif status == 'Open':
-            return LobbyButtonsOpen()
+            if mode == "Ascension":
+                return ascension.AscensionButtonsOpen(self, lobby_name, host_id)
+            else:
+                return LobbyButtonsOpen()
         elif status == 'Rolling':
             return LobbyButtonsRolling()
         elif status == 'Playing':
