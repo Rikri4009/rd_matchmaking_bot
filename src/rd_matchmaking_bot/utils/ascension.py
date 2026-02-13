@@ -1435,10 +1435,10 @@ def get_ascension_open_embed(lobbycommands, ctx, lobby_name, runner_id, players_
 
     exp_boost_text = ""
     if auxiliary_lobby["exp_boost"] > 0:
-        exp_boost_text = f"\n:star2: **Double EXP Active!** :star2: ({auxiliary_lobby['exp_boost']} levels remaining)\n"
+        exp_boost_text = f"\n\n:star2: **Double EXP Active!** :star2: ({auxiliary_lobby['exp_boost']} levels remaining)"
 
     embed = discord.Embed(colour = discord.Colour.blue(), title = f"World Tour Lobby: \"{lobby_name}\" | CITY {set_number}", description = f"Runner: <@{runner_id}> ({ascension_lobby['current_hp']}/{ascension_lobby['max_hp']} HP) [{ascension_lobby['current_sp']} SP]\n\
-{exp_boost_text}{is_open_text}{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{equipped_relics_text}{items_text}**Support:** {support}")
+{is_open_text}{ascension_difficulty_text}Levels: {set_difficulties_text}\n\n{theme_and_modifier_desc}{equipped_relics_text}{items_text}**Support:** {support}{exp_boost_text}")
     embed.set_footer(text="Buttons broke? Use /lobby resend")
     return embed
 
@@ -1548,7 +1548,7 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
 
     if level_chosen['difficulty'] == "???":
         level_embed.add_field(name = f"‼️ Modifier: None!", value = "City 7's usual modifier does **NOT** apply to this level!", inline = False)
-    elif (set_modifier != "None"):
+    elif (set_modifier != "None") and (set_modifier != "Double Boss") and (set_modifier != "Polarity") and (set_modifier != "Rainbow"):
         level_embed.add_field(name = f"‼️ Modifier: **{set_modifier}**", value = sets_config[set_modifier]['description'], inline = False)
 
     level_number = ascension_lobby["level_number"]

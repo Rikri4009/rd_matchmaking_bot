@@ -71,9 +71,9 @@ class LobbyCommands(commands.Cog):
 
         exp_boost_text = ""
         if current_lobby["exp_boost"] > 0:
-            exp_boost_text = f"\n:star2: **Double EXP Active!** :star2: ({current_lobby['exp_boost']} levels remaining)\n"
+            exp_boost_text = f"\n\n:star2: **Double EXP Active!** :star2: ({current_lobby['exp_boost']} levels remaining)"
 
-        embed = discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n{exp_boost_text}# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}")
+        embed = discord.Embed(colour = discord.Colour.blue(), title = f"Free Play Lobby: \"{lobby_name}\"", description = f"Host: <@{host_id}>\n# This lobby is open!\nPress \"**Join**\" to join.\n\n**Players:** {players}{exp_boost_text}")
         embed.set_footer(text="Buttons broke? Use /lobby resend")
         return embed
 

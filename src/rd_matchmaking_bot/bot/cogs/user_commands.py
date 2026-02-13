@@ -163,7 +163,8 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
     @discord.slash_command(description="View your milestones")
     async def achievements(self, ctx,
-        user: discord.Option(discord.SlashCommandOptionType.user, required = False, description = '@user to view achievements of. Default: Yourself')
+        user: discord.Option(discord.SlashCommandOptionType.user, required = False, description = '@user to view achievements of. Default: Yourself'),
+        post_publicly: discord.Option(discord.SlashCommandOptionType.boolean, required = False, description = 'Send your achievements list publicly? Default: False'),
     ):
         if user == None:
             ach_user = ctx.user
@@ -187,7 +188,11 @@ Other lobby commands are explained after you create a lobby.\n\n\
         tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"{ach_user.display_name}\'s Achievements ({achievements_list['total']}\⭐| {user_stats['level']}\🎵 | {total_player_rating}\🩺)", description = achievements_list['message'])
         tooltipEmbed.set_footer(text="Hover over text for info!")
 
-        await ctx.respond(embed=tooltipEmbed)
+        if post_publicly == None:
+            post_publicly = False
+
+        is_ephemeral = not post_publicly
+        await ctx.respond(embed=tooltipEmbed, ephemeral=is_ephemeral)
 
 
     @discord.slash_command(description="See the rankings")
@@ -246,6 +251,37 @@ Other lobby commands are explained after you create a lobby.\n\n\
         quests_embed = discord.Embed(colour = discord.Colour.green(), title = "Daily Quests", description = quests_text)
 
         await ctx.respond(embed=quests_embed, ephemeral=True)
+
+
+    @discord.slash_command(description="Give your items to others")
+    async def gift_items(self, ctx,
+        item: discord.Option(choices = ['💎','🎫','🧪','📦'], description = 'What item to give'),
+        count: discord.Option(discord.SlashCommandOptionType.integer, description = 'How many of the item to give'),
+        user: discord.Option(discord.SlashCommandOptionType.user, description = '@user to give the items to'),
+    ):
+        sender_uid = str(ctx.user.id)
+        recipient_uid = str(user.id)
+
+        match item:
+            case '💎':
+                item = "diamonds"
+            case '🎫':
+                item = "current_tickets"
+            case '🧪':
+                item = "exp_boosters"
+            case '📦':
+                item = "relic_boxes"
+
+        sender_stats = self.bot.users_stats[sender_uid]
+        recipient_stats = self.bot.users_stats[recipient_uid]
+
+        if sender_stats[item] < count:
+            await ctx.respond("You don't have enough of that item!", ephemeral=True)
+
+        sender_stats[item] = sender_stats[item] - count
+        recipient_stats[item] = recipient_stats[item] + count
+
+        await ctx.respond(f"<@{recipient_uid}> You have been gifted {str(count)} {item} by <@{sender_uid}>!")
 
 
     @discord.slash_command(description="(ADVANCED) Run an admin command.")
@@ -340,7 +376,6 @@ Other lobby commands are explained after you create a lobby.\n\n\
 
         ascension_lobby[key] = value
         await ctx.respond("Done!")
-
 
     async def post_about_publicly(self, ctx):
         tooltipEmbed = discord.Embed(colour = discord.Colour.yellow(), title = f"\⭐ About This Bot \🎵", description = "Welcome to the __sync__hronized __ope__rations program!\n\
