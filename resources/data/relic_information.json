@@ -20,7 +20,7 @@
         "ivory_dice_powerup": {
             "name": "Overtime Contract",
             "emoji": "📜",
-            "description": "When using Ivory Dice, if you have more HP than incoming damage, gain the difference as SP"
+            "description": "If you use Ivory Dice when you could've tanked incoming damage (without items/SP), heal to max"
         },
         "chronographs_powerup": {
             "name": "Crystallized Time",
@@ -45,7 +45,7 @@
         "s_rank_bonus": {
             "name": "Celebratory Piñata",
             "emoji": "🪅",
-            "description": "S ranking a level gives you 30 SP"
+            "description": "S ranking a level gives you 30 HP"
         },
         "use_winner": {
             "name": "Backup Disk",
@@ -60,7 +60,7 @@
         "cheaper_essence": {
             "name": "Purifying Alembic",
             "emoji": "⚗️",
-            "description": "Essence costs are reduced"
+            "description": "Essence costs are reduced and scale slower"
         },
         "double_foraging": {
             "name": "Pocket Mirror",

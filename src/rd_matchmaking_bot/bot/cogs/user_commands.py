@@ -284,6 +284,21 @@ Other lobby commands are explained after you create a lobby.\n\n\
         await ctx.respond(f"<@{recipient_uid}> You have been gifted {str(count)} {item} by <@{sender_uid}>!")
 
 
+    @discord.slash_command(description="Be notified when a lobby opens")
+    async def ping_me(self, ctx,
+        ping_me_for: discord.Option(choices = ['Never','All Lobbies','Large Lobbies','World Tour Lobbies'], description = 'You will be notified for:'),
+    ):
+        uid = str(ctx.user.id)
+        user_stats = self.bot.users_stats[uid]
+
+        if ping_me_for == "Never":
+            ping_me_for = None
+
+        user_stats["notification_settings"] = ping_me_for
+
+        await ctx.respond("Notification settings set!", ephemeral=True)
+
+
     @discord.slash_command(description="(ADVANCED) Run an admin command.")
     async def admin_command(self, ctx,
         command: discord.Option(discord.SlashCommandOptionType.string)

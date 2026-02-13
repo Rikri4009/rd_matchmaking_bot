@@ -1560,14 +1560,14 @@ Make sure you do `/lobby already_seen` if you recognize this level!\nOtherwise, 
 
     if (ascension_difficulty >= 3) and (set_number != 3) and ((level_chosen['difficulty'] == "Easy") or (level_chosen['difficulty'] == "Medium")):
         c3_modifier = ascension_lobby['certificate_3_modifiers'][level_number]
-        level_embed.add_field(name = f"<:gold:1399860113883402270> Extra Modifier: **{c3_modifier}**", value = sets_config[c3_modifier]['description'], inline = False)
+        level_embed.add_field(name = f"‼️<:gold:1399860113883402270> **__EXTRA MODIFIER__**: **{c3_modifier}** <:gold:1399860113883402270>‼️", value = sets_config[c3_modifier]['description'], inline = False)
 
     if (ascension_difficulty >= 5) and (set_number != 5) and (level_chosen['difficulty'] == "Easy"):
         c5_modifier = ascension_lobby['certificate_5_modifiers'][level_number]
-        level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **{c5_modifier}**", value = sets_config[c5_modifier]['description'], inline = False)
+        level_embed.add_field(name = f"‼️<:illustrious:1399860117700087888> **__EXTRA MODIFIER__**: **{c5_modifier}** <:illustrious:1399860117700087888>‼️", value = sets_config[c5_modifier]['description'], inline = False)
 
     if (ascension_difficulty >= 5) and (level_chosen['difficulty'] == "???"):
-        level_embed.add_field(name = f"<:illustrious:1399860117700087888> Extra Modifier: **Hard Difficulty Button**", value = "You must use the hard difficulty button!", inline = False)
+        level_embed.add_field(name = f"‼️<:illustrious:1399860117700087888> **__EXTRA MODIFIER__**: **Hard Difficulty Button** <:illustrious:1399860117700087888>‼️", value = "You must use the hard difficulty button!", inline = False)
 
     return level_embed
 

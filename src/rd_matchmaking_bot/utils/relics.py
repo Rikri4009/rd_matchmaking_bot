@@ -38,7 +38,7 @@ def ivory_dice_powerup(ascension_lobby, current_hp, incoming_damage):
         return
 
     if current_hp > incoming_damage:
-        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] + current_hp - incoming_damage
+        ascension_lobby["current_hp"] = max(ascension_lobby["current_hp"], ascension_lobby["max_hp"])
 
 
 def chronographs_powerup(ascension_lobby):
@@ -89,7 +89,7 @@ def s_rank_bonus(ascension_lobby, miss_count):
         return
 
     if miss_count == 0:
-        ascension_lobby["current_sp"] = ascension_lobby["current_sp"] + 30
+        ascension_lobby["current_hp"] = ascension_lobby["current_hp"] + 30
 
     return
 
@@ -129,11 +129,11 @@ def immediate_foraging(ascension_lobby):
     return True
 
 
-def cheaper_essence(ascension_lobby, base_cost):
+def cheaper_essence(ascension_lobby, base_cost, base_base):
     if "cheaper_essence" not in ascension_lobby["lobby_relics"]:
-        return base_cost
+        return [base_cost, base_base]
 
-    return 3
+    return [3, 1.5]
 
 
 def double_foraging_damage(ascension_lobby):

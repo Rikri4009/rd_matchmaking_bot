@@ -84,7 +84,7 @@ class MatchmakingBot(Bot):
         number_stats.append("exp")
         number_stats.append("level")
 
-        string_stats = ["specialization"]
+        string_stats = ["specialization", "notification_settings"]
 
         list_stats = ["opponents_beaten_list", "tough_plus_opponents_beaten_list", "quests"]
 
