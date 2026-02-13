@@ -11,6 +11,9 @@ import rd_matchmaking_bot.utils.ascension as ascension
 import rd_matchmaking_bot.utils.relics as relics
 
 
+is_everyone_ready_lock = asyncio.Lock()
+has_everyone_submitted_lock = asyncio.Lock()
+
 class LobbyButtonsOpen(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=20000)
@@ -658,8 +661,6 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             await ctx.respond(f'No one is playing!', ephemeral=True)
             return
 
-        current_lobby["status"] = "Rolling"
-
         if current_lobby["mode"] == "Free Play":
             tags_list = tags.split(',')
             if tags == '':
@@ -708,6 +709,8 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             else:
                 await ctx.respond("<@1207345676141465622> What")
                 print("todo")
+
+        current_lobby["status"] = "Rolling"
 
         lobby_curr_message = await self.get_lobby_curr_message(current_lobby)
 
@@ -915,22 +918,23 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
 
     async def is_everyone_ready(self, ctx, lobby_name, host):
-        current_lobbies = self.bot.game_data["lobbies"]
-        current_lobby = current_lobbies[lobby_name]
+        async with is_everyone_ready_lock:
+            current_lobbies = self.bot.game_data["lobbies"]
+            current_lobby = current_lobbies[lobby_name]
 
-        if current_lobby['status'] != 'Rolling':
-            return
-
-        if len(current_lobby['players']) == 0: #no players in lobby
-            current_lobby['status'] = 'Open'
-            await self.unroll_level(ctx, lobby_name, host)
-            return
-
-        for player in current_lobby['players']:
-            if current_lobby['players'][player]['ready_status'] == 'Not Ready':
+            if current_lobby['status'] != 'Rolling':
                 return
 
-        await self.begin_match(ctx, lobby_name)
+            if len(current_lobby['players']) == 0: #no players in lobby
+                current_lobby['status'] = 'Open'
+                await self.unroll_level(ctx, lobby_name, host)
+                return
+
+            for player in current_lobby['players']:
+                if current_lobby['players'][player]['ready_status'] == 'Not Ready':
+                    return
+
+            await self.begin_match(ctx, lobby_name)
 
 
     async def finish_match(self, ctx, lobby_name, host):
@@ -1133,22 +1137,23 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
 
     async def has_everyone_submitted(self, ctx, lobby_name, host_id):
-        current_lobbies = self.bot.game_data["lobbies"]
-        current_lobby = current_lobbies[lobby_name]
+        async with has_everyone_submitted_lock:
+            current_lobbies = self.bot.game_data["lobbies"]
+            current_lobby = current_lobbies[lobby_name]
 
-        if current_lobby['status'] != 'Playing':
-            return
-
-        if len(current_lobby['players']) == 0: #no players in lobby
-            current_lobby['status'] = 'Open'
-            await self.unroll_level(ctx, lobby_name, host_id)
-            return
-
-        for player in current_lobby['players']:
-            if current_lobby['players'][player]['ready_status'] == 'Not Yet Submitted':
+            if current_lobby['status'] != 'Playing':
                 return
 
-        await self.finish_match(ctx, lobby_name, host_id)
+            if len(current_lobby['players']) == 0: #no players in lobby
+                current_lobby['status'] = 'Open'
+                await self.unroll_level(ctx, lobby_name, host_id)
+                return
+
+            for player in current_lobby['players']:
+                if current_lobby['players'][player]['ready_status'] == 'Not Yet Submitted':
+                    return
+
+            await self.finish_match(ctx, lobby_name, host_id)
 
 
     @lobby.command(description="MAKE SURE YOU\'RE AT THE BUTTON SCREEN!")

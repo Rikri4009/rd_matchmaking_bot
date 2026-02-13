@@ -168,7 +168,7 @@
             "Assoc_Stat": "vt_s_ranked",
             "Requirement": 1
         },
-        "Workshop Hell": {
+        "Under The Radar": {
             "Description": "Play 5 non-refereed levels",
             "Assoc_Stat": "nr_played",
             "Requirement": 5
