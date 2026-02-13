@@ -167,6 +167,9 @@ def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
             await interaction.response.defer()
             await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
+            await self.lobbycommands.bot.send_notifications(self.lobby_name, "All Lobbies")
+            await self.lobbycommands.bot.send_notifications(self.lobby_name, "World Tour Lobbies")
+
         if require_ticket:
             @discord.ui.button(label="New Game", emoji="🎫", style=discord.ButtonStyle.danger)
             async def newgame_pressed(self, button, interaction):

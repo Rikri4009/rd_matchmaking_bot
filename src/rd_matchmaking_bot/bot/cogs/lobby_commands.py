@@ -739,6 +739,10 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         current_lobby['roll_settings'] = {}
         current_lobby['level'] = {}
 
+        # unready everyone
+        for player in current_lobby['players']:
+            current_lobby['players'][player]['ready_status'] = 'Not Ready'
+
         await lobby_curr_message.edit(f"The level \"{unrolled_artist} - {unrolled_song}\" (by {unrolled_authors}) was unrolled!", embed=None, view=None)
 
         await self.send_current_lobby_message(lobby_name, ctx, False)
@@ -776,6 +780,14 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
         elif current_lobby['status'] != 'Rolling':
             await ctx.respond(f'Your lobby has not yet rolled a level!', ephemeral=True)
             return
+
+        # chronograph used: sorry
+        if current_lobby["mode"] == "Ascension":
+            runner_id = current_lobby["host"]
+            ascension_lobby = self.bot.game_data["ascension"][runner_id]
+            if ascension_lobby["chronograph_used"]:
+                await ctx.respond(f"Chronograph used, sorry!", ephemeral=True)
+                return
 
         await self.unroll_level(ctx, lobby_name_user_is_hosting, uid)
 
@@ -815,6 +827,15 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
 
         # if rolling
         if current_lobby['status'] == 'Rolling':
+
+            # chronograph used: sorry
+            if current_lobby["mode"] == "Ascension":
+                runner_id = current_lobby["host"]
+                ascension_lobby = self.bot.game_data["ascension"][runner_id]
+                if ascension_lobby["chronograph_used"]:
+                    await ctx.respond(f"Chronograph used, sorry! Wait until after everyone readies to do this command, or leave.", ephemeral=True)
+                    return
+
             rerolled_artist = ""
             rerolled_song = ""
             rerolled_authors = ""
@@ -826,14 +847,6 @@ Once everyone has joined, do `/lobby roll` to roll a level.", ephemeral=True)
             # unready everyone
             for player in current_lobby['players']:
                 current_lobby['players'][player]['ready_status'] = 'Not Ready'
-
-            # chronograph used: sorry
-            if current_lobby["mode"] == "Ascension":
-                runner_id = current_lobby["host"]
-                ascension_lobby = self.bot.game_data["ascension"][runner_id]
-                if ascension_lobby["chronograph_used"]:
-                    await ctx.respond(f"Chronograph used, sorry! Wait until after everyone readies to do this command, or leave.", ephemeral=True)
-                    return
 
             # choose a new level, SHOULD be impossible for this to return None
             self.roll_level_from_settings(lobby_name_user_is_playing_in)

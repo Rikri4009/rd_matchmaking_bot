@@ -650,9 +650,14 @@ class MatchmakingBot(Bot):
 
         message_id = lobby["message_id"]
 
+        mode = lobby["mode"]
+
+        if mode == "Ascension":
+            mode = "World Tour"
+
         for uid in users_stats:
             if (users_stats[uid]["notification_settings"] == type) and (uid != lobby["host"]) and (uid not in lobby["players"]):
-                await self.send_user_dm(uid, f"A lobby is active: https://discord.com/channels/296802696243970049/1470904655767666698/{str(message_id)}!")
+                await self.send_user_dm(uid, f"A {mode} lobby is active: https://discord.com/channels/296802696243970049/1470904655767666698/{str(message_id)}!")
 
 
     async def send_user_dm(self, uid, message):
