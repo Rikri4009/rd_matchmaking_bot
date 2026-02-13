@@ -29,8 +29,8 @@ async def newgame_button_pressed(self, button, interaction):
     await interaction.response.defer()
     await self.lobbycommands.send_current_lobby_message(self.lobby_name, interaction, False)
 
-    await self.lobbycommands.bot.send_notifications(self, self.lobby_name, "All Lobbies")
-    await self.lobbycommands.bot.send_notifications(self, self.lobby_name, "World Tour Lobbies")
+    await self.lobbycommands.bot.send_notifications(self.lobby_name, "All Lobbies")
+    await self.lobbycommands.bot.send_notifications(self.lobby_name, "World Tour Lobbies")
 
 
 def get_certify_buttons(lobbycommands, lobby_name, runner_id):

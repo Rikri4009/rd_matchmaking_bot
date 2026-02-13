@@ -656,7 +656,7 @@ class MatchmakingBot(Bot):
 
 
     async def send_user_dm(self, uid, message):
-        user = await self.bot.fetch_user(uid)
+        user = await self.fetch_user(uid)
         user_dm_channel = user.dm_channel
 
         if user_dm_channel == None:
