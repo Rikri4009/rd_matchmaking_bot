@@ -621,6 +621,10 @@ def get_ascension_buttons_item(lobbycommands, lobby_name, runner_id):
 
             await interaction.respond(f"{sp_cost} SP used!")
 
+            if sp_cost >= 100:
+                user_stats = lobbycommands.bot.users_stats[runner_id]
+                user_stats["100_sp_spent_at_once"] = user_stats["100_sp_spent_at_once"] + 1
+
             ascension_lobby["sp_spent"] = ascension_lobby["sp_spent"] + sp_cost
             ascension_lobby["current_sp"] = ascension_lobby["current_sp"] - sp_cost
             ascension_lobby["sp_times_used"] = ascension_lobby["sp_times_used"] + 1

@@ -217,6 +217,11 @@
             "Description": "S-rank an entire set",
             "Assoc_Stat": "s_ranked_entire_set",
             "Requirement": 1
+        },
+        "Suffering From Success": {
+            "Description": "Spend 100 SP at once",
+            "Assoc_Stat": "100_sp_spent_at_once",
+            "Requirement": 1
         }
     }
 }
