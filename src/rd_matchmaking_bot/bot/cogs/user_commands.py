@@ -77,9 +77,9 @@ Other lobby commands are explained after you create a lobby.\n\n\
 `/achievements`: View your overall statistics.\n\
 `/player_rating`: Get an estimate of your overall performance.\n\
 `/leaderboard`: View the exp or \⭐ leaderboards.\n\n\
-`/ping_me`: Use this to get notified when a lobby is created.\
-`/gift_tems`: Gift your items to other people.\
-`/trade_relics`: Initiate a relic trade with someone else.\
+`/ping_me`: Use this to get notified when a lobby is created.\n\
+`/gift_tems`: Gift your items to other people.\n\
+`/trade_relics`: Initiate a relic trade with someone else.\n\
 `/out_of_lobby_roll`: Find a level for a set of players outside of a lobby.\n\
 `/upload_rdsave`: Upload your save data. (See [here](https://docs.google.com/document/d/1llry_KhVjVv7Lg47KqbDUV0BuKHE4mFSsobTcUiV0dI/edit?usp=sharing) for details.)")
 
