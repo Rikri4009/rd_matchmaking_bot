@@ -284,6 +284,9 @@ Other lobby commands are explained after you create a lobby.\n\n\
         sender_stats[item] = sender_stats[item] - count
         recipient_stats[item] = recipient_stats[item] + count
 
+        if recipient_uid == "1391387324922855564":
+            sender_stats["give_item_to_syncope"] = 1
+
         await ctx.respond(f"<@{recipient_uid}> You have been gifted {str(count)} {self.bot.get_item_name(item, None)} by <@{sender_uid}>!")
 
 
