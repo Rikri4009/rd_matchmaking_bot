@@ -224,8 +224,13 @@
             "Requirement": 1
         },
         "Black Hole Apocalypse": {
-            "Description": "Cause a Paradox",
+            "Description": "Cause a paradox",
             "Assoc_Stat": "paradox_caused",
+            "Requirement": 1
+        },
+        "Why Thank You!": {
+            "Description": "Give me an item",
+            "Assoc_Stat": "give_item_to_syncope",
             "Requirement": 1
         }
     }

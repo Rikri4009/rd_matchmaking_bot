@@ -284,7 +284,7 @@ Other lobby commands are explained after you create a lobby.\n\n\
         sender_stats[item] = sender_stats[item] - count
         recipient_stats[item] = recipient_stats[item] + count
 
-        await ctx.respond(f"<@{recipient_uid}> You have been gifted {str(count)} {item} by <@{sender_uid}>!")
+        await ctx.respond(f"<@{recipient_uid}> You have been gifted {str(count)} {self.bot.get_item_name(item, None)} by <@{sender_uid}>!")
 
 
     @discord.slash_command(description="Be notified when a lobby opens")
@@ -292,7 +292,13 @@ Other lobby commands are explained after you create a lobby.\n\n\
         ping_me_for: discord.Option(choices = ['Never','All Lobbies','Large Lobbies','World Tour Lobbies'], description = 'You will be notified for:'),
     ):
         uid = str(ctx.user.id)
-        user_stats = self.bot.users_stats[uid]
+
+        users_stats = self.bot.users_stats
+        if uid not in users_stats:
+            users_stats[uid] = {}
+            self.bot.validate_users_stats()
+
+        user_stats = users_stats[uid]
 
         if ping_me_for == "Never":
             ping_me_for = None

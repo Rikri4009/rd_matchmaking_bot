@@ -452,6 +452,7 @@ def get_ascension_buttons_relics(lobbycommands, lobby_name, runner_id):
 
             if ("short_levels" in runner_stats["equipped_relics"]) and ("long_levels" in runner_stats["equipped_relics"]):
                 runner_stats["equipped_relics"] = []
+                runner_stats["paradox_caused"] = 1
                 await interaction.respond("ERROR: PARADOX DETECTED -- PARADOX RESOLUTION PROTOCOL NOT IMPLEMENTED!")
             else:
                 await interaction.response.defer()
@@ -613,6 +614,7 @@ def get_ascension_buttons_switch_relics(lobbycommands, lobby_name, runner_id):
 
             if ("short_levels" in ascension_lobby["lobby_relics"]) and ("long_levels" in ascension_lobby["lobby_relics"]):
                 ascension_lobby["lobby_relics"] = []
+                self.lobbycommands.bot.users_stats[runner_id]["paradox_caused"] = 1
                 await interaction.respond("ERROR: PARADOX DETECTED -- PARADOX RESOLUTION PROTOCOL NOT IMPLEMENTED!")
             else:
                 await interaction.response.defer()
