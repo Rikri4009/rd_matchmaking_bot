@@ -555,7 +555,7 @@ class MatchmakingBot(Bot):
 
                 user_quests[i]["completion_time"] = now.timestamp()
 
-                completed_quests_message = completed_quests_message + f"- **Quest {str(i+1)}**: {user_quests[i]['description']} ({user_quests[i]['completion']}/{user_quests[i]['requirement']})\n  - Reward: {user_quests[i]['reward_amount']} {user_quests[i]['reward_description']}"
+                completed_quests_message = completed_quests_message + f"- **Quest {str(i+1)}**: {user_quests[i]['description']} ({user_quests[i]['completion']}/{user_quests[i]['requirement']})\n  - Reward: {user_quests[i]['reward_amount']} {user_quests[i]['reward_description']}\n"
 
         if completed_quests_message == "":
             return None

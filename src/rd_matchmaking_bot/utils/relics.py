@@ -59,11 +59,15 @@ def shields_powerup(ascension_lobby, shield_block_factor):
     return shield_block_factor
 
 
-def max_hp(ascension_lobby):
+def max_hp_equip(ascension_lobby):
     if "max_hp" not in ascension_lobby["lobby_relics"]:
         return
 
     ascension_lobby["max_hp"] = ascension_lobby["max_hp"] + 7
+
+
+def max_hp_unequip(ascension_lobby):
+    ascension_lobby["max_hp"] = ascension_lobby["max_hp"] - 7
 
 
 def skip_levels_initialize_data(ascension_lobby):

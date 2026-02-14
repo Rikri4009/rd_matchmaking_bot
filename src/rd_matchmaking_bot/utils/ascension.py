@@ -234,6 +234,10 @@ def get_ascension_buttons_welcome(lobbycommands, lobby_name, runner_id):
                 await lobby_curr_message.edit(embed=specializations_embed, view=SpecializeButtons(self.lobbycommands, self.lobby_name, self.runner_id))
                 return
 
+        @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
+        async def delete_pressed(self, button, interaction):
+            await lobby_commands.LobbyCommands.delete(self.lobbycommands, interaction)
+
     return AscensionButtonsWelcome(lobbycommands, lobby_name, runner_id)
 
 
@@ -263,6 +267,11 @@ class AscensionButtonsOpen(discord.ui.View):
 
     @discord.ui.button(label="Switch Relics", style=discord.ButtonStyle.primary)
     async def switch_relics_pressed(self, button, interaction):
+        uid = str(interaction.user.id)
+        if uid != self.runner_id:
+            await interaction.respond("Not your button!", ephemeral=True)
+            return
+
         current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
         lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
 
@@ -594,6 +603,9 @@ def get_ascension_buttons_switch_relics(lobbycommands, lobby_name, runner_id):
                 if relic not in select.values:
                     ascension_lobby["unequipped_relics"].append(relic)
 
+                    if relic == "max_hp":
+                        relics.max_hp_unequip(ascension_lobby)
+
             ascension_lobby["lobby_relics"] = []
 
             for relic in select.values:
@@ -604,6 +616,8 @@ def get_ascension_buttons_switch_relics(lobbycommands, lobby_name, runner_id):
                 await interaction.respond("ERROR: PARADOX DETECTED -- PARADOX RESOLUTION PROTOCOL NOT IMPLEMENTED!")
             else:
                 await interaction.response.defer()
+
+            relics.max_hp_equip(ascension_lobby)
 
             current_lobby = self.lobbycommands.bot.game_data["lobbies"][self.lobby_name]
             lobby_curr_message = await self.lobbycommands.get_lobby_curr_message(current_lobby)
@@ -1430,7 +1444,7 @@ def begin(self, ctx, runner_id, max_hp, lobby_name):
         ascension_lobby["max_hp"] = max_hp
         ascension_lobby["current_hp"] = max_hp
 
-    relics.max_hp(ascension_lobby)
+    relics.max_hp_equip(ascension_lobby)
 
     ascension_lobby["current_sp"] = 0
     ascension_lobby["sp_times_used"] = 0
@@ -1810,7 +1824,7 @@ def get_ascension_choice_embed(ctx, lobby_name, runner_id, ascension_lobby):
 
     set_number = ascension_lobby["current_set"]
 
-    recover_text = f"You will recover {recover_fraction} of your missing HP __at the start of the next set__.\n\n"
+    recover_text = f"You will recover {recover_fraction} of your missing HP __at the start of the next city__.\n\n"
     if (ascension_difficulty >= 6) and (ascension_lobby["current_set"] == 2):
         recover_text = ""
 
